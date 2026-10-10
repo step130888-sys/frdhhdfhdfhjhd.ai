@@ -51,7 +51,7 @@
     <footer class="mt-auto py-6 border-t border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#07070a] text-center text-xs text-slate-500 dark:text-slate-400 hidden md:block transition-colors">
       <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div class="flex items-center space-x-2">
-          <span class="font-bold text-slate-700 dark:text-slate-300">Медиацентр «КЕДР СГТУ»</span>
+          <span class="font-bold text-slate-700 dark:text-slate-300">Медиацентр «СМС СГТУ»</span>
           <span>•</span>
           <span class="text-slate-500 dark:text-slate-400">Фото • Дизайн • Видео • Моушен • СММ</span>
         </div>

@@ -50,9 +50,9 @@ if (fs.existsSync(distDir)) {
     res.send(`
       <!DOCTYPE html>
       <html>
-      <head><title>КЕДР СГТУ API</title><meta charset="utf-8"></head>
+      <head><title>СМС СГТУ API</title><meta charset="utf-8"></head>
       <body style="background:#070918;color:#eee;font-family:sans-serif;padding:40px;text-align:center;">
-        <h1 style="color:#a855f7;">🌲 Медиацентр «КЕДР СГТУ» (Vue 3 API)</h1>
+        <h1 style="color:#a855f7;">🌲 Медиацентр «СМС СГТУ» (Vue 3 API)</h1>
         <p>Бэкенд успешно запущен на порту ${PORT}!</p>
         <p>Соберите фронтенд командой <code>npm run build</code> или запустите Vite через <code>npm run dev:client</code>.</p>
         <p><a href="/api/auth/me" style="color:#38bdf8;">Проверить API: /api/auth/me</a></p>
@@ -99,7 +99,7 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`========================================================`);
-    console.log(`🌲 Платформа «КЕДР СГТУ» (Vue 3 + Express + SQLite WAL)`);
+    console.log(`🌲 Платформа «СМС СГТУ» (Vue 3 + Express + SQLite WAL)`);
     console.log(`🚀 Сервер запущен: http://localhost:${PORT}`);
     console.log(`========================================================`);
   });

@@ -5,7 +5,7 @@
       <div class="text-center mb-7 relative z-10">
         <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Заявка в команду</h1>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-          Регистрация в студенческий медиацентр «КЕДР СГТУ»
+          Регистрация в студенческий медиацентр «СМС СГТУ»
         </p>
       </div>
 

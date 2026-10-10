@@ -221,7 +221,7 @@
       <!-- Modal Footer -->
       <div class="px-6 py-4 bg-slate-50 dark:bg-[#101016] border-t border-slate-200 dark:border-white/10 flex items-center justify-between flex-shrink-0">
         <span class="text-[11px] text-slate-500">
-          Студенческий медиацентр «КЕДР СГТУ»
+          Студенческий медиацентр «СМС СГТУ»
         </span>
         <button
           @click="$emit('close')"

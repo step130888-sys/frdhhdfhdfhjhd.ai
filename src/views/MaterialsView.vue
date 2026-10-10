@@ -218,7 +218,7 @@
               v-model="uploadForm.title"
               type="text"
               required
-              placeholder="Логотип КЕДР (вектор)"
+              placeholder="Логотип СМС (вектор)"
               class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white"
             />
           </div>

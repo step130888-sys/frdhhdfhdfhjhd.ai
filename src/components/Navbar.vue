@@ -9,13 +9,13 @@
           <div class="relative flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
             <img
               src="/uploads/liquid_glass_logo.png"
-              alt="КЕДР СГТУ"
+              alt="СМС СГТУ"
               class="h-7 sm:h-8 md:h-9 w-auto object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.12)] dark:drop-shadow-[0_2px_14px_rgba(255,255,255,0.22)] select-none"
             >
           </div>
           <div class="flex flex-col justify-center">
             <div class="flex items-center space-x-1.5 leading-none">
-              <span class="font-bold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white whitespace-nowrap">КЕДР СГТУ</span>
+              <span class="font-bold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white whitespace-nowrap">СМС СГТУ</span>
               <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/10 dark:bg-[#fcb4d5]/15 text-orange-600 dark:text-[#fcb4d5] uppercase tracking-wider hidden sm:inline-block">МЕДИА</span>
             </div>
             <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-normal hidden lg:block leading-none mt-1">Студенческий медиацентр</span>
