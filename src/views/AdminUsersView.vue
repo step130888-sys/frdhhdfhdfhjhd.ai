@@ -9,7 +9,7 @@
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
-          <h1 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider holo-text">
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Панель Главного Администратора (Уровень 4)
           </h1>
         </div>
@@ -27,19 +27,17 @@
     </div>
 
     <!-- TELEGRAM BOT CONFIGURATION CARD -->
-    <div class="mb-10 cyber-glass rounded-3xl p-6 border border-orange-200 dark:border-[#fcb4d5]/25 shadow-sm dark:shadow-2xl relative overflow-hidden bg-white/80 dark:bg-[#0A0A0E]/80">
-      <div class="absolute -top-12 -right-12 w-40 h-40 bg-orange-500/10 dark:bg-[#fcb4d5]/12 rounded-full blur-3xl pointer-events-none"></div>
-
+    <div class="mb-10 cyber-glass rounded-3xl p-6 border border-slate-200 dark:border-white/10 shadow-xs relative overflow-hidden bg-white dark:bg-[#0D0E12]">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-white/10">
         <div class="flex items-center space-x-3.5">
-          <div class="w-12 h-12 rounded-2xl bg-[#0088cc]/10 dark:bg-[#0088cc]/20 border border-[#0088cc]/25 flex items-center justify-center text-[#0088cc] flex-shrink-0 shadow-md">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div class="w-11 h-11 rounded-2xl bg-[#0088cc]/10 dark:bg-[#0088cc]/20 border border-[#0088cc]/25 flex items-center justify-center text-[#0088cc] flex-shrink-0 shadow-xs">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
           </div>
           <div>
             <div class="flex items-center space-x-2.5">
-              <h2 class="text-base font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              <h2 class="text-base font-bold text-slate-900 dark:text-white">
                 Интеграция с Telegram-ботом руководства
               </h2>
               <span
@@ -223,7 +221,7 @@
       </div>
 
       <!-- Search, Filter & Sorting Controls (Requirement 7) -->
-      <div class="mb-4 p-3.5 rounded-2xl bg-white dark:bg-[#0E0E14] border border-slate-200 dark:border-[#fcb4d5]/15 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+      <div class="mb-4 p-3.5 rounded-2xl cyber-glass border border-slate-200/80 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
         <!-- Search Input -->
         <div class="relative flex-1">
           <svg class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -293,10 +291,10 @@
         </div>
       </div>
 
-      <div class="cyber-glass rounded-3xl overflow-hidden border border-slate-200 dark:border-[#fcb4d5]/20 shadow-sm dark:shadow-2xl bg-white dark:bg-[#0E0E14]">
+      <div class="cyber-glass rounded-3xl overflow-hidden border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-2xl">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 dark:bg-[#14141A] border-b border-slate-200 dark:border-[#fcb4d5]/15 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
+            <thead class="bg-white/40 dark:bg-white/[0.04] backdrop-blur-md border-b border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
               <tr>
                 <th class="py-3.5 px-4">Пользователь</th>
                 <th class="py-3.5 px-4">Цех</th>

@@ -1,8 +1,8 @@
 <template>
-  <div class="cyber-glass rounded-3xl flex flex-col h-[560px] border border-slate-200 dark:border-white/10 overflow-hidden shadow-xl transition-colors bg-white dark:bg-[#0c0c10]">
+  <div class="cyber-glass rounded-3xl flex flex-col h-[560px] border border-slate-200/80 dark:border-white/10 overflow-hidden shadow-xl transition-colors">
     
     <!-- Chat Header -->
-    <div class="px-5 py-3.5 border-b border-black/10 dark:border-white/10 bg-slate-50/80 dark:bg-[#101016] flex items-center justify-between flex-shrink-0 transition-colors">
+    <div class="px-5 py-3.5 border-b border-black/[0.05] dark:border-white/[0.08] bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl flex items-center justify-between flex-shrink-0 transition-colors">
       <div class="flex items-center space-x-3">
         <div class="w-8 h-8 rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/15 border border-orange-200 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5] shadow-xs">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -104,10 +104,10 @@
 
           <!-- Message Bubble -->
           <div
-            class="px-4 py-2.5 rounded-2xl text-xs leading-relaxed break-words shadow-sm transition-all font-medium"
+            class="px-4 py-2.5 rounded-2xl text-xs leading-relaxed break-words shadow-xs transition-all font-medium"
             :class="c.is_me
-              ? 'bg-gradient-to-r from-orange-500 to-amber-500 dark:from-[#fcb4d5] dark:to-[#f9a8d4] text-white dark:text-black rounded-tr-none shadow-md font-bold'
-              : 'bg-white dark:bg-[#161620] border border-black/10 dark:border-white/10 text-slate-800 dark:text-slate-200 rounded-tl-none'"
+              ? 'bg-orange-500 dark:bg-[#fcb4d5] text-white dark:text-[#0f0f14] rounded-tr-none font-semibold'
+              : 'bg-white dark:bg-[#14151D] border border-black/[0.06] dark:border-white/[0.08] text-slate-800 dark:text-slate-200 rounded-tl-none'"
           >
             {{ c.message }}
           </div>
@@ -118,21 +118,21 @@
     </div>
 
     <!-- Quick Phrases Toolbar -->
-    <div class="px-4 py-2 bg-slate-100/70 dark:bg-[#101016] border-t border-black/10 dark:border-white/10 flex items-center space-x-2 overflow-x-auto text-[11px] no-scrollbar transition-colors">
-      <span class="text-slate-400 font-bold uppercase text-[9px] flex-shrink-0 tracking-wider">Быстрый ответ:</span>
+    <div class="px-4 py-2 bg-slate-50 dark:bg-[#111219] border-t border-black/[0.06] dark:border-white/[0.07] flex items-center space-x-1.5 overflow-x-auto text-[11px] no-scrollbar transition-colors">
+      <span class="text-slate-400 font-semibold uppercase text-[9px] flex-shrink-0 tracking-wider">Быстрый ответ:</span>
       <button
         v-for="phrase in quickPhrases"
         :key="phrase"
         type="button"
         @click="sendQuickPhrase(phrase)"
-        class="flex-shrink-0 px-2.5 py-1 rounded-lg bg-white dark:bg-white/5 hover:bg-orange-50 dark:hover:bg-[#fcb4d5]/20 text-slate-700 dark:text-slate-300 hover:text-orange-600 dark:hover:text-[#fcb4d5] border border-black/10 dark:border-white/10 transition-all text-[11px] font-medium shadow-2xs"
+        class="flex-shrink-0 px-2.5 py-1 rounded-lg bg-white dark:bg-[#181924] hover:bg-orange-50 dark:hover:bg-[#fcb4d5]/15 text-slate-700 dark:text-slate-300 hover:text-orange-600 dark:hover:text-[#fcb4d5] border border-black/[0.06] dark:border-white/[0.08] transition-all text-[11px] font-medium shadow-2xs active:scale-95"
       >
         {{ phrase }}
       </button>
     </div>
 
     <!-- Ergonomic Input Form -->
-    <div class="p-3 md:p-4 border-t border-black/10 dark:border-white/10 bg-white dark:bg-[#0c0c10] transition-colors">
+    <div class="p-3 md:p-4 border-t border-black/[0.06] dark:border-white/[0.07] bg-white dark:bg-[#0D0E12] transition-colors">
       <form @submit.prevent="submitMessage" class="flex items-center gap-2">
         <div class="relative flex-1">
           <input
@@ -140,7 +140,7 @@
             @keydown.enter.exact.prevent="submitMessage"
             type="text"
             placeholder="Напишите сообщение в чат задачи... (Enter для отправки)"
-            class="w-full text-xs px-4 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-[#fcb4d5]/20 transition-all"
+            class="w-full text-xs px-4 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-slate-50 dark:bg-[#14151D] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-[#fcb4d5]/20 transition-all"
           />
         </div>
         

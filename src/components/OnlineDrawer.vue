@@ -7,27 +7,27 @@
       class="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-50 transition-opacity"
     ></div>
 
-    <!-- Sliding Panel -->
+    <!-- Sliding Panel (Liquid Glass Apple Drawer) -->
     <div
-      class="fixed top-0 right-0 h-full w-80 md:w-96 bg-white dark:bg-[#0a0a0e] border-l border-slate-200 dark:border-white/10 z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-out"
+      class="fixed top-0 right-0 h-full w-80 md:w-96 bg-white/75 dark:bg-[#090A0E]/80 backdrop-blur-3xl border-l border-white/60 dark:border-white/[0.08] z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-out"
       :class="isOnlineDrawerOpen ? 'translate-x-0' : 'translate-x-full'"
     >
       <!-- Header -->
-      <div class="p-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-slate-50 dark:bg-[#101016] transition-colors">
+      <div class="p-5 border-b border-black/[0.05] dark:border-white/[0.08] flex items-center justify-between bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl transition-colors">
         <div class="flex items-center space-x-2.5">
-          <span class="relative flex h-3 w-3">
+          <span class="relative flex h-2.5 w-2.5">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
           <div>
-            <h3 class="text-sm font-black text-slate-800 dark:text-white tracking-wide">Кто сейчас в сети</h3>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white tracking-tight">Кто сейчас в сети</h3>
             <p class="text-[11px] text-slate-500 dark:text-slate-400">Активность за последние 5 минут</p>
           </div>
         </div>
 
         <button
           @click="toggleOnlineDrawer"
-          class="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/5 transition-all cursor-pointer"
+          class="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/5 transition-all cursor-pointer active:scale-95"
         >
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6 6 18M6 6l12 12"/>
@@ -36,7 +36,7 @@
       </div>
 
       <!-- Users List -->
-      <div class="flex-1 overflow-y-auto p-4 space-y-2.5 bg-slate-50/50 dark:bg-transparent">
+      <div class="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50/30 dark:bg-transparent">
         <div v-if="onlineUsers.length === 0" class="text-center py-12 text-slate-400 text-xs">
           Никого нет в сети
         </div>
@@ -46,7 +46,7 @@
           :key="u.id"
           :to="`/profile/${u.id}`"
           @click="toggleOnlineDrawer"
-          class="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-[#14141c] hover:bg-orange-50/20 dark:hover:bg-[#1a1a24] border border-slate-200 dark:border-white/10 hover:border-orange-500 dark:hover:border-[#fcb4d5] shadow-xs transition-all group"
+          class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#14151D] hover:bg-black/[0.02] dark:hover:bg-white/[0.03] border border-black/[0.06] dark:border-white/[0.08] hover:border-orange-500/40 dark:hover:border-[#fcb4d5]/40 shadow-2xs transition-all group active:scale-98"
         >
           <div class="flex items-center space-x-3 min-w-0">
             <!-- Avatar with pulse ring -->

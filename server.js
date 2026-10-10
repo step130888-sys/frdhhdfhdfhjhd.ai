@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path');
@@ -73,16 +74,24 @@ async function startServer() {
 
   // Start bots
   try {
-    if (telegramService && typeof telegramService.initTelegramBot === 'function') {
-      telegramService.initTelegramBot();
+    if (telegramService) {
+      if (typeof telegramService.initTelegramBot === 'function') {
+        telegramService.initTelegramBot();
+      } else if (telegramService.botWorker && typeof telegramService.botWorker.start === 'function') {
+        telegramService.botWorker.start();
+      }
     }
   } catch (e) {
     console.error('[Telegram] Ошибка старта бота:', e.message);
   }
 
   try {
-    if (vkService && typeof vkService.initVkBot === 'function') {
-      vkService.initVkBot();
+    if (vkService) {
+      if (typeof vkService.initVkBot === 'function') {
+        vkService.initVkBot();
+      } else if (vkService.botWorker && typeof vkService.botWorker.start === 'function') {
+        vkService.botWorker.start();
+      }
     }
   } catch (e) {
     console.error('[VK] Ошибка старта бота:', e.message);

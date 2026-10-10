@@ -9,7 +9,7 @@
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
           </div>
-          <h1 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider holo-text">
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Панель руководства медиацентра
           </h1>
         </div>
@@ -91,7 +91,7 @@
       </div>
 
       <!-- Search, Filter & Sorting Controls (Requirement 6) -->
-      <div class="mb-4 p-3.5 rounded-2xl bg-white dark:bg-[#0E0E14] border border-slate-200 dark:border-[#fcb4d5]/15 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+      <div class="mb-4 p-3.5 rounded-2xl cyber-glass border border-slate-200/80 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
         <!-- Search Input -->
         <div class="relative flex-1">
           <svg class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -152,10 +152,10 @@
       </div>
 
       <!-- Desktop & Tablet Table -->
-      <div class="cyber-glass rounded-3xl overflow-hidden border border-slate-200 dark:border-[#fcb4d5]/20 shadow-sm dark:shadow-2xl bg-white dark:bg-[#0E0E14]">
+      <div class="cyber-glass rounded-3xl overflow-hidden border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-2xl">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 dark:bg-[#14141A] border-b border-slate-200 dark:border-[#fcb4d5]/15 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
+            <thead class="bg-white/40 dark:bg-white/[0.04] backdrop-blur-md border-b border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
               <tr>
                 <th class="py-3.5 px-4">Сотрудник</th>
                 <th class="py-3.5 px-4">Цех</th>

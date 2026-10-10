@@ -4,10 +4,10 @@
     class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md"
     @click.self="$emit('close')"
   >
-    <div class="cyber-glass max-w-2xl w-full max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden bg-white dark:bg-[#0c0c10] animate-in fade-in zoom-in-95 duration-200">
+    <div class="cyber-glass max-w-2xl w-full max-h-[92vh] flex flex-col rounded-3xl border border-white/60 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
       
       <!-- Modal Header -->
-      <div class="px-6 py-4 bg-slate-50 dark:bg-[#101016] border-b border-slate-200 dark:border-white/10 flex items-center justify-between flex-shrink-0">
+      <div class="px-6 py-4 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl border-b border-black/[0.05] dark:border-white/[0.08] flex items-center justify-between flex-shrink-0">
         <div class="flex items-center space-x-3">
           <div class="w-8 h-8 rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 border border-orange-500/20 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5]">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

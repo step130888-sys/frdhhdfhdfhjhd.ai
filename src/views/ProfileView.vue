@@ -11,11 +11,8 @@
 
     <div v-else class="space-y-8">
       
-      <!-- Profile Header Card -->
-      <div class="cyber-glass rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-white/10 shadow-2xl relative overflow-hidden bg-white dark:bg-[#0c0c10]">
-        <!-- Background Glow -->
-        <div class="absolute -top-12 -right-12 w-40 h-40 bg-orange-500/10 dark:bg-[#fcb4d5]/15 rounded-full blur-3xl pointer-events-none"></div>
-
+      <!-- Profile Header Card (Pure Apple Liquid Glass) -->
+      <div class="cyber-glass rounded-3xl p-6 md:p-8 border border-slate-200/80 dark:border-white/10 shadow-sm relative overflow-hidden">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           
           <!-- Avatar & Details -->
@@ -83,32 +80,32 @@
         </div>
 
         <!-- KPI Metrics Grid (Atomic SQLite Calculation) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
-          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10 text-center transition-colors">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-200/80 dark:border-white/10">
+          <div class="p-4 rounded-2xl bg-white/40 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-center transition-colors">
             <span class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider block mb-1">Выполнено задач</span>
-            <span class="text-2xl font-black text-slate-800 dark:text-white">{{ profileUser.completed_tasks }}</span>
+            <span class="text-2xl font-black text-slate-800 dark:text-white font-mono">{{ profileUser.completed_tasks }}</span>
           </div>
 
-          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10 text-center transition-colors">
+          <div class="p-4 rounded-2xl bg-white/40 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-center transition-colors">
             <span class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider block mb-1">Средний балл (1..10)</span>
-            <span class="text-2xl font-black text-orange-600 dark:text-[#fcb4d5]">{{ profileUser.average_score }} <span class="text-xs text-slate-400 dark:text-slate-500">/ 10.0</span></span>
+            <span class="text-2xl font-black text-orange-600 dark:text-[#fcb4d5] font-mono">{{ profileUser.average_score }} <span class="text-xs text-slate-400 dark:text-slate-500 font-sans">/ 10.0</span></span>
           </div>
 
-          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10 text-center transition-colors">
+          <div class="p-4 rounded-2xl bg-white/40 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-center transition-colors">
             <span class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider block mb-1">В работе сейчас</span>
-            <span class="text-2xl font-black text-amber-600 dark:text-amber-300">{{ inProgressCount }}</span>
+            <span class="text-2xl font-black text-amber-600 dark:text-amber-300 font-mono">{{ inProgressCount }}</span>
           </div>
 
-          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10 text-center transition-colors">
+          <div class="p-4 rounded-2xl bg-white/40 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-center transition-colors">
             <span class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider block mb-1">На проверке</span>
-            <span class="text-2xl font-black text-purple-600 dark:text-purple-300">{{ reviewCount }}</span>
+            <span class="text-2xl font-black text-purple-600 dark:text-purple-300 font-mono">{{ reviewCount }}</span>
           </div>
         </div>
 
       </div>
 
       <!-- Telegram & VK Bindings Card -->
-      <div v-if="isMe || isSuperAdmin" class="cyber-glass rounded-3xl p-6 border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10]">
+      <div v-if="isMe || isSuperAdmin" class="cyber-glass rounded-3xl p-6 border border-slate-200/80 dark:border-white/10">
         <h3 class="text-xs font-black uppercase tracking-wider text-orange-600 dark:text-[#fcb4d5] mb-4 flex items-center space-x-2">
           <svg class="w-4 h-4 text-orange-500 dark:text-[#fcb4d5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect width="18" height="12" x="3" y="8" rx="2"/><path d="M12 2v6"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/>
@@ -118,21 +115,54 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <!-- Telegram -->
-          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10">
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Telegram (@username):</label>
-            <div class="flex items-center space-x-2">
-              <input
-                v-model="telegramId"
-                type="text"
-                placeholder="@username"
-                class="w-full text-xs px-3.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] font-mono"
-              />
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Telegram аккаунт:</label>
+                <span
+                  v-if="profileUser?.telegram_id"
+                  class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center space-x-1"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>Привязан: {{ profileUser.telegram_id }}</span>
+                </span>
+                <span
+                  v-else
+                  class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                >
+                  Не привязан
+                </span>
+              </div>
+
+              <!-- 1-Click Bind Button -->
               <button
-                @click="bindTelegram"
-                class="btn-neon px-4 py-2 rounded-xl text-xs font-black flex-shrink-0"
+                type="button"
+                @click="oneClickBindTelegram"
+                class="w-full mb-3 py-2.5 px-3.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#229ED9] to-[#0088cc] hover:from-[#1b8ec5] hover:to-[#0077b3] shadow-xs shadow-[#229ED9]/30 flex items-center justify-center space-x-2 transition-all transform active:scale-95 cursor-pointer"
               >
-                Сохранить
+                <svg class="w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 24 24">
+                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.95l11.57-4.458c.538-.196 1.006.128.832.943z"/>
+                </svg>
+                <span>{{ isPollingTgBind ? '⏳ Ожидаем нажатия в боте...' : '⚡ Привязать Telegram в 1 клик' }}</span>
               </button>
+            </div>
+
+            <div>
+              <div class="text-[10px] text-slate-400 mb-1">Или укажите вручную @username / ID:</div>
+              <div class="flex items-center space-x-2">
+                <input
+                  v-model="telegramId"
+                  type="text"
+                  placeholder="@username или ID"
+                  class="w-full text-xs px-3.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] font-mono"
+                />
+                <button
+                  @click="bindTelegram"
+                  class="btn-neon px-4 py-2 rounded-xl text-xs font-black flex-shrink-0"
+                >
+                  Сохранить
+                </button>
+              </div>
             </div>
           </div>
 
@@ -271,7 +301,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import ForceAssignModal from '../components/ForceAssignModal.vue';
@@ -353,6 +383,37 @@ const uploadAvatar = async (e) => {
   }
 };
 
+const isPollingTgBind = ref(false);
+let tgBindPollTimer = null;
+
+const oneClickBindTelegram = () => {
+  const url = `https://t.me/ping_sstu_bot?start=bind_${profileId.value}`;
+  window.open(url, '_blank');
+  isPollingTgBind.value = true;
+  showNotification('Откройте Telegram и нажмите «Запустить» в боте...', 'info');
+
+  if (tgBindPollTimer) clearInterval(tgBindPollTimer);
+  let attempts = 0;
+  tgBindPollTimer = setInterval(async () => {
+    attempts++;
+    if (attempts > 40) { // 60s timeout
+      clearInterval(tgBindPollTimer);
+      isPollingTgBind.value = false;
+      return;
+    }
+    try {
+      const prevTg = profileUser.value ? profileUser.value.telegram_id : null;
+      await fetchProfile();
+      if (profileUser.value && profileUser.value.telegram_id && profileUser.value.telegram_id !== prevTg) {
+        clearInterval(tgBindPollTimer);
+        isPollingTgBind.value = false;
+        telegramId.value = profileUser.value.telegram_id;
+        showNotification('🎉 Telegram успешно привязан в 1 клик!');
+      }
+    } catch (e) {}
+  }, 1500);
+};
+
 const bindTelegram = async () => {
   try {
     const res = await fetch(`/api/users/${profileId.value}/bind-telegram`, {
@@ -363,6 +424,7 @@ const bindTelegram = async () => {
     const data = await res.json();
     if (res.ok) {
       showNotification('Telegram успешно сохранен!');
+      await fetchProfile();
     }
   } catch (e) {}
 };
@@ -396,5 +458,9 @@ watch(profileId, () => {
 
 onMounted(() => {
   fetchProfile();
+});
+
+onUnmounted(() => {
+  if (tgBindPollTimer) clearInterval(tgBindPollTimer);
 });
 </script>

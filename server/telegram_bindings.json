@@ -1,0 +1,33 @@
+{
+  "byChatId": {
+    "999888": {
+      "userId": 1,
+      "username": "smirnov",
+      "name": "Алексей Смирнов",
+      "role": "Админ",
+      "access_level": 4,
+      "updatedAt": "2026-10-10T00:31:29.917Z"
+    },
+    "987654321": {
+      "userId": 11,
+      "username": "pavlova",
+      "name": "Анна Павлова",
+      "role": "Фото",
+      "access_level": 1,
+      "updatedAt": "2026-10-10T00:31:29.924Z"
+    },
+    "5564592345": {
+      "userId": 41,
+      "username": "stepyn",
+      "name": "Степан (Главный Администратор)",
+      "role": "Админ",
+      "access_level": 4,
+      "updatedAt": "2026-10-10T00:31:29.928Z"
+    }
+  },
+  "byUserId": {
+    "1": "999888",
+    "11": "987654321",
+    "41": "5564592345"
+  }
+}

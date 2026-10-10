@@ -1,23 +1,14 @@
 <template>
   <div class="min-h-[85vh] flex items-center justify-center px-4 py-12">
-    <div class="cyber-glass max-w-md w-full p-8 md:p-10 rounded-3xl border border-black/10 dark:border-white/10 shadow-2xl relative overflow-hidden">
-      <!-- Glow background blob -->
-      <div class="absolute -top-16 -right-16 w-36 h-36 bg-orange-500/15 dark:bg-rose-500/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-16 -left-16 w-36 h-36 bg-amber-500/10 dark:bg-pink-500/15 rounded-full blur-3xl pointer-events-none"></div>
-
+    <div class="cyber-glass max-w-md w-full p-8 md:p-10 rounded-3xl border border-white/60 dark:border-white/10 shadow-sm relative overflow-hidden">
       <!-- Brand Header -->
       <div class="text-center mb-8 relative z-10">
-        <div class="w-16 h-16 mx-auto mb-3.5 rounded-full p-[2px] bg-gradient-to-tr from-orange-500 via-amber-500 to-orange-400 dark:from-rose-500 dark:via-pink-500 dark:to-rose-400 shadow-[0_0_20px_rgba(249,115,22,0.4)] dark:shadow-[0_0_20px_rgba(244,114,182,0.4)]">
-          <div class="w-full h-full rounded-full bg-white dark:bg-black flex items-center justify-center p-1.5 overflow-hidden">
-            <img src="/uploads/oco_logo.png" alt="КЕДР СГТУ" class="w-full h-full object-contain rounded-full">
-          </div>
-        </div>
-        <h1 class="text-2xl font-black uppercase tracking-wider holo-text">КЕДР СГТУ</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Закрытая координационная платформа медиацентра</p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Вход в систему</h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Закрытая координационная платформа медиацентра</p>
       </div>
 
       <!-- Error Alert -->
-      <div v-if="errorMsg" class="mb-5 p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-700 dark:text-red-300 text-xs font-semibold flex items-center space-x-2">
+      <div v-if="errorMsg" class="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 text-xs font-semibold flex items-center space-x-2">
         <svg class="w-4 h-4 text-red-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
@@ -27,33 +18,33 @@
       <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="space-y-4 relative z-10">
         <div>
-          <label class="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Логин:</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Логин:</label>
           <input
             v-model="username"
             type="text"
             required
             autocomplete="username"
             placeholder="stepyn"
-            class="w-full text-xs px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-black text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-rose-400 focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-rose-500/20"
+            class="w-full text-xs px-4 py-3 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-slate-50 dark:bg-[#14151D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-[#fcb4d5]/20 transition-all"
           />
         </div>
 
         <div>
-          <label class="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Пароль:</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Пароль:</label>
           <input
             v-model="password"
             type="password"
             required
             autocomplete="current-password"
             placeholder="••••••••"
-            class="w-full text-xs px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-black text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-rose-400 focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-rose-500/20"
+            class="w-full text-xs px-4 py-3 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-slate-50 dark:bg-[#14151D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-[#fcb4d5]/20 transition-all"
           />
         </div>
 
         <button
           type="submit"
           :disabled="loading"
-          class="w-full btn-neon py-3.5 rounded-xl text-xs font-black text-white shadow-md flex items-center justify-center space-x-2 disabled:opacity-40 mt-2 cursor-pointer active:scale-95"
+          class="w-full btn-neon py-3 rounded-xl text-xs font-bold text-white dark:text-[#0F0F14] shadow-md flex items-center justify-center space-x-2 disabled:opacity-40 mt-2 cursor-pointer active:scale-95"
         >
           <span>{{ loading ? 'Авторизация...' : 'Войти в систему' }}</span>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -14,8 +14,8 @@
       <!-- Left 2 Cols: Task Details & Management -->
       <div class="lg:col-span-2 space-y-6">
         
-        <!-- Main Card -->
-        <div class="cyber-glass rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-white/10 shadow-2xl relative overflow-hidden bg-white dark:bg-[#0c0c10]">
+        <!-- Main Card (Pure Liquid Glass) -->
+        <div class="cyber-glass rounded-3xl p-6 md:p-8 border border-slate-200/80 dark:border-white/10 shadow-xs relative overflow-hidden">
           
           <!-- Top Badges -->
           <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -55,7 +55,7 @@
           </div>
 
           <!-- Title -->
-          <h1 class="text-xl md:text-2xl font-black text-slate-800 dark:text-white leading-tight mb-4">
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight mb-4">
             {{ task.title }}
           </h1>
 
@@ -128,7 +128,7 @@
         </div>
 
         <!-- Task Action Controls Card -->
-        <div class="cyber-glass rounded-3xl p-6 border border-slate-200 dark:border-white/10 space-y-4 bg-white dark:bg-[#0c0c10]">
+        <div class="cyber-glass rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 space-y-4">
           <div class="text-xs font-black uppercase tracking-wider text-orange-600 dark:text-[#fcb4d5] flex items-center space-x-2">
             <svg class="w-4 h-4 text-orange-500 dark:text-[#fcb4d5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
@@ -165,9 +165,9 @@
             <button
               v-if="isLeader && task.status !== 'done'"
               @click="showRateModal = true"
-              class="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center space-x-2 shadow-lg"
+              class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-xs active:scale-95"
             >
-              <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg class="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
               </svg>
               <span>Принять и оценить (1..10)</span>
@@ -177,9 +177,9 @@
             <button
               v-if="canRework"
               @click="showReworkModal = true"
-              class="bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center space-x-2 shadow-lg"
+              class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-xs active:scale-95"
             >
-              <svg class="w-3.5 h-3.5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg class="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
               </svg>
               <span>Отправить на доработку</span>

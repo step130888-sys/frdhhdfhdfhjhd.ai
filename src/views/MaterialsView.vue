@@ -10,7 +10,7 @@
               <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
             </svg>
           </div>
-          <h1 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider holo-text">
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             База рабочих материалов
           </h1>
         </div>
@@ -23,7 +23,7 @@
       <button
         v-if="isLeader"
         @click="showUploadModal = true"
-        class="btn-neon px-5 py-2.5 rounded-2xl text-xs font-black shadow-xl flex items-center justify-center space-x-2 flex-shrink-0"
+        class="btn-neon px-5 py-2.5 rounded-2xl text-xs font-bold shadow-md flex items-center justify-center space-x-2 flex-shrink-0"
       >
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
@@ -33,8 +33,7 @@
     </div>
 
     <!-- VK BOT INTEGRATION CARD FOR PARTICIPANTS (Requirement 10) -->
-    <div class="mb-8 cyber-glass rounded-3xl p-5 md:p-6 border border-[#2787F5]/30 dark:border-white/10 shadow-sm dark:shadow-2xl relative overflow-hidden bg-white/80 dark:bg-[#0c0c10]">
-      <div class="absolute -top-12 -right-12 w-36 h-36 bg-[#2787F5]/10 dark:bg-[#2787F5]/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="mb-8 cyber-glass rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-white/10 shadow-xs relative overflow-hidden">
 
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="flex items-start md:items-center space-x-3.5">
@@ -75,7 +74,7 @@
             </a>
             <button
               @click="startEditVk"
-              class="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 px-3 py-2 rounded-xl transition-all"
+              class="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 px-3 py-2 rounded-xl transition-all cursor-pointer"
             >
               Изменить
             </button>
@@ -92,7 +91,7 @@
             <button
               type="submit"
               :disabled="savingVk"
-              class="btn-cyan text-xs px-3.5 py-2 rounded-xl font-bold transition-all disabled:opacity-40 flex items-center space-x-1"
+              class="btn-cyan text-xs px-3.5 py-2 rounded-xl font-bold transition-all disabled:opacity-40 flex items-center space-x-1 cursor-pointer"
             >
               <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               <span>{{ savingVk ? '...' : 'Привязать' }}</span>
@@ -101,7 +100,7 @@
               v-if="editingVk"
               type="button"
               @click="editingVk = false"
-              class="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-white px-2 py-1"
+              class="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-white px-2 py-1 cursor-pointer"
             >
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 6 6 18M6 6l12 12"/>
@@ -112,48 +111,41 @@
       </div>
     </div>
 
-    <!-- Direction Tabs with SQLite Counts -->
-    <div class="mb-6 flex flex-wrap gap-2 items-center">
+    <!-- Direction Tabs with Apple Animated Liquid Glass Pill Dock -->
+    <div class="mb-6 flex flex-wrap gap-2.5 items-center">
       <span class="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 uppercase tracking-wider text-[11px]">Цех:</span>
-      <button
-        v-for="d in ['Все', 'Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ']"
-        :key="d"
-        @click="selectedDirection = (d === 'Все' ? '' : d)"
-        class="px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center space-x-1.5"
-        :class="(selectedDirection === '' && d === 'Все') || selectedDirection === d
-          ? 'bg-gradient-to-r from-orange-500 to-amber-500 dark:from-[#fcb4d5] dark:to-[#f9a8d4] text-white dark:text-black border-transparent shadow-sm'
-          : 'bg-white dark:bg-[#14141c] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-orange-500 dark:hover:border-[#fcb4d5] shadow-xs'"
-      >
-        <span>{{ d }}</span>
-        <span class="text-[10px] px-1.5 py-0.2 rounded-full font-mono" :class="(selectedDirection === '' && d === 'Все') || selectedDirection === d ? 'bg-black/30 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300'">
-          {{ d === 'Все' ? totalCount : (counts[d] || 0) }}
-        </span>
-      </button>
+      <AnimatedPills
+        v-model="selectedDirection"
+        :items="directionTabs"
+        variant="glass"
+        size="sm"
+      />
     </div>
 
-    <!-- Materials Grid -->
-    <div v-if="loading" class="text-center py-20 text-slate-500 dark:text-slate-400 text-xs">
-      <div class="animate-spin w-8 h-8 border-2 border-orange-500 dark:border-[#fcb4d5] border-t-transparent rounded-full mx-auto mb-3"></div>
-      Загрузка материалов...
-    </div>
-
-    <div v-else-if="materials.length === 0" class="cyber-glass rounded-3xl p-12 text-center text-slate-500 dark:text-slate-400 max-w-md mx-auto border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#0c0c10]">
-      <div class="w-16 h-16 rounded-2xl bg-orange-50 dark:bg-[#fcb4d5]/15 border border-orange-200 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5] mx-auto mb-4">
-        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
-        </svg>
+    <!-- Materials Grid Transition -->
+    <transition name="dept-swap" mode="out-in">
+      <div v-if="loading" key="loading" class="text-center py-20 text-slate-500 dark:text-slate-400 text-xs">
+        <div class="animate-spin w-8 h-8 border-2 border-orange-500 dark:border-[#fcb4d5] border-t-transparent rounded-full mx-auto mb-3"></div>
+        Загрузка материалов...
       </div>
-      <div class="text-sm font-extrabold text-slate-900 dark:text-white mb-1">Материалов не найдено</div>
-      <p class="text-xs text-slate-500 dark:text-slate-400">
-        По выбранным фильтрам пока нет загруженных файлов или ссылок.
-      </p>
-    </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-      <div
-        v-for="m in materials"
+      <div v-else-if="materials.length === 0" key="empty" class="cyber-glass rounded-3xl p-12 text-center text-slate-500 dark:text-slate-400 max-w-md mx-auto border border-slate-200 dark:border-white/10">
+        <div class="w-16 h-16 rounded-2xl bg-orange-50 dark:bg-[#fcb4d5]/15 border border-orange-200 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5] mx-auto mb-4">
+          <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+          </svg>
+        </div>
+        <div class="text-sm font-extrabold text-slate-900 dark:text-white mb-1">Материалов не найдено</div>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          По выбранным фильтрам пока нет загруженных файлов или ссылок.
+        </p>
+      </div>
+
+      <div v-else :key="'materials-' + selectedDirection" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div
+          v-for="m in materials"
         :key="m.id"
-        class="cyber-glass-card rounded-2xl p-5 flex flex-col justify-between bg-white dark:bg-[#14141c] border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-md dark:shadow-xl transition-all"
+        class="cyber-glass-card rounded-2xl p-5 flex flex-col justify-between border border-slate-200/80 dark:border-white/10 shadow-sm hover:shadow-md dark:shadow-xl transition-all"
       >
         <div>
           <!-- Direction and Category -->
@@ -204,10 +196,11 @@
         </div>
       </div>
     </div>
+    </transition>
 
     <!-- Upload Modal (Leadership only) -->
     <div v-if="showUploadModal" class="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div class="cyber-glass rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10]">
+      <div class="cyber-glass rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-white/60 dark:border-white/10 backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
         <div class="flex items-center space-x-3 mb-2">
           <div class="w-8 h-8 rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/15 border border-orange-200 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5]">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -309,8 +302,9 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
+import AnimatedPills from '../components/AnimatedPills.vue';
 
 const authStore = useAuthStore();
 const { user, isLeader, showNotification } = authStore;
@@ -320,6 +314,15 @@ const counts = ref({});
 const totalCount = ref(0);
 const selectedDirection = ref('');
 const loading = ref(false);
+
+const directionTabs = computed(() => [
+  { label: 'Все', value: '', count: totalCount.value },
+  { label: 'Фото', value: 'Фото', count: counts.value['Фото'] || 0 },
+  { label: 'Дизайн', value: 'Дизайн', count: counts.value['Дизайн'] || 0 },
+  { label: 'Видео', value: 'Видео', count: counts.value['Видео'] || 0 },
+  { label: 'Моушен', value: 'Моушен', count: counts.value['Моушен'] || 0 },
+  { label: 'СММ', value: 'СММ', count: counts.value['СММ'] || 0 }
+]);
 
 // VK Connection State
 const vkInput = ref('');

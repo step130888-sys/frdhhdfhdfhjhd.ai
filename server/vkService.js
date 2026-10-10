@@ -40,6 +40,125 @@ function getGroupId() {
   return String(raw).replace(/[^\d]/g, '');
 }
 
+const VK_BINDINGS_PATH = path.join(__dirname, 'vk_bindings.json');
+
+function getVkBindings() {
+  if (fs.existsSync(VK_BINDINGS_PATH)) {
+    try {
+      return JSON.parse(fs.readFileSync(VK_BINDINGS_PATH, 'utf8'));
+    } catch (e) {
+      console.error('[VkBot] Error reading vk_bindings.json:', e);
+    }
+  }
+  return { byVkId: {}, byUserId: {} };
+}
+
+function saveVkBindings(data) {
+  try {
+    fs.writeFileSync(VK_BINDINGS_PATH, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[VkBot] Error saving vk_bindings.json:', e);
+  }
+}
+
+function persistVkBinding(vkId, user) {
+  if (!vkId || !user || !user.id) return;
+  const strVkId = String(vkId).trim();
+  const strUserId = String(user.id);
+  const bindings = getVkBindings();
+  bindings.byVkId = bindings.byVkId || {};
+  bindings.byUserId = bindings.byUserId || {};
+
+  bindings.byVkId[strVkId] = {
+    userId: user.id,
+    username: user.username,
+    name: user.name,
+    role: user.role,
+    access_level: user.access_level,
+    updatedAt: new Date().toISOString()
+  };
+  bindings.byUserId[strUserId] = strVkId;
+  saveVkBindings(bindings);
+}
+
+function removeVkBinding(vkIdOrUserId) {
+  if (!vkIdOrUserId) return;
+  const key = String(vkIdOrUserId).trim();
+  const bindings = getVkBindings();
+  bindings.byVkId = bindings.byVkId || {};
+  bindings.byUserId = bindings.byUserId || {};
+
+  if (bindings.byVkId[key]) {
+    const uId = String(bindings.byVkId[key].userId);
+    delete bindings.byVkId[key];
+    delete bindings.byUserId[uId];
+  }
+  if (bindings.byUserId[key]) {
+    const vId = bindings.byUserId[key];
+    delete bindings.byUserId[key];
+    delete bindings.byVkId[vId];
+  }
+  saveVkBindings(bindings);
+}
+
+async function findLinkedVkUser(fromId) {
+  const strVkId = String(fromId).trim();
+
+  // 1. Direct query from SQLite
+  let user = await db.get(
+    `SELECT * FROM users 
+     WHERE vk_id = ? 
+        OR CAST(vk_id AS TEXT) = ?`,
+    [strVkId, strVkId]
+  );
+
+  // 2. Fallback to vk_bindings.json
+  if (!user) {
+    const bindings = getVkBindings();
+    const entry = bindings.byVkId && bindings.byVkId[strVkId];
+    if (entry && entry.userId) {
+      user = await db.get('SELECT * FROM users WHERE id = ?', [entry.userId]);
+      if (user) {
+        // Heal SQLite
+        try {
+          await db.run('UPDATE users SET vk_id = NULL WHERE vk_id = ? AND id != ?', [strVkId, user.id]);
+          await db.run('UPDATE users SET vk_id = ? WHERE id = ?', [strVkId, user.id]);
+          user.vk_id = strVkId;
+        } catch (e) {}
+      }
+    }
+  }
+
+  if (user && strVkId) {
+    persistVkBinding(strVkId, user);
+  }
+
+  return user;
+}
+
+async function syncVkBindings() {
+  try {
+    const usersWithVk = await db.all('SELECT * FROM users WHERE vk_id IS NOT NULL AND vk_id != ""');
+    for (const u of usersWithVk) {
+      persistVkBinding(u.vk_id, u);
+    }
+    const bindings = getVkBindings();
+    if (bindings.byVkId) {
+      for (const [vId, data] of Object.entries(bindings.byVkId)) {
+        if (data && data.userId && vId) {
+          const usr = await db.get('SELECT * FROM users WHERE id = ?', [data.userId]);
+          if (usr && !usr.vk_id) {
+            await db.run('UPDATE users SET vk_id = NULL WHERE vk_id = ? AND id != ?', [vId, usr.id]);
+            await db.run('UPDATE users SET vk_id = ? WHERE id = ?', [vId, usr.id]);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[VkBot] Sync VK bindings error:', e.message);
+  }
+}
+
 /**
  * Call VK API method
  */
@@ -374,8 +493,8 @@ async function handleIncomingMessage(message) {
 
   const btnAction = payload && payload.button ? payload.button : null;
 
-  // Find linked user
-  const user = await db.get('SELECT * FROM users WHERE vk_id = ?', [fromId]);
+  // Find linked user with persistent bindings & auto-heal
+  const user = await findLinkedVkUser(fromId);
 
   // Command: Account binding (/login username password or /bind username password)
   if (rawText.startsWith('/login') || rawText.startsWith('/bind')) {
@@ -391,7 +510,7 @@ async function handleIncomingMessage(message) {
     const username = parts[1].trim();
     const password = parts.slice(2).join(' ').trim();
 
-    const candidate = await db.get('SELECT * FROM users WHERE username = ?', [username]);
+    const candidate = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username.toLowerCase()]);
     if (!candidate || !db.verifyPassword(password, candidate.password_hash)) {
       await sendVkMessage(
         fromId,
@@ -400,11 +519,16 @@ async function handleIncomingMessage(message) {
       return;
     }
 
-    // Bind VK ID to user
+    // Bind VK ID to user with persistent sync
+    await db.run('UPDATE users SET vk_id = NULL WHERE vk_id = ? AND id != ?', [fromId, candidate.id]);
     await db.run('UPDATE users SET vk_id = ? WHERE id = ?', [fromId, candidate.id]);
+    candidate.vk_id = fromId;
+    persistVkBinding(fromId, candidate);
+
     await sendVkMessage(
       fromId,
-      `✅ Успешно! Аккаунт «${candidate.name}» (Цех: ${candidate.role}) привязан к вашему ВКонтакте.\n\nТеперь вы будете получать уведомления о задачах и можете проверять сроки прямо здесь!`
+      `✅ Успешно! Аккаунт «${candidate.name}» (Цех: ${candidate.role}) привязан к вашему ВКонтакте.\n\nТеперь вы будете получать уведомления о задачах и можете проверять сроки прямо здесь!`,
+      getMainKeyboard()
     );
     return;
   }
@@ -413,6 +537,8 @@ async function handleIncomingMessage(message) {
   if (cleanText === '/unlink' || cleanText === 'отвязать' || cleanText === 'выйти') {
     if (user) {
       await db.run('UPDATE users SET vk_id = NULL WHERE id = ?', [user.id]);
+      removeVkBinding(fromId);
+      removeVkBinding(user.id);
       await sendVkMessage(fromId, '👋 Ваш аккаунт успешно отвязан от бота.');
     } else {
       await sendVkMessage(fromId, 'У вас нет привязанного аккаунта.');
@@ -425,7 +551,7 @@ async function handleIncomingMessage(message) {
     const unlinkedHelp = [
       '👋 Приветствуем в боте Медиацентра ОСО СГТУ им. Гагарина Ю.А.!',
       '━━━━━━━━━━━━━━━━━━',
-      'Бот создан для просмотра ваших назначенных задач и получения уведомлений о дедлайнах.',
+      'Бот создан для просмотра ваших назначенных задач, горящих дедлайнов и личной статистики.',
       '',
       '🔑 Чтобы привязать ваш профиль, отправьте сообщение:',
       '/login <ваш_логин> <ваш_пароль>',
@@ -436,6 +562,25 @@ async function handleIncomingMessage(message) {
       'Либо укажите ваш VK ID на сайте в личном профиле.'
     ].join('\n');
     await sendVkMessage(fromId, unlinkedHelp);
+    return;
+  }
+
+  // Command: /start, начать, старт, /menu, меню
+  if (cleanText === '/start' || cleanText === 'начать' || cleanText === 'старт' || cleanText === '/menu' || cleanText === 'меню') {
+    const welcome = [
+      `👋 Здравствуйте, ${user.name}!`,
+      '━━━━━━━━━━━━━━━━━━',
+      `Вы успешно авторизованы в боте медиацентра «КЕДР СГТУ».`,
+      `Профиль: @${user.username || 'нет'} (Цех: ${user.role}, Уровень: ${user.access_level})`,
+      '',
+      '🔘 Используйте кнопки внизу экрана для быстрого доступа:',
+      '• 📋 «Мои задачи» — назначенные вам дела',
+      '• 🔥 «Горящие дедлайны» — срочные сроки сдачи',
+      '• 🟢 «Свободные задачи» — открытые задачи в контент-плане',
+      '• 📊 «Моя статистика» — личный рейтинг и продуктивность',
+      '• 👤 «Мой профиль» — информация об аккаунте'
+    ].join('\n');
+    await sendVkMessage(fromId, welcome, getMainKeyboard());
     return;
   }
 
@@ -631,13 +776,65 @@ async function handleIncomingMessage(message) {
     return;
   }
 
+  // Action: Personal Stats (📊 Моя статистика / Личная статистика)
+  const isStats = btnAction === 'my_stats' ||
+                  cleanText.includes('статистик') ||
+                  cleanText.includes('стата') ||
+                  cleanText === '/stats' ||
+                  cleanText === 'моя статистика' ||
+                  cleanText === 'личная статистика';
+
+  if (isStats) {
+    const inProgressCount = await db.get(
+      'SELECT COUNT(*) as c FROM tasks WHERE assigned_to_id = ? AND status = "in_progress"',
+      [user.id]
+    );
+    const reworkCount = await db.get(
+      'SELECT COUNT(*) as c FROM tasks WHERE assigned_to_id = ? AND status = "rework"',
+      [user.id]
+    );
+    const reviewCount = await db.get(
+      'SELECT COUNT(*) as c FROM tasks WHERE assigned_to_id = ? AND status = "review"',
+      [user.id]
+    );
+    const totalCompleted = user.completed_tasks || 0;
+    const avgScore = Number(user.average_score || 0).toFixed(1);
+
+    const levelTitles = {
+      1: 'Участник актива',
+      2: 'Глава направления',
+      3: 'Руководитель медиацентра',
+      4: 'Администратор системы'
+    };
+
+    const lines = [
+      `📊 ЛИЧНАЯ СТАТИСТИКА: ${user.name}`,
+      '━━━━━━━━━━━━━━━━━━',
+      `🏷️ Цех: ${user.role} (${levelTitles[user.access_level] || 'Участник'})`,
+      `🔑 Логин: @${user.username || 'нет'}`,
+      '',
+      `🏆 УСПЕШНОСТЬ И РЕЙТИНГ:`,
+      `⭐ Средний балл: ${avgScore} / 10.0`,
+      `✅ Выполнено задач: ${totalCompleted}`,
+      '',
+      `⏳ ТЕКУЩАЯ НАГРУЗКА:`,
+      `• В работе прямо сейчас: ${inProgressCount ? inProgressCount.c : 0}`,
+      `• На доработке (правки): ${reworkCount ? reworkCount.c : 0}`,
+      `• На проверке у руководства: ${reviewCount ? reviewCount.c : 0}`,
+      '━━━━━━━━━━━━━━━━━━',
+      '💡 Сдать работу или взять новые задачи можно на веб-платформе.'
+    ];
+
+    await sendVkMessage(fromId, lines.join('\n'));
+    return;
+  }
+
   // Action 3: My Profile (👤 Мой профиль)
   const isProfile = btnAction === 'my_profile' ||
                     cleanText.includes('профиль') ||
                     cleanText === 'мой профиль' ||
                     cleanText === '/profile' ||
                     cleanText === '/me' ||
-                    cleanText === 'статистика' ||
                     cleanText === 'мой аккаунт';
 
   if (isProfile) {
@@ -826,6 +1023,11 @@ class VkBotWorker {
 
 const botWorker = new VkBotWorker();
 
+async function initVkBot() {
+  await syncVkBindings();
+  botWorker.start();
+}
+
 module.exports = {
   getConfig,
   saveConfig,
@@ -842,5 +1044,11 @@ module.exports = {
   notifyTaskRework,
   notifyTaskDeadlineChanged,
   handleIncomingMessage,
-  botWorker
+  initVkBot,
+  botWorker,
+  persistVkBinding,
+  removeVkBinding,
+  findLinkedVkUser,
+  syncVkBindings,
+  getVkBindings
 };

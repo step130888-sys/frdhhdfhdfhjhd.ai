@@ -1,11 +1,8 @@
 <template>
   <div
     @click="goToTask"
-    class="cyber-glass-card rounded-2xl p-4 md:p-5 flex flex-col justify-between group cursor-pointer transition-all relative overflow-hidden"
+    class="cyber-glass-card rounded-2xl p-4 md:p-5 flex flex-col justify-between group cursor-pointer transition-all relative border border-black/[0.06] dark:border-white/[0.07] hover:border-orange-500/40 dark:hover:border-[#fcb4d5]/40 hover:-translate-y-0.5 shadow-xs hover:shadow-md"
   >
-    <!-- Ambient card accent glow on hover -->
-    <div class="absolute -top-16 -right-16 w-32 h-32 bg-orange-500/10 dark:bg-rose-500/10 rounded-full blur-2xl group-hover:bg-orange-500/20 dark:group-hover:bg-rose-500/20 transition-all pointer-events-none"></div>
-
     <div>
       <!-- Top Badges: Direction & Status -->
       <div class="flex items-center justify-between gap-2 mb-3">
@@ -37,14 +34,14 @@
 
       <!-- Task Title -->
       <div class="block transition-colors">
-        <h3 class="font-bold text-sm md:text-base text-slate-800 dark:text-slate-100 leading-snug line-clamp-2 mb-1.5 group-hover:text-orange-600 dark:group-hover:text-rose-300 transition-colors">
-          <span class="text-orange-600 dark:text-rose-400 font-mono text-xs font-semibold mr-1">#{{ task.id }}</span>
+        <h3 class="font-bold text-sm md:text-base text-slate-900 dark:text-white leading-snug line-clamp-2 mb-1.5 group-hover:text-orange-600 dark:group-hover:text-[#fcb4d5] transition-colors">
+          <span class="text-orange-600 dark:text-[#fcb4d5] font-mono text-xs font-semibold mr-1">#{{ task.id }}</span>
           {{ task.title }}
         </h3>
       </div>
 
       <!-- Description preview -->
-      <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed font-normal">
+      <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed font-normal">
         {{ task.description }}
       </p>
 
@@ -154,7 +151,7 @@ const getDirectionClasses = (dir) => {
 const getStatusClasses = (status) => {
   switch (status) {
     case 'open':
-      return 'bg-blue-50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30';
+      return 'bg-orange-50 dark:bg-[#fcb4d5]/15 text-orange-700 dark:text-[#fcb4d5] border-orange-200 dark:border-[#fcb4d5]/30';
     case 'in_progress':
       return 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30';
     case 'review':

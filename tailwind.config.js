@@ -52,8 +52,7 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', 'Montserrat', 'system-ui', 'sans-serif'],
-        script: ['Caveat', 'cursive'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'system-ui', 'sans-serif'],
       }
     },
   },

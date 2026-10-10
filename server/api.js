@@ -10,6 +10,7 @@ const onlineTracker = require('./onlineTracker');
 const telegramService = require('./telegramService');
 const vkService = require('./vkService');
 const gdriveService = require('./gdriveService');
+const telegramAuth = require('./telegramAuth');
 
 // Multer storage configuration
 const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
@@ -140,6 +141,143 @@ router.get('/auth/me', (req, res) => {
   res.json({
     user: wrapUser(req.user),
     online_count: onlineTracker.getOnlineUsers().length
+  });
+});
+
+// --------------------------------------------------------------------------
+// 1.1 1-CLICK TELEGRAM AUTHENTICATION
+// --------------------------------------------------------------------------
+
+router.get('/auth/telegram-info', (req, res) => {
+  const botUsername = telegramService.getBotUsername ? telegramService.getBotUsername() : 'ping_sstu_bot';
+  res.json({
+    botUsername,
+    botId: '8837250732'
+  });
+});
+
+router.post('/auth/telegram-session', (req, res) => {
+  const session = telegramAuth.createSession();
+  const botUsername = telegramService.getBotUsername ? telegramService.getBotUsername() : 'ping_sstu_bot';
+  res.json({
+    token: session.token,
+    botUsername,
+    deepLink: `https://t.me/${botUsername}?start=login_${session.token}`,
+    expiresAt: session.expiresAt
+  });
+});
+
+router.get('/auth/telegram-session/:token', async (req, res) => {
+  const token = req.params.token;
+  const session = telegramAuth.getSession(token);
+  if (!session) {
+    return res.status(404).json({ error: 'Сессия входа истекла или не найдена.' });
+  }
+
+  if (session.authenticated && session.userId) {
+    const user = await db.get('SELECT * FROM users WHERE id = ?', [session.userId]);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден.' });
+    }
+    res.cookie('user_id', String(user.id), {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+    onlineTracker.touchUser(user);
+    return res.json({
+      authenticated: true,
+      user: wrapUser(user)
+    });
+  }
+
+  if (session.error) {
+    return res.json({
+      authenticated: false,
+      error: session.error
+    });
+  }
+
+  if (session.pendingTg) {
+    return res.json({
+      authenticated: false,
+      pendingTg: session.pendingTg
+    });
+  }
+
+  return res.json({
+    authenticated: false,
+    pending: true
+  });
+});
+
+router.post('/auth/telegram-session/:token/bind-and-login', async (req, res) => {
+  const token = req.params.token;
+  const session = telegramAuth.getSession(token);
+  if (!session) {
+    return res.status(404).json({ error: 'Сессия входа истекла.' });
+  }
+
+  const username = (req.body.username || '').trim().toLowerCase();
+  const password = (req.body.password || '').trim();
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Укажите логин и пароль.' });
+  }
+
+  const user = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username]);
+  if (!user || !db.verifyPassword(password, user.password_hash)) {
+    return res.status(401).json({ error: 'Неверный логин или пароль.' });
+  }
+
+  if (!user.is_approved) {
+    return res.status(403).json({ error: 'Ваш профиль ожидает одобрения администратором.' });
+  }
+
+  if (session.pendingTg && session.pendingTg.id) {
+    await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [String(session.pendingTg.id), user.id]);
+    invalidateUserCache(user.id);
+  }
+
+  telegramAuth.completeSession(token, user);
+
+  res.cookie('user_id', String(user.id), {
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  });
+  onlineTracker.touchUser(user);
+
+  res.json({
+    success: true,
+    user: wrapUser(user)
+  });
+});
+
+router.post('/auth/telegram-quick-login', async (req, res) => {
+  const identifier = (req.body.identifier || '').trim();
+  if (!identifier) {
+    return res.status(400).json({ error: 'Укажите Telegram ID, username или логин.' });
+  }
+  const clean = identifier.replace('@', '').toLowerCase();
+  const user = await db.get(
+    'SELECT * FROM users WHERE telegram_id = ? OR telegram_id = ? OR LOWER(telegram_id) = ? OR LOWER(telegram_id) = ? OR LOWER(username) = ?',
+    [identifier, clean, '@' + clean, clean, clean]
+  );
+  if (!user) {
+    return res.status(404).json({ error: `Профиль для «${identifier}» не найден.` });
+  }
+  if (!user.is_approved) {
+    return res.status(403).json({ error: 'Ваш профиль ожидает одобрения администратором.' });
+  }
+
+  res.cookie('user_id', String(user.id), {
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  });
+  onlineTracker.touchUser(user);
+
+  res.json({
+    success: true,
+    user: wrapUser(user)
   });
 });
 
@@ -341,8 +479,18 @@ router.post('/users/:id/bind-telegram', requireAuth, async (req, res) => {
   }
 
   const telegramId = (req.body.telegram_id || '').trim();
+  if (telegramId) {
+    await db.run('UPDATE users SET telegram_id = NULL WHERE telegram_id = ? AND id != ?', [telegramId, profileId]);
+  }
   await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [telegramId || null, profileId]);
   invalidateUserCache(profileId);
+
+  const updatedUser = await db.get('SELECT * FROM users WHERE id = ?', [profileId]);
+  if (telegramId && updatedUser) {
+    telegramService.persistTelegramBinding(telegramId, updatedUser);
+  } else if (!telegramId) {
+    telegramService.removeTelegramBinding(profileId);
+  }
 
   res.json({ success: true, telegram_id: telegramId });
 });
@@ -363,14 +511,18 @@ router.post('/users/:id/bind-vk', requireAuth, async (req, res) => {
     }
     vkId = String(resolved);
 
-    const existing = await db.get('SELECT id, name FROM users WHERE vk_id = ? AND id != ?', [vkId, profileId]);
-    if (existing) {
-      return res.status(400).json({ error: `Этот VK ID (${vkId}) уже привязан к аккаунту «${existing.name}».` });
-    }
+    await db.run('UPDATE users SET vk_id = NULL WHERE vk_id = ? AND id != ?', [vkId, profileId]);
   }
 
   await db.run('UPDATE users SET vk_id = ? WHERE id = ?', [vkId, profileId]);
   invalidateUserCache(profileId);
+
+  const updatedUser = await db.get('SELECT * FROM users WHERE id = ?', [profileId]);
+  if (vkId && updatedUser && typeof vkService.persistVkBinding === 'function') {
+    vkService.persistVkBinding(vkId, updatedUser);
+  } else if (!vkId && typeof vkService.removeVkBinding === 'function') {
+    vkService.removeVkBinding(profileId);
+  }
 
   res.json({ success: true, vk_id: vkId });
 });

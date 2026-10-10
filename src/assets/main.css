@@ -11,135 +11,157 @@
 
 :root {
   color-scheme: light;
-  --bg-app: #FAFAFC;
-  --bg-card: rgba(255, 255, 255, 0.84);
+  --bg-app: #F5F7FA;
+  --bg-card: rgba(255, 255, 255, 0.68);
   --bg-card-solid: #FFFFFF;
-  --bg-card-glass: rgba(255, 255, 255, 0.80);
-  --bg-elevated: #FFF7ED;
-  --bg-input: #FFFFFF;
-  --border-subtle: rgba(0, 0, 0, 0.07);
-  --border-card: rgba(0, 0, 0, 0.08);
+  --bg-card-glass: rgba(255, 255, 255, 0.60);
+  --bg-elevated: rgba(255, 255, 255, 0.78);
+  --bg-input: rgba(255, 255, 255, 0.75);
+  --border-subtle: rgba(255, 255, 255, 0.45);
+  --border-card: rgba(255, 255, 255, 0.60);
+  --border-card-outer: rgba(0, 0, 0, 0.07);
   --border-focus: #F97316;
-  --text-primary: #18181B;
-  --text-secondary: #52525B;
-  --text-muted: #A1A1AA;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
   --color-brand: #F97316;
   --color-brand-hover: #EA580C;
   --color-accent: #FB923C;
   --color-rose-accent: #FCB4D5;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  --shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.95), 0 4px 20px -4px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.03);
-  --shadow-card-hover: inset 0 1px 0 0 rgba(255, 255, 255, 1), 0 14px 34px -6px rgba(249, 115, 22, 0.16), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-card: inset 0 1px 1px 0 rgba(255, 255, 255, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 10px 30px -10px rgba(0, 0, 0, 0.07), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 1), inset 0 0 0 1px rgba(255, 255, 255, 0.7), 0 16px 40px -8px rgba(249, 115, 22, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.05);
 }
 
 html.dark {
   color-scheme: dark;
-  --bg-app: #000000;
-  --bg-card: rgba(14, 14, 18, 0.80);
-  --bg-card-solid: #0A0A0D;
-  --bg-card-glass: rgba(10, 10, 14, 0.75);
-  --bg-elevated: #141419;
-  --bg-input: #060608;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-card: rgba(252, 180, 213, 0.15);
+  --bg-app: #08090C;
+  --bg-card: rgba(18, 20, 27, 0.65);
+  --bg-card-solid: #0D0E12;
+  --bg-card-glass: rgba(13, 15, 21, 0.58);
+  --bg-elevated: rgba(24, 27, 37, 0.72);
+  --bg-input: rgba(16, 18, 24, 0.7);
+  --border-subtle: rgba(255, 255, 255, 0.10);
+  --border-card: rgba(255, 255, 255, 0.12);
+  --border-card-outer: rgba(255, 255, 255, 0.06);
   --border-focus: #FCB4D5;
-  --text-primary: #FFFFFF;
-  --text-secondary: #D4D4D8;
-  --text-muted: #A1A1AA;
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #64748B;
   --color-brand: #FCB4D5;
   --color-brand-hover: #F9A8D4;
   --color-accent: #FCB4D5;
   --color-rose-accent: #FCB4D5;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.6);
-  --shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.14), inset 0 0 0 1px rgba(252, 180, 213, 0.08), 0 18px 40px -12px rgba(0, 0, 0, 0.9);
-  --shadow-card-hover: inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 20px 48px -10px rgba(0, 0, 0, 0.95), 0 0 32px rgba(252, 180, 213, 0.35);
+  --shadow-card: inset 0 1px 1px 0 rgba(255, 255, 255, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 16px 40px -10px rgba(0, 0, 0, 0.65), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
+  --shadow-card-hover: inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px rgba(252, 180, 213, 0.3), 0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 20px -2px rgba(252, 180, 213, 0.15);
 }
 
 body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-app);
   color: var(--text-primary);
   background-image:
-    radial-gradient(circle at 10% 8%, rgba(249, 115, 22, 0.08) 0%, transparent 45%),
-    radial-gradient(circle at 90% 12%, rgba(251, 146, 60, 0.06) 0%, transparent 40%),
-    radial-gradient(circle at 50% 85%, rgba(254, 215, 170, 0.07) 0%, transparent 50%);
+    radial-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+    radial-gradient(circle 600px at 20% -10%, rgba(249, 115, 22, 0.12) 0%, transparent 80%),
+    radial-gradient(circle 700px at 80% 20%, rgba(251, 146, 60, 0.08) 0%, transparent 80%),
+    radial-gradient(circle 800px at 50% 80%, rgba(254, 215, 170, 0.25) 0%, transparent 85%);
+  background-size: 24px 24px, 100% 100%, 100% 100%, 100% 100%;
   background-attachment: fixed;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
   transition: background-color 0.25s ease, color 0.25s ease;
+  min-height: 100vh;
 }
 
 html.dark body {
-  background-color: #000000;
-  color: #FFFFFF;
+  background-color: #07080B;
+  color: #F8FAFC;
   background-image:
-    radial-gradient(circle at 12% 10%, rgba(252, 180, 213, 0.12) 0%, transparent 45%),
-    radial-gradient(circle at 88% 18%, rgba(252, 180, 213, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 50% 90%, rgba(244, 114, 182, 0.06) 0%, transparent 55%);
+    radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    radial-gradient(circle 600px at 20% -10%, rgba(252, 180, 213, 0.15) 0%, transparent 80%),
+    radial-gradient(circle 750px at 80% 30%, rgba(139, 92, 246, 0.10) 0%, transparent 80%),
+    radial-gradient(circle 800px at 50% 90%, rgba(252, 180, 213, 0.08) 0%, transparent 85%);
+  background-size: 24px 24px, 100% 100%, 100% 100%, 100% 100%;
 }
 
 /* =========================================================
    Apple Smooth Scrollbar
    ========================================================= */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-app);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.15);
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-brand);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 html.dark ::-webkit-scrollbar-track {
-  background: #000000;
+  background: transparent;
 }
 html.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
 }
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #FCB4D5;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* =========================================================
-   Apple Liquid Glass Components
+   Apple Liquid Glass Components (True Frosted Glass Optics)
    ========================================================= */
 .cyber-glass,
 .apple-glass {
   background: var(--bg-card-glass);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
   border: 1px solid var(--border-card);
   box-shadow: var(--shadow-card);
   transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
+html.dark .cyber-glass,
+html.dark .apple-glass {
+  background: var(--bg-card-glass);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%);
+}
+
 .cyber-glass-card,
 .apple-glass-card {
   background: var(--bg-card);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.1) 100%);
+  backdrop-filter: blur(26px) saturate(185%);
+  -webkit-backdrop-filter: blur(26px) saturate(185%);
   border: 1px solid var(--border-card);
   box-shadow: var(--shadow-card);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.dark .cyber-glass-card,
+html.dark .apple-glass-card {
+  background: var(--bg-card);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.01) 100%);
 }
 
 .cyber-glass-card:hover,
 .apple-glass-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-card-hover);
 }
 
 html:not(.dark) .cyber-glass-card:hover,
 html:not(.dark) .apple-glass-card:hover {
-  border-color: rgba(249, 115, 22, 0.4);
+  border-color: rgba(249, 115, 22, 0.45);
 }
 
 html.dark .cyber-glass-card:hover,
@@ -154,11 +176,12 @@ html.dark .apple-glass-card:hover {
    ========================================================= */
 .btn-neon,
 .btn-primary-glass {
-  background: linear-gradient(135deg, #FB923C 0%, #F97316 45%, #EA580C 100%);
+  background: #F97316;
   color: #FFFFFF;
-  border: 1px solid rgba(249, 115, 22, 0.35);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 16px -2px rgba(249, 115, 22, 0.38);
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  font-weight: 700;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 6px -1px rgba(249, 115, 22, 0.3);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -166,25 +189,26 @@ html.dark .apple-glass-card:hover {
 
 .btn-neon:hover,
 .btn-primary-glass:hover {
-  background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 6px 22px -2px rgba(249, 115, 22, 0.52);
+  background: #EA580C;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 14px -2px rgba(249, 115, 22, 0.4);
   transform: translateY(-1px);
 }
 
 html.dark .btn-neon,
 html.dark .btn-primary-glass {
-  background: linear-gradient(135deg, #FCB4D5 0%, #F472B6 55%, #E11D48 100%);
-  color: #121217;
-  font-weight: 800;
-  border: 1px solid rgba(252, 180, 213, 0.65);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 24px rgba(252, 180, 213, 0.45), 0 4px 12px rgba(0, 0, 0, 0.6);
+  background: #FCB4D5;
+  color: #0F0F14;
+  font-weight: 700;
+  border: 1px solid rgba(252, 180, 213, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 10px rgba(252, 180, 213, 0.25);
 }
 
 html.dark .btn-neon:hover,
 html.dark .btn-primary-glass:hover {
-  background: linear-gradient(135deg, #FFFFFF 0%, #FCB4D5 50%, #F472B6 100%);
+  background: #FDF2F8;
   color: #000000;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 35px rgba(252, 180, 213, 0.7), 0 6px 18px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 4px 16px rgba(252, 180, 213, 0.35);
+  transform: translateY(-1px);
 }
 
 .btn-neon:active,
@@ -195,52 +219,54 @@ html.dark .btn-primary-glass:hover {
 /* Secondary Button / Glass Pill */
 .btn-cyan,
 .btn-secondary-glass {
-  background: rgba(255, 255, 255, 0.95);
-  color: #18181B;
-  border: 1px solid rgba(249, 115, 22, 0.25);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #FFFFFF;
+  color: #334155;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  font-weight: 600;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
 }
 
 .btn-cyan:hover,
 .btn-secondary-glass:hover {
   background: #FFF7ED;
-  border-color: #F97316;
+  border-color: rgba(249, 115, 22, 0.4);
   color: #EA580C;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.08);
 }
 
 html.dark .btn-cyan,
 html.dark .btn-secondary-glass {
-  background: rgba(252, 180, 213, 0.1);
-  color: #FCB4D5;
-  border: 1px solid rgba(252, 180, 213, 0.3);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 8px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  color: #F8FAFC;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  font-weight: 600;
 }
 
 html.dark .btn-cyan:hover,
 html.dark .btn-secondary-glass:hover {
-  background: rgba(252, 180, 213, 0.22);
-  border-color: #FCB4D5;
-  color: #FFFFFF;
-  box-shadow: 0 0 20px rgba(252, 180, 213, 0.35);
+  background: rgba(252, 180, 213, 0.1);
+  border-color: rgba(252, 180, 213, 0.35);
+  color: #FCB4D5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* =========================================================
-   Apple Holographic / Specular Typography
+   Modern Editorial Headings
    ========================================================= */
 .holo-text {
-  background: linear-gradient(135deg, #18181B 0%, #431407 55%, #EA580C 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
 html.dark .holo-text {
-  background: linear-gradient(135deg, #FFFFFF 0%, #FDF2F8 40%, #FCB4D5 85%, #F472B6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #F8FAFC;
+  letter-spacing: -0.02em;
 }
 
 /* Accessible focus ring */
@@ -510,3 +536,94 @@ html:not(.dark) .bg-black\/80 {
 html:not(.dark) .shadow-2xl {
   box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.08), 0 8px 12px -6px rgba(0, 0, 0, 0.04) !important;
 }
+
+/* =========================================================
+   Apple Fluid Glass Transitions (Soft, Depth-Aware Motion)
+   ========================================================= */
+
+/* 1. Page Route Transition (Between Content-Plan, Materials, etc.) */
+.page-swipe-enter-active {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.page-swipe-leave-active {
+  transition: transform 0.20s cubic-bezier(0.25, 1, 0.5, 1),
+              opacity 0.18s cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: transform, opacity;
+}
+
+.page-swipe-enter-from {
+  opacity: 0;
+  transform: translateY(8px) scale(0.996);
+}
+
+.page-swipe-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.996);
+}
+
+/* 2. Soft View Mode Transition (Between Calendar & List) */
+.tab-swipe-enter-active {
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.tab-swipe-leave-active {
+  transition: transform 0.18s cubic-bezier(0.25, 1, 0.5, 1),
+              opacity 0.16s ease;
+  will-change: transform, opacity;
+}
+
+.tab-swipe-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.tab-swipe-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* 3. Department / Workshop Filter Transition (Between Photo, Design, Video, etc.) */
+.dept-swap-enter-active {
+  transition: transform 0.30s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.dept-swap-leave-active {
+  transition: transform 0.16s cubic-bezier(0.25, 1, 0.5, 1),
+              opacity 0.14s ease;
+  will-change: transform, opacity;
+}
+
+.dept-swap-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.dept-swap-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* Glass Pill Dock */
+.glass-pill-dock {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.8), 0 4px 16px -2px rgba(0, 0, 0, 0.05);
+}
+
+html.dark .glass-pill-dock {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12), 0 6px 20px -2px rgba(0, 0, 0, 0.5);
+}
+

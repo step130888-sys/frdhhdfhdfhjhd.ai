@@ -1,19 +1,16 @@
 <template>
   <div class="min-h-[85vh] flex items-center justify-center px-4 py-12">
-    <div class="cyber-glass max-w-lg w-full p-8 md:p-10 rounded-3xl border border-black/10 dark:border-white/10 shadow-2xl relative overflow-hidden">
-      <!-- Glow background -->
-      <div class="absolute -top-16 -left-16 w-36 h-36 bg-orange-500/15 dark:bg-rose-500/20 rounded-full blur-3xl pointer-events-none"></div>
-
+    <div class="cyber-glass max-w-lg w-full p-8 md:p-10 rounded-3xl border border-white/60 dark:border-white/10 shadow-sm relative overflow-hidden">
       <!-- Header -->
       <div class="text-center mb-7 relative z-10">
-        <h1 class="text-2xl font-black uppercase tracking-wider holo-text">Заявка в команду</h1>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Заявка в команду</h1>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
           Регистрация в студенческий медиацентр «КЕДР СГТУ»
         </p>
       </div>
 
       <!-- Success Notification -->
-      <div v-if="successMsg" class="mb-5 p-4 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold leading-relaxed">
+      <div v-if="successMsg" class="mb-5 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold leading-relaxed">
         {{ successMsg }}
         <div class="mt-3">
           <router-link to="/login" class="text-white bg-emerald-600 px-3 py-1.5 rounded-lg font-bold">
@@ -23,7 +20,7 @@
       </div>
 
       <!-- Error Alert -->
-      <div v-if="errorMsg" class="mb-5 p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-700 dark:text-red-300 text-xs font-semibold flex items-center space-x-2">
+      <div v-if="errorMsg" class="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 text-xs font-semibold flex items-center space-x-2">
         <svg class="w-4 h-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
@@ -32,13 +29,13 @@
 
       <form v-if="!successMsg" @submit.prevent="handleRegister" class="space-y-4 relative z-10">
         <div>
-          <label class="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">ФИО полностью:</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">ФИО полностью:</label>
           <input
             v-model="form.name"
             type="text"
             required
             placeholder="Иванов Иван Иванович"
-            class="w-full text-xs px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-black text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-rose-400"
+            class="w-full text-xs px-4 py-3 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-slate-50 dark:bg-[#14151D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-[#fcb4d5]/20 transition-all"
           />
         </div>
 

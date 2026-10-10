@@ -1,23 +1,15 @@
 @echo off
 chcp 65001 >nul
-title КЕДР СГТУ - Платформа Медиацентра (Vue 3)
+title КЕДР СГТУ - Локальный Сервер
 echo ========================================================
-echo   Медиацентр «КЕДР СГТУ» (Vue 3 + Express + SQLite WAL)
-echo   Запуск локального сервера...
-echo ========================================================
-echo.
-if not exist "dist\" (
-  echo [1/2] Сборка фронтенда Vue 3...
-  call npm run build
-  echo.
-)
-echo [2/2] Запуск сервера Express...
-echo.
-echo ========================================================
-echo   Адрес в браузере: http://localhost:8000
-echo   Логин суперадмина: stepyn
-echo   Пароль по умолчанию: admin
+echo   Медиацентр «КЕДР СГТУ» им. Гагарина Ю.А.
+echo   Локальный запуск платформы (http://localhost:8000)
 echo ========================================================
 echo.
-node server.js
+echo Сервер запущен. Нажмите Ctrl+C для остановки.
+echo.
+set "NODE_CMD=%~dp0..\nodejs\node.exe"
+if not exist "%NODE_CMD%" set "NODE_CMD=node"
+
+"%NODE_CMD%" "%~dp0server.js"
 pause

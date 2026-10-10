@@ -4,10 +4,10 @@
     class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md"
     @click.self="$emit('close')"
   >
-    <div class="cyber-glass max-w-4xl w-full max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden bg-white dark:bg-[#0c0c10] animate-in fade-in zoom-in-95 duration-200">
+    <div class="cyber-glass max-w-4xl w-full max-h-[92vh] flex flex-col rounded-3xl border border-white/60 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
       
       <!-- Modal Top Bar -->
-      <div class="px-6 py-5 bg-slate-50 dark:bg-[#101016] border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
+      <div class="px-6 py-5 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl border-b border-black/[0.05] dark:border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
         <div class="flex items-start space-x-3.5">
           <div class="w-12 h-12 rounded-2xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 border border-orange-500/20 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5] flex-shrink-0 shadow-lg">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -38,7 +38,7 @@
           <button
             v-if="isLeader && event.id < 900000"
             @click="$emit('edit', event)"
-            class="px-4 py-2 rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 hover:bg-orange-500/20 dark:hover:bg-[#fcb4d5]/25 text-orange-600 dark:text-[#fcb4d5] border border-orange-500/20 dark:border-[#fcb4d5]/30 text-xs font-bold transition-all flex items-center space-x-1.5 shadow-xs active:scale-95"
+            class="px-4 py-2 rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 hover:bg-orange-500/20 dark:hover:bg-[#fcb4d5]/25 text-orange-600 dark:text-[#fcb4d5] border border-orange-500/20 dark:border-[#fcb4d5]/30 text-xs font-bold transition-all flex items-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
@@ -48,7 +48,7 @@
           
           <button
             @click="$emit('close')"
-            class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-sm transition-colors"
+            class="w-8 h-8 rounded-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-sm transition-colors cursor-pointer"
           >
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 6 6 18M6 6l12 12"/>
@@ -62,7 +62,7 @@
         
         <!-- Meta Details Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10">
+          <div class="p-3.5 rounded-2xl bg-white/40 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200/80 dark:border-white/10">
             <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider block mb-1">Дата проведения:</span>
             <span class="text-sm font-black text-slate-900 dark:text-white font-mono flex items-center space-x-1.5">
               <svg class="w-4 h-4 text-orange-500 dark:text-[#fcb4d5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -75,7 +75,7 @@
             </span>
           </div>
 
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10">
+          <div class="p-3.5 rounded-2xl bg-white/40 dark:bg-white/[0.03] backdrop-blur-md border border-slate-200/80 dark:border-white/10">
             <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider block mb-1">Дедлайн сдачи:</span>
             <span class="text-sm font-black text-amber-500 dark:text-amber-400 font-mono flex items-center space-x-1.5">
               <svg class="w-4 h-4 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

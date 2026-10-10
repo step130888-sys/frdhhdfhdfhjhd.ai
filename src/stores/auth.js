@@ -59,6 +59,13 @@ export const useAuthStore = () => {
     return data;
   };
 
+  const setUser = (userData) => {
+    state.user = userData;
+    if (userData) {
+      showNotification(`С возвращением, ${userData.name}!`);
+    }
+  };
+
   const register = async (form) => {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
@@ -124,6 +131,7 @@ export const useAuthStore = () => {
     showNotification,
     fetchMe,
     login,
+    setUser,
     register,
     logout,
     fetchOnlineUsers,

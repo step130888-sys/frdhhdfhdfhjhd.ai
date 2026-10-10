@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const db = require('./db');
 const gdriveService = require('./gdriveService');
+const telegramAuth = require('./telegramAuth');
 
 const CONFIG_PATH = path.join(__dirname, 'bot_config.json');
 
@@ -44,6 +45,162 @@ function getBotUsername() {
 
 function getLeadershipChatId() {
   return getConfig().leadership_group_chat_id;
+}
+
+const BINDINGS_PATH = path.join(__dirname, 'telegram_bindings.json');
+
+function getTelegramBindings() {
+  if (fs.existsSync(BINDINGS_PATH)) {
+    try {
+      return JSON.parse(fs.readFileSync(BINDINGS_PATH, 'utf8'));
+    } catch (e) {
+      console.error('[TelegramBot] Error reading telegram_bindings.json:', e);
+    }
+  }
+  return { byChatId: {}, byUserId: {} };
+}
+
+function saveTelegramBindings(data) {
+  try {
+    fs.writeFileSync(BINDINGS_PATH, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[TelegramBot] Error saving telegram_bindings.json:', e);
+  }
+}
+
+function persistTelegramBinding(chatId, user) {
+  if (!chatId || !user || !user.id) return;
+  const strChatId = String(chatId).trim();
+  const strUserId = String(user.id);
+  const bindings = getTelegramBindings();
+  bindings.byChatId = bindings.byChatId || {};
+  bindings.byUserId = bindings.byUserId || {};
+
+  bindings.byChatId[strChatId] = {
+    userId: user.id,
+    username: user.username,
+    name: user.name,
+    role: user.role,
+    access_level: user.access_level,
+    updatedAt: new Date().toISOString()
+  };
+  bindings.byUserId[strUserId] = strChatId;
+  saveTelegramBindings(bindings);
+}
+
+function removeTelegramBinding(chatIdOrUserId) {
+  if (!chatIdOrUserId) return;
+  const key = String(chatIdOrUserId).trim();
+  const bindings = getTelegramBindings();
+  bindings.byChatId = bindings.byChatId || {};
+  bindings.byUserId = bindings.byUserId || {};
+
+  if (bindings.byChatId[key]) {
+    const uId = String(bindings.byChatId[key].userId);
+    delete bindings.byChatId[key];
+    delete bindings.byUserId[uId];
+  }
+  if (bindings.byUserId[key]) {
+    const cId = bindings.byUserId[key];
+    delete bindings.byUserId[key];
+    delete bindings.byChatId[cId];
+  }
+  saveTelegramBindings(bindings);
+}
+
+async function findLinkedTelegramUser(chatId, tgUserId = null, tgUsername = null) {
+  const strChatId = String(chatId || '').trim();
+  const strUserId = tgUserId ? String(tgUserId).trim() : null;
+
+  // 1. Direct query from SQLite by numeric/string telegram_id
+  let user = await db.get(
+    `SELECT * FROM users 
+     WHERE telegram_id = ? 
+        OR telegram_id = ? 
+        OR CAST(telegram_id AS TEXT) = ? 
+        OR CAST(telegram_id AS TEXT) = ?`,
+    [strChatId, strUserId || strChatId, strChatId, strUserId || strChatId]
+  );
+
+  // 2. Fallback to telegram_bindings.json file
+  if (!user) {
+    const bindings = getTelegramBindings();
+    const entry = (bindings.byChatId && (bindings.byChatId[strChatId] || (strUserId && bindings.byChatId[strUserId]))) || null;
+    if (entry && entry.userId) {
+      user = await db.get('SELECT * FROM users WHERE id = ?', [entry.userId]);
+      if (user) {
+        // Auto-heal SQLite database with current chatId
+        try {
+          await db.run('UPDATE users SET telegram_id = NULL WHERE telegram_id = ? AND id != ?', [strChatId, user.id]);
+          await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [strChatId, user.id]);
+          user.telegram_id = strChatId;
+        } catch (e) {
+          console.error('[TelegramBot] Auto-heal error:', e.message);
+        }
+      }
+    }
+  }
+
+  // 3. Fallback to username matching if available
+  if (!user && tgUsername) {
+    const cleanU = String(tgUsername).replace('@', '').trim().toLowerCase();
+    user = await db.get(
+      `SELECT * FROM users 
+       WHERE LOWER(telegram_id) = ? 
+          OR LOWER(telegram_id) = ? 
+          OR LOWER(username) = ?`,
+      [`@${cleanU}`, cleanU, cleanU]
+    );
+    if (user) {
+      try {
+        await db.run('UPDATE users SET telegram_id = NULL WHERE telegram_id = ? AND id != ?', [strChatId, user.id]);
+        await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [strChatId, user.id]);
+        user.telegram_id = strChatId;
+        persistTelegramBinding(strChatId, user);
+      } catch (e) {
+        console.error('[TelegramBot] Link by username error:', e.message);
+      }
+    }
+  }
+
+  // Ensure persistent binding file has latest info if user is found
+  if (user && strChatId && (!user.telegram_id || user.telegram_id.startsWith('@'))) {
+    try {
+      await db.run('UPDATE users SET telegram_id = NULL WHERE telegram_id = ? AND id != ?', [strChatId, user.id]);
+      await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [strChatId, user.id]);
+      user.telegram_id = strChatId;
+    } catch (e) {}
+  }
+  if (user && strChatId) {
+    persistTelegramBinding(strChatId, user);
+  }
+
+  return user;
+}
+
+async function syncTelegramBindings() {
+  try {
+    const usersWithTg = await db.all('SELECT * FROM users WHERE telegram_id IS NOT NULL AND telegram_id != ""');
+    for (const u of usersWithTg) {
+      if (u.telegram_id && !u.telegram_id.startsWith('@')) {
+        persistTelegramBinding(u.telegram_id, u);
+      }
+    }
+    const bindings = getTelegramBindings();
+    if (bindings.byChatId) {
+      for (const [tgId, data] of Object.entries(bindings.byChatId)) {
+        if (data && data.userId && tgId && !tgId.startsWith('@')) {
+          const usr = await db.get('SELECT * FROM users WHERE id = ?', [data.userId]);
+          if (usr && !usr.telegram_id) {
+            await db.run('UPDATE users SET telegram_id = NULL WHERE telegram_id = ? AND id != ?', [tgId, usr.id]);
+            await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [tgId, usr.id]);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[TelegramBot] Sync bindings error:', e.message);
+  }
 }
 
 let cachedAgent = null;
@@ -96,10 +253,9 @@ async function callTelegramApi(method, body = {}, timeoutMs = 25000) {
 }
 
 function getMainReplyKeyboard(user = null) {
-  const isManager = user && user.access_level >= 2;
   const keyboard = [];
 
-  if (user) {
+  if (user && user.is_approved) {
     keyboard.push([
       { text: '📋 Мои задачи' },
       { text: '🔥 Горящие дедлайны' }
@@ -109,7 +265,16 @@ function getMainReplyKeyboard(user = null) {
       { text: '🟢 Свободные задачи' }
     ]);
 
-    if (isManager) {
+    if (user.access_level >= 3) {
+      keyboard.push([
+        { text: '📋 Задачи на проверке' },
+        { text: '👥 Заявки на регистрацию' }
+      ]);
+      keyboard.push([
+        { text: '➕ Добавить участника' },
+        { text: '📊 Статистика медиацентра' }
+      ]);
+    } else if (user.access_level === 2) {
       keyboard.push([
         { text: '📋 Задачи на проверке' },
         { text: '📊 Статистика медиацентра' }
@@ -122,10 +287,13 @@ function getMainReplyKeyboard(user = null) {
     ]);
   } else {
     keyboard.push([
-      { text: '🟢 Свободные задачи' }
+      { text: '📝 Подать заявку на регистрацию' }
     ]);
     keyboard.push([
-      { text: '👤 Мой профиль' },
+      { text: '🟢 Свободные задачи' },
+      { text: '🔑 Привязать аккаунт' }
+    ]);
+    keyboard.push([
       { text: 'ℹ️ Помощь' }
     ]);
   }
@@ -267,18 +435,7 @@ async function applyTaskRatingByTgUser(taskId, score, tgUserId, tgUsername) {
   }
 
   // Find reviewer by telegram_id or username
-  let grader = await db.get('SELECT * FROM users WHERE telegram_id = ?', [String(tgUserId)]);
-  if (!grader && tgUsername) {
-    const cleanUser = tgUsername.replace('@', '').toLowerCase();
-    grader = await db.get(
-      'SELECT * FROM users WHERE telegram_id LIKE ? OR telegram_id LIKE ? OR LOWER(username) = ?',
-      [`%${cleanUser}%`, cleanUser, cleanUser]
-    );
-    if (grader) {
-      grader.telegram_id = String(tgUserId);
-      await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [String(tgUserId), grader.id]);
-    }
-  }
+  let grader = await findLinkedTelegramUser(tgUserId, tgUserId, tgUsername);
 
   if (!grader) {
     return {
@@ -340,18 +497,7 @@ async function applyTaskReworkByTgUser(taskId, tgUserId, tgUsername, notes) {
     return { success: false, message: `❌ Задача #${taskId} не найдена в системе.` };
   }
 
-  let grader = await db.get('SELECT * FROM users WHERE telegram_id = ?', [String(tgUserId)]);
-  if (!grader && tgUsername) {
-    const cleanUser = tgUsername.replace('@', '').toLowerCase();
-    grader = await db.get(
-      'SELECT * FROM users WHERE telegram_id LIKE ? OR telegram_id LIKE ? OR LOWER(username) = ?',
-      [`%${cleanUser}%`, cleanUser, cleanUser]
-    );
-    if (grader) {
-      grader.telegram_id = String(tgUserId);
-      await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [String(tgUserId), grader.id]);
-    }
-  }
+  let grader = await findLinkedTelegramUser(tgUserId, tgUserId, tgUsername);
 
   if (!grader) {
     return {
@@ -445,6 +591,20 @@ async function notifyTaskSubmittedForReview(task, user) {
     }
   }
 
+  // Send to workshop head of this direction (level = 2)
+  if (task.direction) {
+    const workshopHeads = await db.all(
+      'SELECT telegram_id FROM users WHERE access_level = 2 AND role = ? AND telegram_id IS NOT NULL AND is_approved = 1',
+      [task.direction]
+    );
+    for (const h of workshopHeads) {
+      if (h.telegram_id && h.telegram_id !== leadGroup) {
+        const ok = await sendTelegramMessage(h.telegram_id, card, kbd);
+        if (ok) sentCount++;
+      }
+    }
+  }
+
   return sentCount;
 }
 
@@ -455,25 +615,47 @@ async function notifyNewUserRegistered(newUser) {
     `🔑 <b>Логин:</b> <code>@${newUser.username}</code>\n` +
     `🏷️ <b>Цех / Направление:</b> <b>${newUser.role}</b>\n` +
     `✈️ <b>Telegram:</b> ${newUser.telegram_id || 'не указан'}\n\n` +
-    '👑 <i>Главный администратор (4 ур.) может одобрить заявку в панели «Управление профилями».</i>'
+    'Нажмите кнопку ниже, чтобы одобрить заявку в 1 клик прямо из Telegram:'
   );
 
+  const kbd = {
+    inline_keyboard: [
+      [
+        { text: '✅ Одобрить (Участник)', callback_data: `approve_user:${newUser.id}:1` },
+        { text: '👑 Одобрить (Глава цеха)', callback_data: `approve_user:${newUser.id}:2` }
+      ],
+      [
+        { text: '❌ Отклонить', callback_data: `reject_user:${newUser.id}` }
+      ]
+    ]
+  };
+
   const admins = await db.all(
-    'SELECT telegram_id FROM users WHERE access_level = 4 AND telegram_id IS NOT NULL'
+    'SELECT telegram_id FROM users WHERE access_level >= 3 AND telegram_id IS NOT NULL AND is_approved = 1'
   );
   let sentCount = 0;
   for (const a of admins) {
     if (a.telegram_id) {
-      const ok = await sendTelegramMessage(a.telegram_id, card);
+      const ok = await sendTelegramMessage(a.telegram_id, card, kbd);
       if (ok) sentCount++;
     }
   }
   return sentCount;
 }
 
-async function notifyTaskGraded(task, reviewer, score) {
-  if (!task.assigned_to_id) return false;
-  const assignee = await db.get('SELECT * FROM users WHERE id = ?', [task.assigned_to_id]);
+async function notifyTaskGraded(task, arg2, arg3, arg4) {
+  let assignee, reviewer, score;
+  if (arg4 !== undefined) {
+    assignee = arg2;
+    reviewer = arg3;
+    score = arg4;
+  } else {
+    reviewer = arg2;
+    score = arg3;
+    if (task.assigned_to_id) {
+      assignee = await db.get('SELECT * FROM users WHERE id = ?', [task.assigned_to_id]);
+    }
+  }
   if (!assignee || !assignee.telegram_id) return false;
 
   const card = (
@@ -481,17 +663,27 @@ async function notifyTaskGraded(task, reviewer, score) {
     `📌 <b>Задача:</b> #${task.id} — <b>${task.title}</b>\n` +
     `📂 <b>Цех:</b> <code>${task.direction}</code>\n` +
     `⭐ <b>Оценка:</b> <b>${score} / 10</b>\n` +
-    `👑 <b>Проверил:</b> ${reviewer.name} (${reviewer.role})\n` +
-    `📊 <b>Ваш новый средний балл:</b> <b>${assignee.average_score.toFixed(1)} / 10.0</b>\n` +
-    `✅ <b>Закрыто задач:</b> ${assignee.completed_tasks}\n\n` +
+    `👑 <b>Проверил:</b> ${reviewer ? reviewer.name : 'Руководство'} (${reviewer ? reviewer.role : 'Руководитель'})\n` +
+    `📊 <b>Ваш новый средний балл:</b> <b>${assignee.average_score != null ? assignee.average_score.toFixed(1) : '—'} / 10.0</b>\n` +
+    `✅ <b>Закрыто задач:</b> ${assignee.completed_tasks || 0}\n\n` +
     '<i>Отличная работа! Продолжайте в том же духе.</i>'
   );
   return await sendTelegramMessage(assignee.telegram_id, card);
 }
 
-async function notifyTaskRework(task, reviewer, notes = null) {
-  if (!task.assigned_to_id) return false;
-  const assignee = await db.get('SELECT * FROM users WHERE id = ?', [task.assigned_to_id]);
+async function notifyTaskRework(task, arg2, arg3, arg4) {
+  let assignee, reviewer, notes;
+  if (arg4 !== undefined) {
+    assignee = arg2;
+    reviewer = arg3;
+    notes = arg4;
+  } else {
+    reviewer = arg2;
+    notes = arg3;
+    if (task.assigned_to_id) {
+      assignee = await db.get('SELECT * FROM users WHERE id = ?', [task.assigned_to_id]);
+    }
+  }
   if (!assignee || !assignee.telegram_id) return false;
 
   const notesText = notes ? `\n📝 <b>Замечания руководителя:</b>\n<i>${notes}</i>\n` : '';
@@ -499,7 +691,7 @@ async function notifyTaskRework(task, reviewer, notes = null) {
     '⚠️ <b>ЗАДАЧА ОТПРАВЛЕНА НА ДОРАБОТКУ</b>\n\n' +
     `📌 <b>Задача:</b> #${task.id} — <b>${task.title}</b>\n` +
     `📂 <b>Цех:</b> <code>${task.direction}</code>\n` +
-    `👑 <b>Руководитель:</b> ${reviewer.name} (${reviewer.role})\n` +
+    `👑 <b>Руководитель:</b> ${reviewer ? reviewer.name : 'Руководство'} (${reviewer ? reviewer.role : 'Руководитель'})\n` +
     notesText + '\n' +
     '⚡ <i>Пожалуйста, внесите необходимые исправления и загрузите обновленный результат на сайте.</i>'
   );
@@ -571,6 +763,21 @@ async function sendTestNotification(chatId = null) {
   );
   return await sendTelegramMessage(target, text);
 }
+
+async function notifyUserApproved(user, accessLevel) {
+  if (!user || !user.telegram_id) return false;
+  const card = (
+    '🎉 <b>ВАША УЧЕТНАЯ ЗАПИСЬ ОДОБРЕНА!</b>\n\n' +
+    `👤 <b>Пользователь:</b> ${user.name}\n` +
+    `🏷️ <b>Цех / Направление:</b> ${user.role}\n` +
+    `⭐ <b>Уровень доступа:</b> ${accessLevel}\n\n` +
+    '✅ Теперь вам доступны все рабочие разделы медиацентра СГТУ!'
+  );
+  return await sendTelegramMessage(user.telegram_id, card, getMainReplyKeyboard(user));
+}
+
+const notifyTaskSubmitted = notifyTaskSubmittedForReview;
+const notifyTaskNewComment = notifyTaskComment;
 
 // Telegram Worker class with long polling
 class TelegramBotWorker {
@@ -728,6 +935,198 @@ class TelegramBotWorker {
       return;
     }
 
+    // 3. reg_dept:DIRECTION (Candidate Registration from Telegram)
+    if (cbData.startsWith('reg_dept:')) {
+      const direction = cbData.split(':')[1].trim();
+      const applicantName = [fromUser.first_name, fromUser.last_name].filter(Boolean).join(' ') || fromUser.first_name || 'Новый участник';
+      const cleanUsername = tgUsername ? tgUsername.replace('@', '').toLowerCase() : `tg_${tgUserId.slice(-5)}`;
+
+      let existingUser = await db.get('SELECT * FROM users WHERE telegram_id = ? OR LOWER(username) = ?', [tgUserId, cleanUsername]);
+      if (existingUser) {
+        if (existingUser.is_approved) {
+          await answerCallbackQuery(cbId, `Вы уже зарегистрированы как ${existingUser.name}!`);
+          await sendTelegramMessage(String(fromUser.id), `✅ Вы уже являетесь участником медиацентра: <b>${existingUser.name}</b> (${existingUser.role}).`, getMainReplyKeyboard(existingUser));
+          return;
+        } else {
+          await answerCallbackQuery(cbId, 'Ваша заявка уже на рассмотрении!');
+          await sendTelegramMessage(String(fromUser.id), `⏳ Ваша заявка в цех <b>${existingUser.role}</b> уже находится на рассмотрении руководства медиацентра.`);
+          return;
+        }
+      }
+
+      const defaultPassHash = db.hashPassword('kedr2026');
+      const insRes = await db.run(
+        `INSERT INTO users (name, username, password_hash, telegram_id, role, access_level, is_approved, completed_tasks, average_score)
+         VALUES (?, ?, ?, ?, ?, 1, 0, 0, 0.0)`,
+        [applicantName, cleanUsername, defaultPassHash, tgUserId, direction]
+      );
+      const newUserId = insRes.lastID;
+
+      await answerCallbackQuery(cbId, '🎉 Заявка принята!');
+
+      const applicantCard = (
+        '🎉 <b>ЗАЯВКА НА ВСТУПЛЕНИЕ УСПЕШНО ОТПРАВЛЕНА!</b>\n\n' +
+        `👤 <b>ФИО:</b> ${applicantName}\n` +
+        `🔑 <b>Логин:</b> <code>@${cleanUsername}</code>\n` +
+        `🏷️ <b>Выбранный цех:</b> <b>${direction}</b>\n` +
+        `✈️ <b>Telegram:</b> @${cleanUsername} (ID: <code>${tgUserId}</code>)\n\n` +
+        '⏳ <i>Заявка поступила руководству медиацентра. Как только администратор подтвердит ваш профиль, бот пришлет вам уведомление и откроет доступ к задачам!</i>'
+      );
+      await sendTelegramMessage(String(fromUser.id), applicantCard);
+
+      // Notify all admins and leaders with 1-click approval buttons
+      const adminNotice = (
+        '🆕 <b>НОВАЯ ЗАЯВКА НА ВСТУПЛЕНИЕ В МЕДИАЦЕНТР!</b>\n\n' +
+        `👤 <b>Кандидат:</b> ${applicantName}\n` +
+        `🔑 <b>Логин:</b> <code>@${cleanUsername}</code>\n` +
+        `🏷️ <b>Цех:</b> <b>${direction}</b>\n` +
+        `✈️ <b>Telegram:</b> @${cleanUsername} (ID: <code>${tgUserId}</code>)\n\n` +
+        'Нажмите кнопку ниже, чтобы одобрить заявку в 1 клик:'
+      );
+      const adminKeyboard = {
+        inline_keyboard: [
+          [
+            { text: '✅ Одобрить (Участник)', callback_data: `approve_user:${newUserId}:1` },
+            { text: '👑 Одобрить (Глава цеха)', callback_data: `approve_user:${newUserId}:2` }
+          ],
+          [
+            { text: '❌ Отклонить', callback_data: `reject_user:${newUserId}` }
+          ]
+        ]
+      };
+
+      const adminsAndLeads = await db.all(
+        'SELECT telegram_id FROM users WHERE access_level >= 3 AND telegram_id IS NOT NULL AND is_approved = 1'
+      );
+      for (const a of adminsAndLeads) {
+        if (a.telegram_id && a.telegram_id !== tgUserId) {
+          await sendTelegramMessage(a.telegram_id, adminNotice, adminKeyboard);
+        }
+      }
+      return;
+    }
+
+    // 4. approve_user:USER_ID:LEVEL (Admin approval in 1 click)
+    if (cbData.startsWith('approve_user:')) {
+      const parts = cbData.split(':');
+      if (parts.length !== 3) {
+        await answerCallbackQuery(cbId, 'Некорректный запрос', true);
+        return;
+      }
+      const targetUserId = parseInt(parts[1], 10);
+      const accessLevel = parseInt(parts[2], 10) || 1;
+
+      let adminUser = await db.get('SELECT * FROM users WHERE telegram_id = ?', [String(tgUserId)]);
+      if (!adminUser && tgUsername) {
+        adminUser = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [tgUsername.replace('@', '').toLowerCase()]);
+      }
+      if (!adminUser || adminUser.access_level < 3) {
+        await answerCallbackQuery(cbId, '⛔ Только руководство и администраторы (3–4 ур.) могут одобрять заявки.', true);
+        return;
+      }
+
+      const targetUser = await db.get('SELECT * FROM users WHERE id = ?', [targetUserId]);
+      if (!targetUser) {
+        await answerCallbackQuery(cbId, '❌ Пользователь не найден или уже удален.', true);
+        return;
+      }
+
+      if (targetUser.is_approved) {
+        await answerCallbackQuery(cbId, `ℹ️ Пользователь ${targetUser.name} уже одобрен.`);
+        if (msg) {
+          await editTelegramMessage(String(msg.chat.id), msg.message_id, `ℹ️ Пользователь <b>${targetUser.name}</b> уже одобрен (Ур. ${targetUser.access_level}).`, { inline_keyboard: [] });
+        }
+        return;
+      }
+
+      await db.run('UPDATE users SET is_approved = 1, access_level = ? WHERE id = ?', [accessLevel, targetUserId]);
+      targetUser.is_approved = 1;
+      targetUser.access_level = accessLevel;
+
+      await answerCallbackQuery(cbId, `✅ Пользователь ${targetUser.name} одобрен!`);
+
+      if (msg) {
+        const adminChatId = String(msg.chat.id);
+        const approvedCard = (
+          '✅ <b>ЗАЯВКА УСПЕШНО ОДОБРЕНА!</b>\n\n' +
+          `👤 <b>Пользователь:</b> ${targetUser.name}\n` +
+          `🔑 <b>Логин:</b> <code>@${targetUser.username}</code>\n` +
+          `🏷️ <b>Цех:</b> <b>${targetUser.role}</b>\n` +
+          `⭐ <b>Уровень доступа:</b> <b>${accessLevel}</b> (${accessLevel === 2 ? 'Глава цеха' : 'Участник'})\n` +
+          `👑 <b>Одобрил:</b> ${adminUser.name} (${adminUser.role})\n\n` +
+          '⚡ <i>Пользователю открыт доступ на сайте и отправлено уведомление с кнопками бота.</i>'
+        );
+        await editTelegramMessage(adminChatId, msg.message_id, approvedCard, { inline_keyboard: [] });
+      }
+
+      // Notify applicant in Telegram
+      if (targetUser.telegram_id) {
+        const welcomeText = (
+          '🎉 <b>ВАША ЗАЯВКА ОДОБРЕНА РУКОВОДСТВОМ!</b>\n\n' +
+          `👋 Здравствуйте, <b>${targetUser.name}</b>!\n` +
+          'Вы официально приняты в команду медиацентра <b>«КЕДР СГТУ»</b>.\n\n' +
+          `🏷️ <b>Цех:</b> <code>${targetUser.role}</code>\n` +
+          `⭐ <b>Уровень доступа:</b> <b>${accessLevel}</b> (${accessLevel === 2 ? 'Глава цеха' : 'Участник'})\n` +
+          `🔑 <b>Логин:</b> <code>@${targetUser.username}</code>\n\n` +
+          '✅ <b>Внизу экрана активированы рабочие плашки!</b>\n' +
+          'Теперь вы можете брать свободные задачи, сдавать готовые материалы и получать оценки руководства.'
+        );
+        await sendTelegramMessage(targetUser.telegram_id, welcomeText, getMainReplyKeyboard(targetUser));
+      }
+      return;
+    }
+
+    // 5. reject_user:USER_ID (Admin rejection in 1 click)
+    if (cbData.startsWith('reject_user:')) {
+      const parts = cbData.split(':');
+      if (parts.length !== 2) {
+        await answerCallbackQuery(cbId, 'Некорректный запрос', true);
+        return;
+      }
+      const targetUserId = parseInt(parts[1], 10);
+
+      let adminUser = await db.get('SELECT * FROM users WHERE telegram_id = ?', [String(tgUserId)]);
+      if (!adminUser && tgUsername) {
+        adminUser = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [tgUsername.replace('@', '').toLowerCase()]);
+      }
+      if (!adminUser || adminUser.access_level < 3) {
+        await answerCallbackQuery(cbId, '⛔ Только руководство и администраторы (3–4 ур.) могут отклонять заявки.', true);
+        return;
+      }
+
+      const targetUser = await db.get('SELECT * FROM users WHERE id = ?', [targetUserId]);
+      if (!targetUser) {
+        await answerCallbackQuery(cbId, 'Пользователь не найден.', true);
+        return;
+      }
+
+      const candidateTg = targetUser.telegram_id;
+      const candidateName = targetUser.name;
+      await db.run('DELETE FROM users WHERE id = ? AND is_approved = 0', [targetUserId]);
+
+      await answerCallbackQuery(cbId, `❌ Заявка ${candidateName} отклонена.`);
+
+      if (msg) {
+        const adminChatId = String(msg.chat.id);
+        const rejectedCard = (
+          '❌ <b>ЗАЯВКА ОТКЛОНЕНА</b>\n\n' +
+          `👤 <b>Кандидат:</b> ${candidateName} (@${targetUser.username})\n` +
+          `🏷️ <b>Цех:</b> ${targetUser.role}\n` +
+          `👑 <b>Отклонил:</b> ${adminUser.name} (${adminUser.role})`
+        );
+        await editTelegramMessage(adminChatId, msg.message_id, rejectedCard, { inline_keyboard: [] });
+      }
+
+      if (candidateTg) {
+        await sendTelegramMessage(
+          candidateTg,
+          '❌ <b>Ваша заявка на регистрацию в медиацентр была отклонена руководством.</b>\n' +
+          'Если произошла ошибка, свяжитесь с руководителем напрямую.'
+        );
+      }
+      return;
+    }
+
     await answerCallbackQuery(cbId);
   }
 
@@ -751,21 +1150,8 @@ class TelegramBotWorker {
       return;
     }
 
-    // Find linked user
-    let linkedUser = await db.get('SELECT * FROM users WHERE telegram_id = ?', [chatId]);
-    if (!linkedUser && tgUserId) {
-      linkedUser = await db.get('SELECT * FROM users WHERE telegram_id = ?', [tgUserId]);
-    }
-    if (!linkedUser && tgUsername) {
-      const cleanU = tgUsername.replace('@', '').toLowerCase();
-      linkedUser = await db.get(
-        'SELECT * FROM users WHERE telegram_id LIKE ? OR LOWER(username) = ?',
-        [`%${cleanU}%`, cleanU]
-      );
-      if (linkedUser) {
-        await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [chatId, linkedUser.id]);
-      }
-    }
+    // Find linked user with double persistence & auto-heal
+    let linkedUser = await findLinkedTelegramUser(chatId, tgUserId, tgUsername);
 
     // Normalize text (lower case, remove emojis)
     const cleanText = rawText
@@ -773,21 +1159,74 @@ class TelegramBotWorker {
       .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
       .trim();
 
-    // 1. /start bind_ID
+    // 1. /start login_TOKEN (1-click Web Login)
+    if (rawText.startsWith('/start login_')) {
+      const token = rawText.split('login_')[1].trim();
+      const session = telegramAuth.getSession(token);
+      if (!session) {
+        await sendTelegramMessage(chatId, '⚠️ Срок действия ссылки входа истек. Нажмите «Войти через Telegram» на сайте заново.');
+        return;
+      }
+
+      let user = linkedUser || (await findLinkedTelegramUser(chatId, tgUserId, tgUsername));
+
+      if (!user) {
+        telegramAuth.setPendingTg(token, {
+          id: chatId,
+          username: tgUsername || null,
+          name: userName || 'Пользователь'
+        });
+        await sendTelegramMessage(
+          chatId,
+          `👋 Здравствуйте, <b>${userName}</b>!\n\n` +
+          'Ваш Telegram еще не привязан к аккаунту на сайте КЕДР СГТУ.\n\n' +
+          'Чтобы завершить вход в один клик, напишите боту команду:\n' +
+          '<code>/bind &lt;ваш_логин&gt; &lt;ваш_пароль&gt;</code>\n\n' +
+          'Или введите логин и пароль в открытом окне на сайте — профиль привяжется автоматически!'
+        );
+        return;
+      }
+
+      if (!user.is_approved) {
+        telegramAuth.setSessionError(token, 'Ваш профиль ожидает одобрения главным администратором (4 уровень).');
+        await sendTelegramMessage(chatId, `⏳ Здравствуйте, <b>${user.name}</b>!\nВаш профиль еще ожидает подтверждения администратором.`);
+        return;
+      }
+
+      persistTelegramBinding(chatId, user);
+      telegramAuth.completeSession(token, user);
+
+      const kbd = getMainReplyKeyboard(user);
+      const reply = (
+        '🎉 <b>УСПЕШНЫЙ ВХОД НА САЙТ В 1 КЛИК!</b>\n\n' +
+        `👤 <b>Пользователь:</b> ${user.name}\n` +
+        `🔑 <b>Логин:</b> <code>@${user.username}</code>\n` +
+        `🏷️ <b>Цех:</b> ${user.role} (Уровень ${user.access_level})\n\n` +
+        '✅ Авторизация в браузере завершена. Окно входа на сайте закрылось автоматически!'
+      );
+      await sendTelegramMessage(chatId, reply, kbd);
+      return;
+    }
+
+    // 2. /start bind_ID (1-click Account Linking)
     if (rawText.startsWith('/start bind_')) {
       const uidStr = rawText.split('bind_')[1].trim();
       const uid = parseInt(uidStr, 10);
       if (!isNaN(uid)) {
         const targetUser = await db.get('SELECT * FROM users WHERE id = ?', [uid]);
         if (targetUser) {
+          await db.run('UPDATE users SET telegram_id = NULL WHERE telegram_id = ? AND id != ?', [chatId, targetUser.id]);
           await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [chatId, targetUser.id]);
+          targetUser.telegram_id = chatId;
+          persistTelegramBinding(chatId, targetUser);
+          telegramAuth.completePendingSessionByTg(chatId, targetUser);
           const kbd = getMainReplyKeyboard(targetUser);
           const reply = (
-            '🎉 <b>АККАУНТ УСПЕШНО ПРИВЯЗАН!</b>\n\n' +
+            '🎉 <b>АККАУНТ УСПЕШНО ПРИВЯЗАН В 1 КЛИК!</b>\n\n' +
             `👤 <b>Пользователь:</b> ${targetUser.name}\n` +
             `🔑 <b>Логин:</b> <code>@${targetUser.username}</code>\n` +
             `🏷️ <b>Цех:</b> ${targetUser.role} (Уровень ${targetUser.access_level})\n\n` +
-            '✅ <b>Внизу экрана появились удобные плашки действий!</b>\n' +
+            '✅ <b>Внизу экрана активированы кнопки быстрых действий!</b>\n' +
             'Теперь вы можете просматривать задачи, дедлайны и сдавать материалы прямо здесь.'
           );
           await sendTelegramMessage(chatId, reply, kbd);
@@ -798,37 +1237,49 @@ class TelegramBotWorker {
       return;
     }
 
-    // 2. /start
-    if (rawText === '/start') {
-      const kbd = getMainReplyKeyboard(linkedUser);
-      if (linkedUser) {
+    // 3. /start, /restart, /menu
+    const firstWord = (rawText.trim().split(/\s+/)[0] || '').toLowerCase();
+    const isStartCmd = firstWord === '/start' || firstWord.startsWith('/start@');
+    const isRestartOrMenu = firstWord === '/restart' || firstWord.startsWith('/restart@') ||
+                            firstWord === '/menu' || firstWord.startsWith('/menu@') ||
+                            cleanText === 'меню' || cleanText === 'главное меню' || cleanText === 'перезапуск';
+
+    if (isStartCmd || isRestartOrMenu) {
+      if (linkedUser && linkedUser.is_approved) {
         const isLead = linkedUser.access_level >= 2;
+        const isAdmin = linkedUser.access_level >= 3;
+        const kbd = getMainReplyKeyboard(linkedUser);
         const reply = (
           `👋 Здравствуйте, <b>${linkedUser.name}</b>!\n\n` +
-          `Ваш Telegram привязан к аккаунту: <code>@${linkedUser.username}</code> (${linkedUser.role}, Ур. ${linkedUser.access_level}).\n\n` +
-          '🔘 <b>Внизу экрана доступны быстрые кнопки (плашки):</b>\n' +
+          `Ваш Telegram привязан к профилю: <code>@${linkedUser.username}</code> (${linkedUser.role}, Ур. ${linkedUser.access_level}).\n\n` +
+          '🔘 <b>Внизу экрана доступны быстрые кнопки действий:</b>\n' +
           '• <b>📋 Мои задачи</b> — список ваших текущих дел\n' +
-          '• <b>🔥 Горящие дедлайны</b> — задачи, требующие срочного внимания\n' +
-          (isLead ? '• <b>📋 Задачи на проверке</b> — очередь сдачи с оценками 1–10\n• <b>📊 Статистика медиацентра</b> — сводка платформы\n' : '') +
-          '• <b>👤 Мой профиль</b> — статус и статистика\n' +
+          '• <b>🔥 Горящие дедлайны</b> — срочные задачи с дедлайнами\n' +
+          '• <b>🟢 Свободные задачи</b> — доступная работа в контент-плане\n' +
+          (isLead ? '• <b>📋 Задачи на проверке</b> — очередь сдачи с оценками 1–10 и доработкой\n' : '') +
+          (isAdmin ? '• <b>👥 Заявки на регистрацию</b> — модерация и одобрение новых участников\n• <b>➕ Добавить участника</b> — ручное добавление человека в команду\n' : '') +
+          '• <b>👤 Мой профиль</b> — статус, статистика и рейтинг\n' +
           '• <b>ℹ️ Помощь</b> — команды и руководство\n\n' +
           '<i>Просто кликайте по плашкам внизу экрана!</i>'
         );
         await sendTelegramMessage(chatId, reply, kbd);
       } else {
+        const kbd = getMainReplyKeyboard(null);
         const reply = (
           `👋 Привет, <b>${userName}</b>! Я официальный бот медиацентра СГТУ (@ping_sstu_bot).\n\n` +
-          'Чтобы привязать этот Telegram к вашему профилю на платформе:\n' +
-          '1. Войдите на сайт медиацентра и в профиле нажмите <b>«Подключить Telegram»</b>\n' +
-          '2. Или отправьте команду прямо сюда:\n' +
-          '<code>/bind &lt;ваш_логин&gt; &lt;ваш_пароль&gt;</code>'
+          '🔹 <b>Если вы уже состоите в команде:</b>\n' +
+          'Привяжите свой профиль командой:\n' +
+          '<code>/bind &lt;ваш_логин&gt; &lt;ваш_пароль&gt;</code>\n\n' +
+          '🔹 <b>Если вы хотите вступить в медиацентр:</b>\n' +
+          'Нажмите кнопку внизу экрана или отправьте команду:\n' +
+          '<code>/register</code> — <i>подать заявку на регистрацию в цех прямо сейчас!</i>'
         );
         await sendTelegramMessage(chatId, reply, kbd);
       }
       return;
     }
 
-    // 3. /bind <login> <pass>
+    // 4. /bind <login> <pass>
     if (rawText.startsWith('/bind')) {
       const parts = rawText.split(/\s+/);
       if (parts.length === 3) {
@@ -836,7 +1287,11 @@ class TelegramBotWorker {
         const pwd = parts[2].trim();
         const usr = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [login]);
         if (usr && db.verifyPassword(pwd, usr.password_hash)) {
+          await db.run('UPDATE users SET telegram_id = NULL WHERE telegram_id = ? AND id != ?', [chatId, usr.id]);
           await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [chatId, usr.id]);
+          usr.telegram_id = chatId;
+          persistTelegramBinding(chatId, usr);
+          telegramAuth.completePendingSessionByTg(chatId, usr);
           const kbd = getMainReplyKeyboard(usr);
           await sendTelegramMessage(
             chatId,
@@ -1130,12 +1585,19 @@ class TelegramBotWorker {
         return;
       }
 
-      const reviewTasks = await db.all('SELECT * FROM tasks WHERE status = "review" ORDER BY id DESC');
+      let reviewTasks;
+      if (linkedUser.access_level >= 3) {
+        reviewTasks = await db.all('SELECT * FROM tasks WHERE status = "review" ORDER BY id DESC');
+      } else {
+        reviewTasks = await db.all('SELECT * FROM tasks WHERE status = "review" AND direction = ? ORDER BY id DESC', [linkedUser.role]);
+      }
+
       if (reviewTasks.length > 0) {
         const gdriveFolderUrl = gdriveService.getTargetFolderUrl();
         const header = (
-          `📋 <b>В очереди на проверку: ${reviewTasks.length} задач(и).</b>\n\n` +
-          `📁 <b>Google Диск команды:</b> <a href="${gdriveFolderUrl}">Открыть папку сдачи</a>\n` +
+          `📋 <b>В очереди на проверку: ${reviewTasks.length} задач(и).</b>\n` +
+          (linkedUser.access_level === 2 ? `📂 <i>Цех: ${linkedUser.role}</i>\n` : '') +
+          `\n📁 <b>Google Диск команды:</b> <a href="${gdriveFolderUrl}">Открыть папку сдачи</a>\n` +
           'Выберите оценку от 1 до 10 для нужного задания кнопками ниже:'
         );
         await sendTelegramMessage(chatId, header);
@@ -1150,14 +1612,16 @@ class TelegramBotWorker {
           const fileBadge = t.file_name ? `📎 <b>Сданный файл:</b> <code>${t.file_name}</code>\n` : '';
           const deadlineBadge = t.deadline ? `⏰ <b>Дедлайн:</b> <code>${t.deadline.replace('T', ' ')}</code>\n` : '';
           const fileInfoLine = t.file_link ? `🔗 <b>Ссылка / файл:</b> ${t.file_link}\n` : '';
+          const descLine = t.description ? `📝 <b>ТЗ:</b> ${t.description.length > 100 ? t.description.slice(0, 97) + '...' : t.description}\n` : '';
 
           const card = (
             `📌 <b>Задача #${t.id}</b> — <b>${t.title}</b>\n` +
             `📂 <b>Цех:</b> <code>${t.direction}</code> | 👤 <b>Исполнитель:</b> ${assigneeName}\n` +
+            descLine +
             deadlineBadge +
             fileBadge +
             fileInfoLine + '\n' +
-            '⭐ <b>Поставьте оценку прямо здесь (1–10):</b>'
+            '⭐ <b>Поставьте оценку прямо здесь (1–10) или отправьте на доработку:</b>'
           );
           const kbd = getRatingKeyboard(t.id, t.file_link);
           await sendTelegramMessage(chatId, card, kbd);
@@ -1165,6 +1629,207 @@ class TelegramBotWorker {
       } else {
         await sendTelegramMessage(chatId, '🎉 <b>Очередь проверки пуста!</b>\nВсе сданные задачи уже проверены и закрыты.');
       }
+      return;
+    }
+
+    // 7.1. Command: /grade <taskId> <score> or /rate <taskId> <score>
+    if (rawText.startsWith('/grade') || rawText.startsWith('/rate')) {
+      const parts = rawText.split(/\s+/);
+      if (parts.length >= 3) {
+        const taskId = parseInt(parts[1], 10);
+        const score = parseInt(parts[2], 10);
+        if (!isNaN(taskId) && !isNaN(score)) {
+          const res = await applyTaskRatingByTgUser(taskId, score, tgUserId, tgUsername);
+          await sendTelegramMessage(chatId, res.message);
+          return;
+        }
+      }
+      await sendTelegramMessage(chatId, 'ℹ️ Формат команды: <code>/grade &lt;ID задачи&gt; &lt;оценка 1-10&gt;</code>\nПример: <code>/grade 5 10</code>');
+      return;
+    }
+
+    // 7.2. Command: /rework <taskId> [notes]
+    if (rawText.startsWith('/rework')) {
+      const parts = rawText.split(/\s+/);
+      if (parts.length >= 2) {
+        const taskId = parseInt(parts[1], 10);
+        const notes = parts.slice(2).join(' ') || 'Возвращено на доработку через Telegram';
+        if (!isNaN(taskId)) {
+          const res = await applyTaskReworkByTgUser(taskId, tgUserId, tgUsername, notes);
+          await sendTelegramMessage(chatId, res.message);
+          return;
+        }
+      }
+      await sendTelegramMessage(chatId, 'ℹ️ Формат команды: <code>/rework &lt;ID задачи&gt; &lt;замечания&gt;</code>\nПример: <code>/rework 5 Переделать первый слайд</code>');
+      return;
+    }
+
+    // 7.3. Action: 👥 Заявки на регистрацию (/pending, /requests, заявки)
+    const isPending = cleanText.includes('заявки') ||
+                      cleanText.includes('модераци') ||
+                      cleanText === '/pending' ||
+                      cleanText === '/requests';
+
+    if (isPending) {
+      if (!linkedUser) {
+        await sendTelegramMessage(chatId, '⚠️ Сначала привяжите аккаунт руководителя: <code>/bind &lt;логин&gt; &lt;пароль&gt;</code>');
+        return;
+      }
+      if (linkedUser.access_level < 3) {
+        await sendTelegramMessage(chatId, `🔒 Управление заявками доступно руководству и администраторам (3–4 ур.). Ваш профиль: ${linkedUser.name} (Ур. ${linkedUser.access_level}).`);
+        return;
+      }
+
+      const pendingUsers = await db.all('SELECT * FROM users WHERE is_approved = 0 ORDER BY id DESC');
+      if (pendingUsers.length === 0) {
+        await sendTelegramMessage(chatId, '🎉 <b>Нет заявок на модерации!</b>\nВсе кандидаты уже одобрены и имеют доступ.');
+        return;
+      }
+
+      await sendTelegramMessage(chatId, `👥 <b>На рассмотрении ${pendingUsers.length} заявок(ки):</b>`);
+
+      for (const cand of pendingUsers) {
+        const tgStr = cand.telegram_id ? (cand.telegram_id.startsWith('@') ? cand.telegram_id : `ID: <code>${cand.telegram_id}</code>`) : 'не указан';
+        const candCard = (
+          `👤 <b>Заявка #${cand.id}: ${cand.name}</b>\n` +
+          `🔑 <b>Логин:</b> <code>@${cand.username}</code>\n` +
+          `🏷️ <b>Желаемый цех:</b> <b>${cand.role}</b>\n` +
+          `✈️ <b>Telegram:</b> ${tgStr}\n\n` +
+          'Нажмите кнопку для решения прямо из Telegram:'
+        );
+        const kbd = {
+          inline_keyboard: [
+            [
+              { text: '✅ Одобрить (Участник)', callback_data: `approve_user:${cand.id}:1` },
+              { text: '👑 Одобрить (Глава цеха)', callback_data: `approve_user:${cand.id}:2` }
+            ],
+            [
+              { text: '❌ Отклонить', callback_data: `reject_user:${cand.id}` }
+            ]
+          ]
+        };
+        await sendTelegramMessage(chatId, candCard, kbd);
+      }
+      return;
+    }
+
+    // 7.4. Action: ➕ Добавить участника (/add_user, /add, добавить участника)
+    const isAddUserBtn = cleanText.includes('добавить участника') || cleanText === 'добавить';
+    if (rawText.startsWith('/add_user') || rawText.startsWith('/add') || isAddUserBtn) {
+      if (!linkedUser) {
+        await sendTelegramMessage(chatId, '⚠️ Сначала привяжите профиль руководителя: <code>/bind &lt;логин&gt; &lt;пароль&gt;</code>');
+        return;
+      }
+      if (linkedUser.access_level < 3) {
+        await sendTelegramMessage(chatId, '🔒 Добавлять участников могут только руководители (3+) и администраторы (4 ур.).');
+        return;
+      }
+
+      const parts = rawText.split(/\s+/);
+      if (parts.length >= 4 && (parts[0] === '/add_user' || parts[0] === '/add')) {
+        const newLogin = parts[1].replace('@', '').toLowerCase().trim();
+        const rawRole = parts[2].trim();
+        const newName = parts.slice(3).join(' ').trim();
+
+        const validRoles = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ', 'Руководство'];
+        const matchedRole = validRoles.find(r => r.toLowerCase() === rawRole.toLowerCase()) || rawRole;
+
+        const existing = await db.get('SELECT id FROM users WHERE LOWER(username) = ?', [newLogin]);
+        if (existing) {
+          await sendTelegramMessage(chatId, `❌ Логин <code>@${newLogin}</code> уже занят другим участником.`);
+          return;
+        }
+
+        const passHash = db.hashPassword('kedr2026');
+        const insRes = await db.run(
+          `INSERT INTO users (name, username, password_hash, role, access_level, is_approved, completed_tasks, average_score)
+           VALUES (?, ?, ?, ?, 1, 1, 0, 0.0)`,
+          [newName, newLogin, passHash, matchedRole]
+        );
+        const createdId = insRes.lastID;
+        const botName = getBotUsername();
+
+        const successCard = (
+          '✅ <b>УЧАСТНИК УСПЕШНО ДОБАВЛЕН!</b>\n\n' +
+          `👤 <b>ФИО:</b> ${newName}\n` +
+          `🔑 <b>Логин:</b> <code>@${newLogin}</code>\n` +
+          `🏷️ <b>Цех:</b> <b>${matchedRole}</b>\n` +
+          '🔑 <b>Пароль по умолчанию:</b> <code>kedr2026</code>\n' +
+          '⭐ <b>Уровень доступа:</b> 1 (Участник)\n\n' +
+          '🔗 <b>Ссылка для привязки в 1 клик в Telegram:</b>\n' +
+          `https://t.me/${botName}?start=bind_${createdId}\n\n` +
+          '<i>Перешлите эту ссылку участнику — он нажмет «Запустить» в Telegram и сразу подключится к боту!</i>'
+        );
+        await sendTelegramMessage(chatId, successCard);
+        return;
+      }
+
+      const helpMsg = (
+        '➕ <b>ДОБАВЛЕНИЕ УЧАСТНИКА В КОМАНДУ</b>\n\n' +
+        'Чтобы добавить человека, отправьте команду:\n' +
+        '<code>/add_user &lt;логин&gt; &lt;цех&gt; &lt;Имя и Фамилия&gt;</code>\n\n' +
+        '📌 <b>Пример:</b>\n' +
+        '<code>/add_user ivanov Фото Иван Иванов</code>\n\n' +
+        '🏷️ <b>Доступные цехи:</b> <code>Фото</code>, <code>Дизайн</code>, <code>Видео</code>, <code>Моушен</code>, <code>СММ</code>, <code>Руководство</code>.\n\n' +
+        '💡 <i>Пароль по умолчанию создается:</i> <code>kedr2026</code>\n' +
+        '<i>Бот автоматически создаст пользователя и пришлет персональную ссылку для входа!</i>'
+      );
+      await sendTelegramMessage(chatId, helpMsg);
+      return;
+    }
+
+    // 7.5. Action: 📝 Регистрация / подать заявку (/register, регистрация, подать заявку)
+    const isRegister = cleanText.includes('подать заявку') ||
+                       cleanText.includes('регистраци') ||
+                       cleanText === '/register';
+
+    if (isRegister) {
+      if (linkedUser && linkedUser.is_approved) {
+        await sendTelegramMessage(
+          chatId,
+          `✅ Вы уже зарегистрированы и активны в медиацентре: <b>${linkedUser.name}</b> (${linkedUser.role}, Ур. ${linkedUser.access_level}).`,
+          getMainReplyKeyboard(linkedUser)
+        );
+        return;
+      }
+
+      const pendingCheck = await db.get('SELECT * FROM users WHERE telegram_id = ? AND is_approved = 0', [chatId]);
+      if (pendingCheck) {
+        await sendTelegramMessage(
+          chatId,
+          `⏳ Ваша заявка (<b>${pendingCheck.name}</b>, цех: <b>${pendingCheck.role}</b>) уже находится на рассмотрении руководства медиацентра.\n\nКак только администратор подтвердит её, вы получите уведомление!`
+        );
+        return;
+      }
+
+      const regKbd = {
+        inline_keyboard: [
+          [
+            { text: '📸 Фото', callback_data: 'reg_dept:Фото' },
+            { text: '🎨 Дизайн', callback_data: 'reg_dept:Дизайн' }
+          ],
+          [
+            { text: '🎬 Видео', callback_data: 'reg_dept:Видео' },
+            { text: '✨ Моушен', callback_data: 'reg_dept:Моушен' }
+          ],
+          [
+            { text: '📱 СММ', callback_data: 'reg_dept:СММ' }
+          ]
+        ]
+      };
+
+      const msgText = (
+        '📝 <b>РЕГИСТРАЦИЯ В МЕДИАЦЕНТР КЕДР СГТУ</b>\n\n' +
+        `Приветствуем, <b>${userName}</b>!\n` +
+        'Выберите цех (направление), в котором вы хотите работать:\n\n' +
+        '• <b>Фото</b> — репортажная и студийная съемка\n' +
+        '• <b>Дизайн</b> — графика, баннеры, айдентика\n' +
+        '• <b>Видео</b> — съемка и монтаж сюжетов\n' +
+        '• <b>Моушен</b> — анимация, титры, заставки\n' +
+        '• <b>СММ</b> — копирайтинг, посты, контент-план\n\n' +
+        '<i>Нажмите на кнопку с нужным направлением ниже:</i>'
+      );
+      await sendTelegramMessage(chatId, msgText, regKbd);
       return;
     }
 
@@ -1199,21 +1864,26 @@ class TelegramBotWorker {
 
     if (isHelp) {
       const isLead = linkedUser && linkedUser.access_level >= 2;
+      const isAdmin = linkedUser && linkedUser.access_level >= 3;
       const helpText = (
         'ℹ️ <b>СПРАВКА ПО БОТУ МЕДИАЦЕНТРА (@ping_sstu_bot):</b>\n\n' +
         '🔘 <b>Быстрые кнопки внизу экрана (плашки):</b>\n' +
         '• <b>📋 Мои задачи</b> — список ваших задач в работе и на доработке\n' +
         '• <b>🔥 Горящие дедлайны</b> — задачи со сроком менее 48ч или просроченные\n' +
         '• <b>🟢 Свободные задачи</b> — просмотр открытых задач в контент-плане\n' +
-        (isLead ? '• <b>📋 Задачи на проверке</b> — очередь работ с кнопками быстрой оценки (1–10)\n• <b>📊 Статистика медиацентра</b> — сводка команды\n' : '') +
+        (isLead ? '• <b>📋 Задачи на проверке</b> — очередь работ с кнопками быстрой оценки (1–10) и доработкой\n' : '') +
+        (isAdmin ? '• <b>👥 Заявки на регистрацию</b> — модерация и одобрение новых участников\n• <b>➕ Добавить участника</b> — ручное добавление новичка в цех\n• <b>📊 Статистика медиацентра</b> — сводка команды\n' : '') +
         '• <b>👤 Мой профиль</b> — ваши данные, цех, уровень и рейтинг\n' +
         '• <b>ℹ️ Помощь</b> — эта справка\n\n' +
         '📤 <b>Сдача работ:</b>\n' +
         'Просто отправьте боту файл, фото или видео с указанием номера задачи в подписи (например: <code>#12</code>).\n\n' +
         '⌨️ <b>Текстовые команды:</b>\n' +
+        '• <code>/register</code> — подать заявку на вступление в медиацентр\n' +
         '• <code>/bind &lt;логин&gt; &lt;пароль&gt;</code> — связать аккаунт\n' +
-        '• <code>/rate &lt;ID&gt; &lt;оценка&gt;</code> — оценить задачу текстом\n' +
+        '• <code>/review</code> — открыть очередь проверки задач\n' +
+        '• <code>/rate &lt;ID&gt; &lt;оценка 1-10&gt;</code> — выставить оценку задаче\n' +
         '• <code>/rework &lt;ID&gt; [замечания]</code> — вернуть на доработку\n' +
+        (isAdmin ? '• <code>/pending</code> — список ожидающих заявок на регистрацию\n• <code>/add_user &lt;логин&gt; &lt;цех&gt; &lt;ФИО&gt;</code> — добавить участника\n' : '') +
         '• <code>/myid</code> — показать ваш цифровой Chat ID\n' +
         '• <code>/unbind</code> — отвязать Telegram'
       );
@@ -1268,9 +1938,11 @@ class TelegramBotWorker {
 
     // 14. /unbind
     if (rawText === '/unbind' || cleanText === 'отвязать' || cleanText === 'выйти') {
-      const usr = await db.get('SELECT * FROM users WHERE telegram_id = ?', [chatId]);
+      const usr = await findLinkedTelegramUser(chatId, tgUserId, tgUsername);
       if (usr) {
         await db.run('UPDATE users SET telegram_id = NULL WHERE id = ?', [usr.id]);
+        removeTelegramBinding(chatId);
+        removeTelegramBinding(usr.id);
         await sendTelegramMessage(chatId, `✅ Аккаунт <b>${usr.name}</b> отвязан. Оповещения отключены.`, getMainReplyKeyboard(null));
       } else {
         await sendTelegramMessage(chatId, 'ℹ️ Ваш Telegram не был привязан ни к одному аккаунту.', getMainReplyKeyboard(null));
@@ -1288,14 +1960,7 @@ class TelegramBotWorker {
   }
 
   async handleFileSubmission(message, chatId, tgUserId, tgUsername, userName) {
-    let linkedUser = await db.get('SELECT * FROM users WHERE telegram_id = ?', [chatId]);
-    if (!linkedUser) {
-      linkedUser = await db.get('SELECT * FROM users WHERE telegram_id = ?', [tgUserId]);
-    }
-    if (!linkedUser && tgUsername) {
-      const cleanU = tgUsername.replace('@', '').toLowerCase();
-      linkedUser = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [cleanU]);
-    }
+    let linkedUser = await findLinkedTelegramUser(chatId, tgUserId, tgUsername);
 
     if (!linkedUser) {
       const msg = (
@@ -1423,6 +2088,11 @@ class TelegramBotWorker {
 
 const botWorker = new TelegramBotWorker();
 
+async function initTelegramBot() {
+  await syncTelegramBindings();
+  botWorker.start();
+}
+
 module.exports = {
   getConfig,
   saveConfig,
@@ -1437,12 +2107,22 @@ module.exports = {
   applyTaskRatingByTgUser,
   applyTaskReworkByTgUser,
   notifyTaskSubmittedForReview,
+  notifyTaskSubmitted,
   notifyNewUserRegistered,
   notifyTaskGraded,
   notifyTaskRework,
   notifyTaskForceAssigned,
   notifyTaskComment,
+  notifyTaskNewComment,
+  notifyUserApproved,
   sendTestNotification,
   testTelegramConnection,
-  botWorker
+  initTelegramBot,
+  botWorker,
+  persistTelegramBinding,
+  removeTelegramBinding,
+  findLinkedTelegramUser,
+  syncTelegramBindings,
+  getTelegramBindings
 };
+

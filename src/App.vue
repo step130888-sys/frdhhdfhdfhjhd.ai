@@ -3,9 +3,20 @@
     <!-- Navbar (Desktop top + Mobile bottom) -->
     <Navbar />
 
+    <!-- Ambient Glass Lighting Orbs (Fixed background refraction for Liquid Glass) -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      <div class="absolute -top-32 left-1/4 w-96 h-96 rounded-full bg-orange-400/10 dark:bg-[#fcb4d5]/10 blur-3xl"></div>
+      <div class="absolute top-1/3 -right-20 w-[420px] h-[420px] rounded-full bg-amber-400/8 dark:bg-purple-600/10 blur-3xl"></div>
+      <div class="absolute bottom-10 left-10 w-80 h-80 rounded-full bg-orange-300/10 dark:bg-[#fcb4d5]/8 blur-3xl"></div>
+    </div>
+
     <!-- Main Content Area with safe mobile bottom margin -->
-    <main class="flex-1 pb-24 md:pb-8">
-      <router-view />
+    <main class="flex-1 pb-24 md:pb-8 relative z-10 overflow-x-hidden">
+      <router-view v-slot="{ Component, route }">
+        <transition name="page-swipe" mode="out-in">
+          <component :is="Component" :key="route.path" />
+        </transition>
+      </router-view>
     </main>
 
     <!-- Online Drawer -->
