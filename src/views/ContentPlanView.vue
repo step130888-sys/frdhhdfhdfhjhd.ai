@@ -98,6 +98,58 @@
         </div>
       </div>
 
+      <!-- TOP CALENDAR WIDGET: Month Grid + Quick Multi-Task Navigation -->
+      <MultiTaskCalendar
+        v-model="calendarSelectedDate"
+        :events="calendarEvents"
+        :can-create="isLeader"
+        @jump-to-event="onJumpToMultiTask"
+        @create-on-date="onCreateOnDate"
+      />
+
+      <!-- Multi-tasks Section Header & Filter Toolbar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 pb-1 border-b border-black/[0.06] dark:border-white/[0.08]">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-2.5 h-2.5 rounded-full bg-orange-500 dark:bg-[#fcb4d5] animate-pulse"></div>
+          <h2 class="text-sm sm:text-base font-black uppercase tracking-wider text-slate-800 dark:text-white">
+            <template v-if="calendarSelectedDate && filterByDateOnly">
+              Мульти-задачи на {{ formatFilterDateTitle(calendarSelectedDate) }}
+            </template>
+            <template v-else>
+              Все мульти-задачи медиацентра
+            </template>
+          </h2>
+          <span class="text-xs font-mono font-bold text-slate-400">
+            ({{ displayedCalendarEvents.length }})
+          </span>
+        </div>
+
+        <!-- Filter & View Controls -->
+        <div class="flex items-center space-x-3 text-xs">
+          <!-- Toggle: Filter by selected date -->
+          <label
+            v-if="calendarSelectedDate"
+            class="flex items-center space-x-2 cursor-pointer px-3 py-1.5 rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 border border-orange-500/20 dark:border-[#fcb4d5]/30 text-orange-700 dark:text-[#fcb4d5] font-bold"
+          >
+            <input
+              type="checkbox"
+              v-model="filterByDateOnly"
+              class="rounded text-orange-500 focus:ring-orange-500/20 cursor-pointer"
+            />
+            <span>Показывать только выбранную дату</span>
+          </label>
+
+          <button
+            v-if="calendarSelectedDate && filterByDateOnly"
+            type="button"
+            @click="clearDateFilter"
+            class="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white underline cursor-pointer"
+          >
+            Показать все даты
+          </button>
+        </div>
+      </div>
+
       <!-- Loading State -->
       <div v-if="calendarLoading" class="text-center py-20 text-slate-400 text-xs font-medium">
         <div class="animate-spin w-8 h-8 border-2 border-orange-500 dark:border-rose-500 border-t-transparent rounded-full mx-auto mb-3"></div>
@@ -105,7 +157,7 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else-if="calendarEvents.length === 0" class="cyber-glass rounded-3xl p-12 text-center text-slate-400 max-w-md mx-auto">
+      <div v-else-if="displayedCalendarEvents.length === 0" class="cyber-glass rounded-3xl p-12 text-center text-slate-400 max-w-md mx-auto">
         <div class="w-16 h-16 rounded-2xl bg-orange-50 dark:bg-rose-500/10 border border-orange-200 dark:border-rose-500/20 flex items-center justify-center text-orange-500 dark:text-rose-400 mx-auto mb-4">
           <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
@@ -133,10 +185,14 @@
       <!-- Multi-task Cards Timeline -->
       <div v-else class="space-y-8">
         <div
-          v-for="ev in calendarEvents"
+          v-for="ev in displayedCalendarEvents"
           :key="ev.id"
+          :id="'multitask-' + ev.id"
           @click="openDetailMultiTask(ev)"
-          class="cyber-glass rounded-3xl overflow-hidden transition-all duration-200 cursor-pointer group/card"
+          class="cyber-glass rounded-3xl overflow-hidden transition-all duration-300 cursor-pointer group/card scroll-mt-24"
+          :class="{
+            'ring-4 ring-orange-500/80 dark:ring-[#fcb4d5] shadow-2xl scale-[1.01] -translate-y-0.5': highlightedEventId === ev.id
+          }"
           title="Нажмите на карточку для просмотра деталей мульти-задачи"
         >
           <!-- Multi-task Header (Liquid Glass) -->
@@ -392,12 +448,13 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import TaskCard from '../components/TaskCard.vue';
 import CreateTaskModal from '../components/CreateTaskModal.vue';
 import MultiTaskModal from '../components/MultiTaskModal.vue';
 import MultiTaskDetailModal from '../components/MultiTaskDetailModal.vue';
+import MultiTaskCalendar from '../components/MultiTaskCalendar.vue';
 import AnimatedPills from '../components/AnimatedPills.vue';
 
 const { user, isLeader, canCreateTasks, showNotification } = useAuthStore();
@@ -443,6 +500,66 @@ const editingEvent = ref(null);
 // Multi-Task Detail State
 const showDetailModal = ref(false);
 const selectedDetailEvent = ref(null);
+
+// Top Calendar State & Quick Jump
+const calendarSelectedDate = ref(null);
+const filterByDateOnly = ref(false);
+const highlightedEventId = ref(null);
+
+const onJumpToMultiTask = (ev) => {
+  if (!ev) return;
+  highlightedEventId.value = ev.id;
+
+  if (ev.event_date) {
+    calendarSelectedDate.value = ev.event_date.substring(0, 10);
+  }
+
+  setTimeout(() => {
+    const el = document.getElementById(`multitask-${ev.id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 100);
+
+  setTimeout(() => {
+    if (highlightedEventId.value === ev.id) {
+      highlightedEventId.value = null;
+    }
+  }, 3200);
+};
+
+const onCreateOnDate = (dateStr) => {
+  editingEvent.value = { event_date: dateStr };
+  showMultiTaskModal.value = true;
+};
+
+const clearDateFilter = () => {
+  calendarSelectedDate.value = null;
+  filterByDateOnly.value = false;
+};
+
+const displayedCalendarEvents = computed(() => {
+  if (!filterByDateOnly.value || !calendarSelectedDate.value) {
+    return calendarEvents.value;
+  }
+  return calendarEvents.value.filter(ev => {
+    const rawDate = ev.event_date || (ev.deadline ? ev.deadline.substring(0, 10) : null);
+    return rawDate && rawDate.startsWith(calendarSelectedDate.value);
+  });
+});
+
+const formatFilterDateTitle = (dateStr) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length < 3) return dateStr;
+  const monthIdx = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+  const mGenitive = [
+    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+  ];
+  return `${day} ${mGenitive[monthIdx] || ''} ${parts[0]}`;
+};
 
 const openCreateMultiTask = () => {
   editingEvent.value = null;
