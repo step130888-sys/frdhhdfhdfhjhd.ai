@@ -333,14 +333,9 @@ router.get('/users/:id', requireAuth, async (req, res) => {
   const userTasks = await db.all(`
     SELECT t.*,
            g.name AS grader_name, g.role AS grader_role,
-           COALESCE(tc.comment_count, 0) AS comment_count
+           (SELECT COUNT(*) FROM task_comments tc WHERE tc.task_id = t.id) AS comment_count
     FROM tasks t
     LEFT JOIN users g ON t.graded_by_id = g.id
-    LEFT JOIN (
-      SELECT task_id, COUNT(*) AS comment_count
-      FROM task_comments
-      GROUP BY task_id
-    ) tc ON t.id = tc.task_id
     WHERE t.assigned_to_id = ?
     ORDER BY t.id DESC
   `, [profileId]);
@@ -610,14 +605,9 @@ router.get('/tasks/calendar', requireAuth, async (req, res) => {
   const allTasks = await db.all(`
     SELECT t.*,
            u.id AS u_id, u.name AS u_name, u.username AS u_username, u.role AS u_role, u.avatar_url AS u_avatar_url,
-           COALESCE(tc.comment_count, 0) AS comment_count
+           (SELECT COUNT(*) FROM task_comments tc WHERE tc.task_id = t.id) AS comment_count
     FROM tasks t
     LEFT JOIN users u ON t.assigned_to_id = u.id
-    LEFT JOIN (
-      SELECT task_id, COUNT(*) AS comment_count
-      FROM task_comments
-      GROUP BY task_id
-    ) tc ON t.id = tc.task_id
     ORDER BY 
       CASE WHEN t.event_date IS NOT NULL AND TRIM(t.event_date) != '' THEN t.event_date ELSE SUBSTR(t.deadline, 1, 10) END ASC,
       t.id ASC
@@ -855,14 +845,9 @@ router.get('/tasks', requireAuth, async (req, res) => {
            u.role AS u_role,
            u.avatar_url AS u_avatar_url,
            u.access_level AS u_access_level,
-           COALESCE(tc.comment_count, 0) AS comment_count
+           (SELECT COUNT(*) FROM task_comments tc WHERE tc.task_id = t.id) AS comment_count
     FROM tasks t
     LEFT JOIN users u ON t.assigned_to_id = u.id
-    LEFT JOIN (
-      SELECT task_id, COUNT(*) AS comment_count
-      FROM task_comments
-      GROUP BY task_id
-    ) tc ON t.id = tc.task_id
   `;
   const where = [];
   const params = [];
@@ -1786,6 +1771,105 @@ router.post('/ideas/:id/status', requireAuth, requireLevel(3), async (req, res) 
   } catch (e) {}
 
   res.json({ success: true, status, message: `Статус идеи обновлен на «${statusLabels[status]}»` });
+});
+
+// DELETE /api/ideas/:id - Delete idea & discussion (Level 4-5 only)
+router.delete('/ideas/:id', requireAuth, requireLevel(4), async (req, res) => {
+  const ideaId = parseInt(req.params.id, 10);
+  const idea = await db.get('SELECT * FROM ideas WHERE id = ?', [ideaId]);
+  if (!idea) {
+    return res.status(404).json({ error: 'Предложение не найдено.' });
+  }
+
+  await db.run('DELETE FROM idea_comments WHERE idea_id = ?', [ideaId]);
+  await db.run('DELETE FROM ideas WHERE id = ?', [ideaId]);
+
+  res.json({ success: true, message: 'Предложение успешно удалено.' });
+});
+
+// --------------------------------------------------------------------------
+// GUARDIAN SECRET NOTES ("Гос-Долг USA" - Level 5 only)
+// --------------------------------------------------------------------------
+
+// GET /api/guardian-notes - Get all secret notes
+router.get('/guardian-notes', requireAuth, requireLevel(5), async (req, res) => {
+  const notes = await db.all(`
+    SELECT n.*, u.name AS author_name, u.role AS author_role, u.avatar_url AS author_avatar
+    FROM guardian_notes n
+    JOIN users u ON n.user_id = u.id
+    ORDER BY n.is_pinned DESC, n.id DESC
+  `);
+  res.json({ success: true, notes });
+});
+
+// POST /api/guardian-notes - Create a new secret note
+router.post('/guardian-notes', requireAuth, requireLevel(5), async (req, res) => {
+  const title = (req.body.title || '').trim();
+  const content = (req.body.content || '').trim();
+  const isPinned = req.body.is_pinned ? 1 : 0;
+
+  if (!content) {
+    return res.status(400).json({ error: 'Содержание заметки не может быть пустым.' });
+  }
+
+  const now = new Date().toISOString();
+  const result = await db.run(
+    'INSERT INTO guardian_notes (user_id, title, content, is_pinned, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+    [req.user.id, title || 'Без названия', content, isPinned, now, now]
+  );
+
+  const note = await db.get(`
+    SELECT n.*, u.name AS author_name, u.role AS author_role, u.avatar_url AS author_avatar
+    FROM guardian_notes n
+    JOIN users u ON n.user_id = u.id
+    WHERE n.id = ?
+  `, [result.lastID]);
+
+  res.json({ success: true, note, message: 'Заметка сохранена в секретном архиве Хранителей.' });
+});
+
+// PUT /api/guardian-notes/:id - Update secret note
+router.put('/guardian-notes/:id', requireAuth, requireLevel(5), async (req, res) => {
+  const noteId = parseInt(req.params.id, 10);
+  const note = await db.get('SELECT * FROM guardian_notes WHERE id = ?', [noteId]);
+  if (!note) {
+    return res.status(404).json({ error: 'Заметка не найдена.' });
+  }
+
+  const title = req.body.title !== undefined ? req.body.title.trim() : note.title;
+  const content = req.body.content !== undefined ? req.body.content.trim() : note.content;
+  const isPinned = req.body.is_pinned !== undefined ? (req.body.is_pinned ? 1 : 0) : note.is_pinned;
+
+  if (!content) {
+    return res.status(400).json({ error: 'Содержание заметки не может быть пустым.' });
+  }
+
+  const now = new Date().toISOString();
+  await db.run(
+    'UPDATE guardian_notes SET title = ?, content = ?, is_pinned = ?, updated_at = ? WHERE id = ?',
+    [title || 'Без названия', content, isPinned, now, noteId]
+  );
+
+  const updated = await db.get(`
+    SELECT n.*, u.name AS author_name, u.role AS author_role, u.avatar_url AS author_avatar
+    FROM guardian_notes n
+    JOIN users u ON n.user_id = u.id
+    WHERE n.id = ?
+  `, [noteId]);
+
+  res.json({ success: true, note: updated, message: 'Заметка обновлена.' });
+});
+
+// DELETE /api/guardian-notes/:id - Delete secret note
+router.delete('/guardian-notes/:id', requireAuth, requireLevel(5), async (req, res) => {
+  const noteId = parseInt(req.params.id, 10);
+  const note = await db.get('SELECT * FROM guardian_notes WHERE id = ?', [noteId]);
+  if (!note) {
+    return res.status(404).json({ error: 'Заметка не найдена.' });
+  }
+
+  await db.run('DELETE FROM guardian_notes WHERE id = ?', [noteId]);
+  res.json({ success: true, message: 'Заметка удалена из архива.' });
 });
 
 module.exports = router;

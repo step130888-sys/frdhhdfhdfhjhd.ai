@@ -4,23 +4,39 @@
     <header class="bg-white/70 dark:bg-[#07080B]/75 backdrop-blur-3xl border-b border-black/[0.05] dark:border-white/[0.08] sticky top-0 z-40 transition-colors shadow-2xs">
       <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-17 flex items-center justify-between gap-3 sm:gap-6 flex-nowrap w-full">
         
-        <!-- Left: Brand & Logo -->
-        <router-link to="/content-plan" class="flex items-center space-x-2.5 sm:space-x-3 shrink-0 group">
-          <div class="relative flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
-            <img
-              src="/uploads/liquid_glass_logo.png"
-              alt="СМС СГТУ"
-              class="h-7 sm:h-8 md:h-9 w-auto object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.12)] dark:drop-shadow-[0_2px_14px_rgba(255,255,255,0.22)] select-none"
-            >
-          </div>
-          <div class="flex flex-col justify-center">
-            <div class="flex items-center space-x-1.5 leading-none">
-              <span class="font-bold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white whitespace-nowrap">СМС СГТУ</span>
-              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/10 dark:bg-[#fcb4d5]/15 text-orange-600 dark:text-[#fcb4d5] uppercase tracking-wider hidden sm:inline-block">МЕДИА</span>
+        <!-- Left: Secret Tab & Brand & Logo -->
+        <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+          <!-- Secret Tab: Гос-Долг USA (Keepers / Level 5 only) -->
+          <router-link
+            v-if="user && user.access_level >= 5"
+            to="/secret-debt-usa"
+            title="Секретный архив Хранителей: Гос-Долг USA"
+            class="px-2.5 py-1.5 rounded-xl border border-pink-300 dark:border-[#fcb4d5]/40 bg-pink-100/90 hover:bg-pink-200 dark:bg-pink-500/25 dark:hover:bg-pink-500/35 text-pink-900 dark:text-[#fcb4d5] text-[11px] sm:text-xs font-black flex items-center space-x-1.5 transition-all shadow-xs shrink-0 active:scale-95 group"
+            :class="$route.path === '/secret-debt-usa' ? 'ring-2 ring-pink-400 dark:ring-[#fcb4d5]' : ''"
+          >
+            <span class="text-sm">🇺🇸</span>
+            <span class="tracking-tight whitespace-nowrap">Гос-Долг USA</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse hidden sm:inline-block"></span>
+          </router-link>
+
+          <!-- Brand & Logo -->
+          <router-link to="/content-plan" class="flex items-center space-x-2.5 sm:space-x-3 shrink-0 group">
+            <div class="relative flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
+              <img
+                src="/uploads/liquid_glass_logo.png"
+                alt="СМС СГТУ"
+                class="h-7 sm:h-8 md:h-9 w-auto object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.12)] dark:drop-shadow-[0_2px_14px_rgba(255,255,255,0.22)] select-none"
+              >
             </div>
-            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-normal hidden lg:block leading-none mt-1">Студенческий медиацентр</span>
-          </div>
-        </router-link>
+            <div class="flex flex-col justify-center">
+              <div class="flex items-center space-x-1.5 leading-none">
+                <span class="font-bold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white whitespace-nowrap">СМС СГТУ</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/10 dark:bg-[#fcb4d5]/15 text-orange-600 dark:text-[#fcb4d5] uppercase tracking-wider hidden sm:inline-block">МЕДИА</span>
+              </div>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-normal hidden lg:block leading-none mt-1">Студенческий медиацентр</span>
+            </div>
+          </router-link>
+        </div>
 
         <!-- Center: Navigation Links (Wide Apple Liquid Glass Dock) -->
         <nav v-if="isLoggedIn" ref="navDockRef" class="relative hidden md:flex items-center gap-1.5 p-1.5 rounded-2xl glass-pill-dock shrink-0">

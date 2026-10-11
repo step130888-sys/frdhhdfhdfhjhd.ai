@@ -66,6 +66,12 @@ const routes = [
     meta: { requiresAuth: true, minLevel: 4 }
   },
   {
+    path: '/secret-debt-usa',
+    name: 'secret-debt-usa',
+    component: () => import('../views/USADebtView.vue'),
+    meta: { requiresAuth: true, minLevel: 5 }
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/content-plan'
   }

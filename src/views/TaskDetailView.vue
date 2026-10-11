@@ -222,7 +222,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import TaskChat from '../components/TaskChat.vue';
@@ -233,9 +233,13 @@ import ReworkTaskModal from '../components/ReworkTaskModal.vue';
 const route = useRoute();
 const { user, isLeader, isWorkshopHead, showNotification } = useAuthStore();
 
-const taskId = parseInt(route.params.id, 10);
+const taskId = computed(() => parseInt(route.params.id, 10));
 const task = ref(null);
 const loading = ref(true);
+
+watch(taskId, (newVal) => {
+  if (newVal) fetchTask();
+});
 
 const showSubmitModal = ref(false);
 const showRateModal = ref(false);
@@ -258,9 +262,10 @@ const canRework = computed(() => {
 });
 
 const fetchTask = async () => {
+  if (!taskId.value) return;
   loading.value = true;
   try {
-    const res = await fetch(`/api/tasks/${taskId}`);
+    const res = await fetch(`/api/tasks/${taskId.value}`);
     if (res.ok) {
       const data = await res.json();
       task.value = data.task;
@@ -273,8 +278,9 @@ const fetchTask = async () => {
 };
 
 const takeTask = async () => {
+  if (!taskId.value) return;
   try {
-    const res = await fetch(`/api/tasks/${taskId}/take`, { method: 'POST' });
+    const res = await fetch(`/api/tasks/${taskId.value}/take`, { method: 'POST' });
     const data = await res.json();
     if (res.ok) {
       showNotification(data.message);

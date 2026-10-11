@@ -47,6 +47,19 @@
             </select>
           </div>
 
+          <!-- Delete Proposal (Level 4-5 only) -->
+          <button
+            v-if="canDeleteIdea"
+            @click="handleDeleteIdea"
+            :disabled="isDeleting"
+            title="Удалить предложение (Уровни 4–5)"
+            class="p-2 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 transition-all cursor-pointer disabled:opacity-40"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/>
+            </svg>
+          </button>
+
           <button
             @click="close"
             class="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
@@ -172,7 +185,7 @@ const props = defineProps({
   ideaId: { type: Number, default: null }
 });
 
-const emit = defineEmits(['close', 'status-updated']);
+const emit = defineEmits(['close', 'status-updated', 'deleted']);
 
 const { user, isLeader, isSuperAdmin, isGuardian, showNotification } = useAuthStore();
 
@@ -180,10 +193,15 @@ const isManagement = computed(() => {
   return (user.value && user.value.access_level >= 3) || isLeader.value || isSuperAdmin.value || isGuardian.value;
 });
 
+const canDeleteIdea = computed(() => {
+  return user.value && user.value.access_level >= 4;
+});
+
 const idea = ref(null);
 const comments = ref([]);
 const loading = ref(false);
 const sending = ref(false);
+const isDeleting = ref(false);
 const inputMessage = ref('');
 const chatContainer = ref(null);
 let pollTimer = null;
@@ -236,7 +254,7 @@ const getStatusBadgeClass = (status) => {
 };
 
 const fetchIdeaDetails = async () => {
-  if (!props.ideaId) return;
+  if (!props.ideaId || !props.isOpen || document.hidden) return;
   try {
     const res = await fetch(`/api/ideas/${props.ideaId}`);
     if (res.ok) {
@@ -302,8 +320,35 @@ const updateStatus = async (newStatus) => {
   }
 };
 
+const handleDeleteIdea = async () => {
+  if (!props.ideaId) return;
+  if (!confirm('Вы уверены, что хотите безвозвратно удалить это предложение и весь чат обсуждения?')) return;
+  isDeleting.value = true;
+  try {
+    const res = await fetch(`/api/ideas/${props.ideaId}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (res.ok) {
+      showNotification(data.message || 'Предложение успешно удалено');
+      emit('deleted', props.ideaId);
+      close();
+    } else {
+      alert(data.error || 'Ошибка удаления предложения');
+    }
+  } catch (e) {
+    alert('Сетевая ошибка при удалении предложения');
+  } finally {
+    isDeleting.value = false;
+  }
+};
+
 const close = () => {
   emit('close');
+};
+
+const handleVisibilityChange = () => {
+  if (!document.hidden && props.isOpen && props.ideaId) {
+    fetchIdeaDetails();
+  }
 };
 
 watch(() => props.isOpen, (newVal) => {
@@ -317,7 +362,12 @@ watch(() => props.isOpen, (newVal) => {
   }
 });
 
+onMounted(() => {
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+});
+
 onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
 </script>

@@ -88,15 +88,31 @@ const getToastClasses = (type) => {
   }
 };
 
+const handleVisibilityChange = () => {
+  if (document.hidden) {
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
+    }
+  } else {
+    heartbeat();
+    if (!heartbeatInterval) {
+      heartbeatInterval = setInterval(heartbeat, 60000);
+    }
+  }
+};
+
 onMounted(() => {
   initTheme();
   fetchMe();
-  // 60-second online heartbeat
+  // 60-second online heartbeat (pauses on inactive tabs)
   heartbeatInterval = setInterval(heartbeat, 60000);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 });
 
 onUnmounted(() => {
   if (heartbeatInterval) clearInterval(heartbeatInterval);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
 </script>
 

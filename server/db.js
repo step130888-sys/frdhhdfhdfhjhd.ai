@@ -154,6 +154,19 @@ async function initDb() {
     )
   `);
 
+  await run(`
+    CREATE TABLE IF NOT EXISTS guardian_notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title VARCHAR(200) NOT NULL,
+      content TEXT NOT NULL,
+      is_pinned INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL,
+      updated_at DATETIME NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users (id)
+    )
+  `);
+
   // Column migrations for macro-calendar events and subtasks
   try {
     await run('ALTER TABLE tasks ADD COLUMN event_date VARCHAR(50)');
@@ -167,8 +180,10 @@ async function initDb() {
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)');
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_direction ON tasks(direction)');
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_deadline ON tasks(deadline)');
+  await run('CREATE INDEX IF NOT EXISTS idx_tasks_created_by ON tasks(created_by)');
   await run('CREATE INDEX IF NOT EXISTS idx_task_comments_task_id ON task_comments(task_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_task_comments_task_id_id ON task_comments(task_id, id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_task_comments_user_id ON task_comments(user_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_work_materials_direction ON work_materials(direction)');
   await run('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)');
   await run('CREATE INDEX IF NOT EXISTS idx_users_is_approved ON users(is_approved)');
@@ -182,6 +197,8 @@ async function initDb() {
   await run('CREATE INDEX IF NOT EXISTS idx_ideas_user_id ON ideas(user_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_ideas_status ON ideas(status)');
   await run('CREATE INDEX IF NOT EXISTS idx_idea_comments_idea_id ON idea_comments(idea_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_guardian_notes_user_id ON guardian_notes(user_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_guardian_notes_pinned_created ON guardian_notes(is_pinned DESC, id DESC)');
 
   await ensureRootAdmin();
   await ensureDemoAccounts();

@@ -163,13 +163,26 @@
               <span>{{ idea.comments_count || 1 }} сообщ.</span>
             </span>
 
-            <button
-              @click="openTeamIdeaChat(idea.id)"
-              class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-500/15 hover:bg-amber-100 dark:hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 transition-all flex items-center space-x-1 cursor-pointer"
-            >
-              <span>Диалог / Ответить</span>
-              <span>→</span>
-            </button>
+            <div class="flex items-center space-x-1.5">
+              <button
+                v-if="authStore.user?.access_level >= 4"
+                @click.stop="quickDeleteIdea(idea.id)"
+                title="Удалить предложение (Уровни 4–5)"
+                class="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/15 border border-transparent hover:border-rose-200 dark:hover:border-rose-500/30 transition-all cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/>
+                </svg>
+              </button>
+
+              <button
+                @click="openTeamIdeaChat(idea.id)"
+                class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-500/15 hover:bg-amber-100 dark:hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 transition-all flex items-center space-x-1 cursor-pointer"
+              >
+                <span>Диалог / Ответить</span>
+                <span>→</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -771,6 +784,7 @@
       :idea-id="activeIdeaId"
       @close="showIdeaChatModal = false"
       @status-updated="fetchTeamIdeas"
+      @deleted="onIdeaDeleted"
     />
 
   </div>
@@ -792,6 +806,26 @@ const teamIdeas = ref([]);
 const ideaStatusFilter = ref('');
 const showIdeaChatModal = ref(false);
 const activeIdeaId = ref(null);
+
+const onIdeaDeleted = (deletedId) => {
+  teamIdeas.value = teamIdeas.value.filter(i => i.id !== deletedId);
+};
+
+const quickDeleteIdea = async (id) => {
+  if (!confirm('Вы уверены, что хотите удалить это предложение и весь чат обсуждения?')) return;
+  try {
+    const res = await fetch(`/api/ideas/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (res.ok) {
+      authStore.showNotification(data.message || 'Предложение удалено.');
+      onIdeaDeleted(id);
+    } else {
+      alert(data.error || 'Ошибка удаления предложения');
+    }
+  } catch (e) {
+    alert('Сетевая ошибка при удалении предложения');
+  }
+};
 
 const filteredTeamIdeas = computed(() => {
   if (!ideaStatusFilter.value) return teamIdeas.value;

@@ -509,6 +509,7 @@
       :idea-id="activeIdeaId"
       @close="showIdeaChatModal = false"
       @status-updated="fetchUserIdeas"
+      @deleted="onIdeaDeleted"
     />
 
   </div>
@@ -543,6 +544,10 @@ const userIdeas = ref([]);
 const showNewIdeaModal = ref(false);
 const showIdeaChatModal = ref(false);
 const activeIdeaId = ref(null);
+
+const onIdeaDeleted = (deletedId) => {
+  userIdeas.value = userIdeas.value.filter(i => i.id !== deletedId);
+};
 
 const filteredTasks = computed(() => {
   if (!taskFilter.value) return userTasks.value;
