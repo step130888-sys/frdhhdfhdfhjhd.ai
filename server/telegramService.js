@@ -8,8 +8,8 @@ const CONFIG_PATH = path.join(__dirname, 'bot_config.json');
 
 function getConfig() {
   const defaults = {
-    bot_token: '8837250732:AAGS9Z_PoAuJQdQbDyFJ5us1ny1CmHSs0mc',
-    bot_username: 'ping_sstu_bot',
+    bot_token: process.env.TELEGRAM_BOT_TOKEN || '',
+    bot_username: process.env.TELEGRAM_BOT_USERNAME || 'ping_sstu_bot',
     leadership_group_chat_id: null,
     api_base_url: 'https://api.telegram.org',
     proxy_url: ''
@@ -786,10 +786,15 @@ class TelegramBotWorker {
     this.offset = 0;
   }
 
-  start() {
+  async start() {
     if (this.running) return;
     this.running = true;
     console.log('[TelegramBot] Starting Telegram bot polling worker...');
+    try {
+      await callTelegramApi('deleteWebhook', { drop_pending_updates: true }, 10000);
+    } catch (e) {
+      console.warn('[TelegramBot] Warning during deleteWebhook:', e.message);
+    }
     this.pollLoop();
   }
 
