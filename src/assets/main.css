@@ -375,21 +375,44 @@ html.dark .border-violet-500\/15 {
   border-color: rgba(252, 180, 213, 0.16) !important;
 }
 
-/* Light Mode Typography */
-html:not(.dark) .text-white {
+/* Light Mode Typography (exclude USA debt secret tab where text is ALWAYS white) */
+html:not(.dark) .text-white:not(.usa-debt-page *):not(.usa-debt-page) {
   color: #18181B !important;
 }
-html:not(.dark) .text-slate-100 {
+html:not(.dark) .text-slate-100:not(.usa-debt-page *):not(.usa-debt-page) {
   color: #27272A !important;
 }
-html:not(.dark) .text-slate-200 {
+html:not(.dark) .text-slate-200:not(.usa-debt-page *):not(.usa-debt-page) {
   color: #3F3F46 !important;
 }
-html:not(.dark) .text-slate-300 {
+html:not(.dark) .text-slate-300:not(.usa-debt-page *):not(.usa-debt-page) {
   color: #52525B !important;
 }
-html:not(.dark) .text-slate-400 {
+html:not(.dark) .text-slate-400:not(.usa-debt-page *):not(.usa-debt-page) {
   color: #71717A !important;
+}
+
+/* =========================================================
+   USA DEBT SECRET TAB: ALWAYS 100% PURE WHITE TEXT IN ALL THEMES
+   ========================================================= */
+.usa-debt-page,
+.usa-debt-page h1,
+.usa-debt-page h2,
+.usa-debt-page h3,
+.usa-debt-page h4,
+.usa-debt-page p,
+.usa-debt-page label {
+  color: #FFFFFF !important;
+}
+.usa-debt-page input,
+.usa-debt-page textarea {
+  color: #FFFFFF !important;
+  background-color: #140516 !important;
+  border-color: rgba(252, 180, 213, 0.35) !important;
+}
+.usa-debt-page input::placeholder,
+.usa-debt-page textarea::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
 }
 
 /* =========================================================

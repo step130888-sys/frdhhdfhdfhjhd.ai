@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-8 animate-in fade-in duration-300">
+  <div class="usa-debt-page max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-8 animate-in fade-in duration-300">
     
     <!-- Top Secret Classified Header -->
     <div class="relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-br from-slate-900 via-[#100612] to-slate-950 text-white border border-pink-500/30 shadow-2xl">
@@ -462,5 +462,29 @@ onUnmounted(() => {
 .expand-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+/* Force 100% pure white text on all elements in this view regardless of active theme */
+:deep(h1),
+:deep(h2),
+:deep(h3),
+:deep(h4),
+:deep(p),
+:deep(span:not(.keep-color)),
+:deep(div:not(.keep-bg)),
+:deep(label) {
+  color: #FFFFFF !important;
+}
+
+:deep(input),
+:deep(textarea) {
+  color: #FFFFFF !important;
+  background-color: #120513 !important;
+  border-color: rgba(252, 180, 213, 0.4) !important;
+}
+
+:deep(input::placeholder),
+:deep(textarea::placeholder) {
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 </style>
