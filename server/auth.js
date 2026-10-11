@@ -48,11 +48,12 @@ async function getCurrentUserMiddleware(req, res, next) {
     } else {
       user = await get('SELECT * FROM users WHERE id = ?', [uid]);
       if (user) {
-        // stepyn is always root admin (level 4, approved)
-        if (user.username === ROOT_ADMIN_USERNAME && (user.access_level !== 4 || !user.is_approved)) {
-          user.access_level = 4;
+        // ROOT_ADMIN_USERNAME ('admin') is always Guardian (level 5, approved, role Хранитель)
+        if (user.username === ROOT_ADMIN_USERNAME && (user.access_level !== 5 || !user.is_approved || user.role !== 'Хранитель')) {
+          user.access_level = 5;
           user.is_approved = 1;
-          await run('UPDATE users SET access_level = 4, is_approved = 1 WHERE id = ?', [user.id]);
+          user.role = 'Хранитель';
+          await run("UPDATE users SET access_level = 5, is_approved = 1, role = 'Хранитель' WHERE id = ?", [user.id]);
         }
         userCache.set(uid, { user, expiresAt: now + USER_CACHE_TTL_MS });
       }

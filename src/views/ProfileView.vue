@@ -399,6 +399,91 @@
         </div>
       </div>
 
+      <!-- Ideas & Suggestions Section («💡 Предложить идею») -->
+      <div v-if="isMe || isLeader" class="cyber-glass rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 shadow-sm transition-colors">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-2xl bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shadow-xs">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v1"/><path d="M12 21v1"/><path d="M4.93 4.93l.7.7"/><path d="M18.36 18.36l.7.7"/><path d="M2 12h1"/><path d="M21 12h1"/><path d="M4.93 19.07l.7-.7"/><path d="M18.36 5.64l.7-.7"/>
+                <circle cx="12" cy="12" r="5"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+                <span>Предложенные идеи и инициативы</span>
+                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                  {{ userIdeas.length }}
+                </span>
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {{ isMe ? 'Ваши идеи с личным чатом для обсуждения с руководством (3–5 уровень)' : 'Идеи данного участника с историей обсуждения' }}
+              </p>
+            </div>
+          </div>
+
+          <button
+            v-if="isMe"
+            @click="showNewIdeaModal = true"
+            class="btn-neon px-4 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md flex items-center space-x-2 shrink-0 cursor-pointer active:scale-95"
+          >
+            <span>💡 Предложить идею</span>
+          </button>
+        </div>
+
+        <!-- Ideas List Grid -->
+        <div v-if="userIdeas.length === 0" class="p-8 rounded-2xl bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/10 text-center">
+          <div class="text-3xl mb-2">💡</div>
+          <div class="text-xs font-bold text-slate-700 dark:text-slate-300">
+            {{ isMe ? 'У вас пока нет предложенных идей' : 'Участник пока не предлагал идей' }}
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+            {{ isMe ? 'Есть интересная мысль для видео, статьи, дизайна или спецпроекта? Нажмите кнопку выше — руководство сразу увидит ее и ответит вам в личном мини-чате!' : 'Все предложенные идеи участника будут отображаться здесь.' }}
+          </p>
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div
+            v-for="item in userIdeas"
+            :key="item.id"
+            @click="openIdeaChat(item.id)"
+            class="p-4.5 rounded-2xl bg-white/60 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 hover:border-amber-500/40 dark:hover:border-amber-400/40 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+          >
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span
+                  class="text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase font-mono"
+                  :class="getIdeaStatusBadgeClass(item.status)"
+                >
+                  {{ getIdeaStatusLabel(item.status) }}
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">
+                  {{ formatIdeaDate(item.created_at) }}
+                </span>
+              </div>
+
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors line-clamp-1 mb-1">
+                {{ item.title }}
+              </h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                {{ item.description }}
+              </p>
+            </div>
+
+            <div class="flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-white/5 text-[11px]">
+              <span class="text-slate-500 dark:text-slate-400 flex items-center space-x-1 font-mono text-[10px]">
+                <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span>{{ item.comments_count || 1 }} сообщ. в чате</span>
+              </span>
+              <span class="text-amber-600 dark:text-amber-300 font-bold group-hover:translate-x-0.5 transition-transform flex items-center space-x-1">
+                <span>Открыть чатик</span>
+                <span>→</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Forced Assignment Modal -->
@@ -411,6 +496,21 @@
       @assigned="onTaskForceAssigned"
     />
 
+    <!-- New Idea Proposal Modal -->
+    <NewIdeaModal
+      :is-open="showNewIdeaModal"
+      @close="showNewIdeaModal = false"
+      @created="onIdeaCreated"
+    />
+
+    <!-- Idea Discussion Mini-Chat Modal -->
+    <IdeaChatModal
+      :is-open="showIdeaChatModal"
+      :idea-id="activeIdeaId"
+      @close="showIdeaChatModal = false"
+      @status-updated="fetchUserIdeas"
+    />
+
   </div>
 </template>
 
@@ -419,6 +519,8 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import ForceAssignModal from '../components/ForceAssignModal.vue';
+import IdeaChatModal from '../components/IdeaChatModal.vue';
+import NewIdeaModal from '../components/NewIdeaModal.vue';
 
 const route = useRoute();
 const { user, isLeader, isWorkshopHead, isSuperAdmin, showNotification } = useAuthStore();
@@ -436,6 +538,12 @@ const telegramId = ref('');
 const vkId = ref('');
 const showAssignModal = ref(false);
 
+// Ideas & Mini-Chat state
+const userIdeas = ref([]);
+const showNewIdeaModal = ref(false);
+const showIdeaChatModal = ref(false);
+const activeIdeaId = ref(null);
+
 const filteredTasks = computed(() => {
   if (!taskFilter.value) return userTasks.value;
   return userTasks.value.filter(t => t.status === taskFilter.value);
@@ -450,6 +558,64 @@ const canForceAssign = computed(() => {
   if (user.value.can_create_tasks && user.value.role === profileUser.value.role) return true;
   return false;
 });
+
+const fetchUserIdeas = async () => {
+  if (!profileId.value) return;
+  try {
+    const res = await fetch(`/api/ideas?user_id=${profileId.value}`);
+    if (res.ok) {
+      const data = await res.json();
+      userIdeas.value = data.ideas || [];
+    }
+  } catch (e) {
+    console.error('Failed to load ideas:', e);
+  }
+};
+
+const openIdeaChat = (id) => {
+  activeIdeaId.value = id;
+  showIdeaChatModal.value = true;
+};
+
+const onIdeaCreated = (newIdea) => {
+  showNotification('💡 Ваша идея успешно передана руководству!');
+  fetchUserIdeas();
+  if (newIdea && newIdea.id) {
+    openIdeaChat(newIdea.id);
+  }
+};
+
+const getIdeaStatusLabel = (status) => {
+  const map = {
+    new: 'Новая',
+    in_review: 'На рассмотрении',
+    approved: 'Одобрено',
+    implemented: 'Реализовано',
+    rejected: 'Отклонено'
+  };
+  return map[status] || status;
+};
+
+const getIdeaStatusBadgeClass = (status) => {
+  const map = {
+    new: 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/30',
+    in_review: 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
+    approved: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30',
+    implemented: 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/30',
+    rejected: 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30'
+  };
+  return map[status] || 'bg-slate-100 dark:bg-white/5 text-slate-600 border-slate-200';
+};
+
+const formatIdeaDate = (ts) => {
+  if (!ts) return '';
+  try {
+    const d = new Date(ts);
+    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  } catch (e) {
+    return '';
+  }
+};
 
 const fetchProfile = async () => {
   if (!profileId.value) return;
@@ -466,6 +632,7 @@ const fetchProfile = async () => {
       telegramId.value = data.user.telegram_id || '';
       vkId.value = data.user.vk_id || '';
     }
+    await fetchUserIdeas();
   } catch (e) {
     console.error('Failed to load profile:', e);
   } finally {

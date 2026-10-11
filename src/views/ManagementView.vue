@@ -66,6 +66,115 @@
       </div>
     </div>
 
+    <!-- Team Ideas Section («💡 Банк идей от команды») -->
+    <div class="mb-10">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-7 h-7 rounded-lg bg-amber-500/15 dark:bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v1"/><path d="M12 21v1"/><path d="M4.93 4.93l.7.7"/><path d="M18.36 18.36l.7.7"/><path d="M2 12h1"/><path d="M21 12h1"/><path d="M4.93 19.07l.7-.7"/><path d="M18.36 5.64l.7-.7"/>
+              <circle cx="12" cy="12" r="5"/>
+            </svg>
+          </div>
+          <h2 class="text-sm font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-300 flex items-center space-x-2">
+            <span>Банк идей от команды</span>
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+              {{ teamIdeas.length }}
+            </span>
+          </h2>
+        </div>
+
+        <!-- Status Filter Pills -->
+        <div class="flex flex-wrap gap-1.5 items-center">
+          <button
+            v-for="st in [
+              { label: 'Все', value: '' },
+              { label: 'Новые', value: 'new' },
+              { label: 'На рассмотрении', value: 'in_review' },
+              { label: 'Одобрено', value: 'approved' },
+              { label: 'Реализовано', value: 'implemented' },
+              { label: 'Отклонено', value: 'rejected' }
+            ]"
+            :key="st.value"
+            @click="ideaStatusFilter = st.value"
+            class="px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer"
+            :class="ideaStatusFilter === st.value
+              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs'
+              : 'bg-white dark:bg-[#14141c] text-slate-700 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-amber-500'"
+          >
+            {{ st.label }}
+          </button>
+        </div>
+      </div>
+
+      <div v-if="filteredTeamIdeas.length === 0" class="cyber-glass rounded-2xl p-6 text-center text-slate-500 dark:text-slate-400 text-xs border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#101016]/90">
+        {{ ideaStatusFilter ? 'Нет предложений с выбранным статусом.' : 'В банке идей пока нет предложений от команды.' }}
+      </div>
+
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div
+          v-for="idea in filteredTeamIdeas"
+          :key="idea.id"
+          class="cyber-glass-card rounded-2xl p-5 flex flex-col justify-between bg-white dark:bg-[#14141c] border border-slate-200 dark:border-white/10 hover:border-amber-500/50 transition-all shadow-xs"
+        >
+          <div>
+            <!-- Header: Status + Date -->
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span
+                class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase font-mono"
+                :class="getIdeaStatusBadgeClass(idea.status)"
+              >
+                {{ getIdeaStatusLabel(idea.status) }}
+              </span>
+              <span class="text-[10px] text-slate-400 font-mono">
+                {{ formatIdeaDate(idea.created_at) }}
+              </span>
+            </div>
+
+            <!-- Author Info -->
+            <div class="flex items-center space-x-2.5 mb-3 pb-3 border-b border-slate-100 dark:border-white/5">
+              <div class="w-7 h-7 rounded-full overflow-hidden bg-orange-100 dark:bg-[#fcb4d5]/20 flex items-center justify-center font-bold text-xs text-orange-700 dark:text-[#fcb4d5] shrink-0">
+                <img v-if="idea.author_avatar" :src="idea.author_avatar" class="w-full h-full object-cover">
+                <span v-else>{{ idea.author_name ? idea.author_name.charAt(0) : '?' }}</span>
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-slate-900 dark:text-white truncate">
+                  {{ idea.author_name }}
+                </div>
+                <div class="text-[10px] text-slate-400 truncate">
+                  {{ idea.author_role }} • {{ idea.author_level }} ур.
+                </div>
+              </div>
+            </div>
+
+            <!-- Title & Description -->
+            <h3 class="font-extrabold text-sm text-slate-900 dark:text-white mb-1.5 line-clamp-1">
+              {{ idea.title }}
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed mb-3">
+              {{ idea.description }}
+            </p>
+          </div>
+
+          <!-- Footer: Chat Count & Action Button -->
+          <div class="pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs">
+            <span class="text-[11px] font-mono text-slate-400 flex items-center space-x-1">
+              <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>{{ idea.comments_count || 1 }} сообщ.</span>
+            </span>
+
+            <button
+              @click="openTeamIdeaChat(idea.id)"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-500/15 hover:bg-amber-100 dark:hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 transition-all flex items-center space-x-1 cursor-pointer"
+            >
+              <span>Диалог / Ответить</span>
+              <span>→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Team Members Table & Click Inspector -->
     <div>
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
@@ -656,18 +765,87 @@
       </div>
     </div>
 
+    <!-- Idea Discussion Mini-Chat Modal -->
+    <IdeaChatModal
+      :is-open="showIdeaChatModal"
+      :idea-id="activeIdeaId"
+      @close="showIdeaChatModal = false"
+      @status-updated="fetchTeamIdeas"
+    />
+
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import TaskCard from '../components/TaskCard.vue';
+import IdeaChatModal from '../components/IdeaChatModal.vue';
 import { useAuthStore } from '../stores/auth';
 
 const authStore = useAuthStore();
 
 const users = ref([]);
 const reviewTasks = ref([]);
+
+// Team Ideas state
+const teamIdeas = ref([]);
+const ideaStatusFilter = ref('');
+const showIdeaChatModal = ref(false);
+const activeIdeaId = ref(null);
+
+const filteredTeamIdeas = computed(() => {
+  if (!ideaStatusFilter.value) return teamIdeas.value;
+  return teamIdeas.value.filter(i => i.status === ideaStatusFilter.value);
+});
+
+const fetchTeamIdeas = async () => {
+  try {
+    const res = await fetch('/api/ideas');
+    if (res.ok) {
+      const data = await res.json();
+      teamIdeas.value = data.ideas || [];
+    }
+  } catch (e) {
+    console.error('Failed to load team ideas:', e);
+  }
+};
+
+const openTeamIdeaChat = (id) => {
+  activeIdeaId.value = id;
+  showIdeaChatModal.value = true;
+};
+
+const getIdeaStatusLabel = (status) => {
+  const map = {
+    new: 'Новая',
+    in_review: 'На рассмотрении',
+    approved: 'Одобрено',
+    implemented: 'Реализовано',
+    rejected: 'Отклонено'
+  };
+  return map[status] || status;
+};
+
+const getIdeaStatusBadgeClass = (status) => {
+  const map = {
+    new: 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/30',
+    in_review: 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
+    approved: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30',
+    implemented: 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/30',
+    rejected: 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30'
+  };
+  return map[status] || 'bg-slate-100 dark:bg-white/5 text-slate-600 border-slate-200';
+};
+
+const formatIdeaDate = (ts) => {
+  if (!ts) return '';
+  try {
+    const d = new Date(ts);
+    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  } catch (e) {
+    return '';
+  }
+};
 
 // Search and Sorting (Requirement 6)
 const searchQuery = ref('');
@@ -913,6 +1091,7 @@ const fetchData = async () => {
       const data = await tasksRes.json();
       reviewTasks.value = data.tasks || [];
     }
+    await fetchTeamIdeas();
   } catch (e) {
     console.error('Failed to load management data:', e);
   }

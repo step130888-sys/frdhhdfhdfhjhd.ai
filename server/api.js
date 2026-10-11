@@ -1555,4 +1555,237 @@ router.post('/admin/telegram-test', requireAuth, requireLevel(4), async (req, re
   }
 });
 
+// --------------------------------------------------------------------------
+// 9. IDEAS & SUGGESTIONS MINI-CHATS («💡 Предложить идею»)
+// --------------------------------------------------------------------------
+
+// GET /api/ideas - List ideas (author sees own ideas, 3-5 lvl sees all or filtered)
+router.get('/ideas', requireAuth, async (req, res) => {
+  const isManagement = req.user.access_level >= 3;
+  const targetUserId = req.query.user_id ? parseInt(req.query.user_id, 10) : null;
+
+  let sql = `
+    SELECT i.*,
+           u.name AS author_name, u.role AS author_role, u.avatar_url AS author_avatar, u.access_level AS author_level,
+           (SELECT COUNT(*) FROM idea_comments ic WHERE ic.idea_id = i.id) AS comments_count
+    FROM ideas i
+    JOIN users u ON i.user_id = u.id
+  `;
+  const params = [];
+
+  if (targetUserId) {
+    // If requesting specific user's ideas
+    if (!isManagement && targetUserId !== req.user.id) {
+      return res.status(403).json({ error: 'У вас нет прав для просмотра идей других участников.' });
+    }
+    sql += ' WHERE i.user_id = ?';
+    params.push(targetUserId);
+  } else if (!isManagement) {
+    // Regular users (lvl 1-2) can only see their own ideas
+    sql += ' WHERE i.user_id = ?';
+    params.push(req.user.id);
+  }
+
+  sql += ' ORDER BY i.id DESC';
+
+  const rows = await db.all(sql, params);
+  res.json({ success: true, ideas: rows });
+});
+
+// POST /api/ideas - Propose a new idea
+router.post('/ideas', requireAuth, async (req, res) => {
+  const title = (req.body.title || '').trim();
+  const description = (req.body.description || '').trim();
+
+  if (!title || !description) {
+    return res.status(400).json({ error: 'Укажите название и подробное описание вашей идеи.' });
+  }
+
+  const now = new Date().toISOString();
+  const result = await db.run(
+    'INSERT INTO ideas (user_id, title, description, status, created_at) VALUES (?, ?, ?, ?, ?)',
+    [req.user.id, title, description, 'new', now]
+  );
+  const ideaId = result.lastID;
+
+  // Insert initial description into idea_comments as the first message
+  await db.run(
+    'INSERT INTO idea_comments (idea_id, user_id, message, created_at) VALUES (?, ?, ?, ?)',
+    [ideaId, req.user.id, description, now]
+  );
+
+  // Notify leadership group via Telegram if configured
+  try {
+    const cfg = telegramService.getConfig ? telegramService.getConfig() : {};
+    if (cfg.leadership_group_chat_id) {
+      const msg = [
+        '💡 <b>НОВАЯ ИДЕЯ ОТ УЧАСТНИКА КОМАНДЫ</b>',
+        '━━━━━━━━━━━━━━━━━━',
+        `📌 <b>${title}</b>`,
+        `👤 Автор: ${req.user.name} (${req.user.role}, ${req.user.access_level} ур.)`,
+        `📝 Описание:\n${description}`,
+        '━━━━━━━━━━━━━━━━━━',
+        'Ответить автору можно на платформе СМС СГТУ в разделе «Руководство».'
+      ].join('\n');
+      await telegramService.sendTelegramMessage(cfg.leadership_group_chat_id, msg);
+    }
+  } catch (e) {}
+
+  const createdIdea = await db.get(
+    `SELECT i.*, u.name AS author_name, u.role AS author_role, u.avatar_url AS author_avatar, u.access_level AS author_level, 1 AS comments_count
+     FROM ideas i
+     JOIN users u ON i.user_id = u.id
+     WHERE i.id = ?`,
+    [ideaId]
+  );
+
+  res.json({ success: true, idea: createdIdea, message: 'Идея успешно предложена и передана руководству!' });
+});
+
+// GET /api/ideas/:id - Get idea details & discussion comments
+router.get('/ideas/:id', requireAuth, async (req, res) => {
+  const ideaId = parseInt(req.params.id, 10);
+  const idea = await db.get(
+    `SELECT i.*, u.name AS author_name, u.role AS author_role, u.avatar_url AS author_avatar, u.access_level AS author_level
+     FROM ideas i
+     JOIN users u ON i.user_id = u.id
+     WHERE i.id = ?`,
+    [ideaId]
+  );
+
+  if (!idea) {
+    return res.status(404).json({ error: 'Идея не найдена.' });
+  }
+
+  // Access check: only author or leadership (level >= 3)
+  if (idea.user_id !== req.user.id && req.user.access_level < 3) {
+    return res.status(403).json({ error: 'Чат этой идеи доступен только ее автору и руководству (3–5 уровень).' });
+  }
+
+  const comments = await db.all(
+    `SELECT ic.*, u.name AS user_name, u.role AS user_role, u.avatar_url AS user_avatar, u.access_level AS user_level
+     FROM idea_comments ic
+     JOIN users u ON ic.user_id = u.id
+     WHERE ic.idea_id = ?
+     ORDER BY ic.id ASC`,
+    [ideaId]
+  );
+
+  const mappedComments = comments.map(c => ({
+    ...c,
+    is_me: c.user_id === req.user.id,
+    is_author: c.user_id === idea.user_id
+  }));
+
+  res.json({ success: true, idea, comments: mappedComments });
+});
+
+// POST /api/ideas/:id/comments - Send message into idea mini-chat
+router.post('/ideas/:id/comments', requireAuth, async (req, res) => {
+  const ideaId = parseInt(req.params.id, 10);
+  const message = (req.body.message || '').trim();
+
+  if (!message) {
+    return res.status(400).json({ error: 'Сообщение не может быть пустым.' });
+  }
+
+  const idea = await db.get('SELECT * FROM ideas WHERE id = ?', [ideaId]);
+  if (!idea) {
+    return res.status(404).json({ error: 'Идея не найдена.' });
+  }
+
+  // Permission check: only author or leadership (3-5 lvl)
+  if (idea.user_id !== req.user.id && req.user.access_level < 3) {
+    return res.status(403).json({ error: 'Вы не можете отправлять сообщения в чат этой идеи.' });
+  }
+
+  const now = new Date().toISOString();
+  const result = await db.run(
+    'INSERT INTO idea_comments (idea_id, user_id, message, created_at) VALUES (?, ?, ?, ?)',
+    [ideaId, req.user.id, message, now]
+  );
+
+  const newComment = {
+    id: result.lastID,
+    idea_id: ideaId,
+    user_id: req.user.id,
+    user_name: req.user.name,
+    user_role: req.user.role,
+    user_avatar: req.user.avatar_url,
+    user_level: req.user.access_level,
+    message,
+    created_at: now,
+    is_me: true,
+    is_author: req.user.id === idea.user_id
+  };
+
+  // If leadership answered, notify author in VK
+  if (req.user.access_level >= 3 && req.user.id !== idea.user_id) {
+    try {
+      const author = await db.get('SELECT * FROM users WHERE id = ?', [idea.user_id]);
+      if (author && author.vk_id && typeof vkService.sendVkMessage === 'function') {
+        const text = [
+          '💬 ОТВЕТ РУКОВОДСТВА НА ВАШУ ИДЕЮ',
+          '━━━━━━━━━━━━━━━━━━',
+          `📌 Идея: «${idea.title}»`,
+          `👤 От: ${req.user.name} (${req.user.role})`,
+          `💬 Сообщение:`,
+          `«${message}»`,
+          '━━━━━━━━━━━━━━━━━━',
+          'Откройте свой профиль на платформе СМС СГТУ, чтобы продолжить диалог.'
+        ].join('\n');
+        await vkService.sendVkMessage(author.vk_id, text);
+      }
+    } catch (e) {}
+  }
+
+  res.json({ success: true, comment: newComment });
+});
+
+// POST /api/ideas/:id/status - Update idea status (3-5 lvl only)
+router.post('/ideas/:id/status', requireAuth, requireLevel(3), async (req, res) => {
+  const ideaId = parseInt(req.params.id, 10);
+  const status = (req.body.status || '').trim();
+  const validStatuses = ['new', 'in_review', 'approved', 'rejected', 'implemented'];
+
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Недопустимый статус идеи.' });
+  }
+
+  const idea = await db.get('SELECT * FROM ideas WHERE id = ?', [ideaId]);
+  if (!idea) {
+    return res.status(404).json({ error: 'Идея не найдена.' });
+  }
+
+  await db.run('UPDATE ideas SET status = ? WHERE id = ?', [status, ideaId]);
+
+  // Status label translation for notifications
+  const statusLabels = {
+    new: 'Новая',
+    in_review: 'На рассмотрении',
+    approved: 'Одобрено к реализации',
+    rejected: 'Отклонено',
+    implemented: 'Реализовано'
+  };
+
+  // Notify author in VK about status change
+  try {
+    const author = await db.get('SELECT * FROM users WHERE id = ?', [idea.user_id]);
+    if (author && author.vk_id && typeof vkService.sendVkMessage === 'function') {
+      const text = [
+        '🔔 ИЗМЕНЕН СТАТУС ВАШЕЙ ИДЕИ',
+        '━━━━━━━━━━━━━━━━━━',
+        `📌 Идея: «${idea.title}»`,
+        `📊 Новый статус: ${statusLabels[status] || status}`,
+        `👤 Изменил: ${req.user.name} (${req.user.role})`,
+        '━━━━━━━━━━━━━━━━━━',
+        'Подробности и обсуждение доступны в вашем профиле на платформе СМС СГТУ.'
+      ].join('\n');
+      await vkService.sendVkMessage(author.vk_id, text);
+    }
+  } catch (e) {}
+
+  res.json({ success: true, status, message: `Статус идеи обновлен на «${statusLabels[status]}»` });
+});
+
 module.exports = router;

@@ -130,6 +130,30 @@ async function initDb() {
     )
   `);
 
+  await run(`
+    CREATE TABLE IF NOT EXISTS ideas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title VARCHAR(200) NOT NULL,
+      description TEXT NOT NULL,
+      status VARCHAR(30) NOT NULL DEFAULT 'new',
+      created_at DATETIME NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users (id)
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS idea_comments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      idea_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      message TEXT NOT NULL,
+      created_at DATETIME NOT NULL,
+      FOREIGN KEY(idea_id) REFERENCES ideas (id),
+      FOREIGN KEY(user_id) REFERENCES users (id)
+    )
+  `);
+
   // Column migrations for macro-calendar events and subtasks
   try {
     await run('ALTER TABLE tasks ADD COLUMN event_date VARCHAR(50)');
@@ -155,6 +179,9 @@ async function initDb() {
   await run('CREATE INDEX IF NOT EXISTS idx_users_username_nocase ON users(username COLLATE NOCASE)');
   await run('CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_users_vk_id ON users(vk_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_ideas_user_id ON ideas(user_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_ideas_status ON ideas(status)');
+  await run('CREATE INDEX IF NOT EXISTS idx_idea_comments_idea_id ON idea_comments(idea_id)');
 
   await ensureRootAdmin();
   await ensureDemoAccounts();
