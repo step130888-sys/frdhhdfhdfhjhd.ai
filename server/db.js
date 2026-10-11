@@ -180,7 +180,7 @@ async function initDb() {
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)');
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_direction ON tasks(direction)');
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_deadline ON tasks(deadline)');
-  await run('CREATE INDEX IF NOT EXISTS idx_tasks_created_by ON tasks(created_by)');
+  await run('CREATE INDEX IF NOT EXISTS idx_tasks_graded_by_id ON tasks(graded_by_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_task_comments_task_id ON task_comments(task_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_task_comments_task_id_id ON task_comments(task_id, id)');
   await run('CREATE INDEX IF NOT EXISTS idx_task_comments_user_id ON task_comments(user_id)');
