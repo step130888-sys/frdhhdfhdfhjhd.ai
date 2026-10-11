@@ -10,19 +10,33 @@ const apiRouter = require('./server/api');
 const telegramService = require('./server/telegramService');
 const vkService = require('./server/vkService');
 
+const compression = require('compression');
+
 const app = express();
 const PORT = process.env.PORT || 8000;
+
+// Gzip/Deflate response compression for ultra-fast load times
+app.use(compression({
+  threshold: 1024,
+  level: 6
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Static uploads directory with 1-day caching
+// Static uploads directory with 30-day client cache
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
-app.use('/uploads', express.static(uploadsDir, { maxAge: '1d' }));
+app.use('/uploads', express.static(uploadsDir, {
+  maxAge: 30 * 24 * 3600 * 1000,
+  etag: true,
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'public, max-age=2592000');
+  }
+}));
 
 // Auth & Session caching middleware
 app.use(getCurrentUserMiddleware);
@@ -30,14 +44,39 @@ app.use(getCurrentUserMiddleware);
 // REST API routes
 app.use('/api', apiRouter);
 
-// Serve compiled Vue 3 SPA frontend (dist)
+// Serve compiled Vue 3 SPA frontend (dist) with optimized caching
 const distDir = path.resolve(__dirname, 'dist');
 if (fs.existsSync(distDir)) {
-  app.use(express.static(distDir));
+  // Vite hashed assets can be cached immutably for 1 year
+  const assetsDir = path.join(distDir, 'assets');
+  if (fs.existsSync(assetsDir)) {
+    app.use('/assets', express.static(assetsDir, {
+      maxAge: 31536000 * 1000,
+      immutable: true,
+      etag: true,
+      setHeaders: (res) => {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    }));
+  }
+
+  // Other static files in dist
+  app.use(express.static(distDir, {
+    maxAge: 3600 * 1000,
+    etag: true,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      }
+    }
+  }));
+
+  // SPA Catch-All fallback: Always return latest index.html with no-cache
   app.use((req, res, next) => {
     if (req.path.startsWith('/api')) {
       return res.status(404).json({ error: `Маршрут API «${req.originalUrl}» не найден.` });
     }
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile('index.html', { root: distDir }, (err) => {
       if (err && !res.headersSent) {
         next(err);

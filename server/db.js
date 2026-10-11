@@ -5,12 +5,14 @@ const crypto = require('crypto');
 const DB_PATH = path.join(__dirname, 'media_app.db');
 const db = new sqlite3.Database(DB_PATH);
 
-// High-performance SQLite engine tuning (WAL Mode)
+// High-performance SQLite engine tuning (WAL Mode & In-Memory optimization)
 db.serialize(() => {
   db.run('PRAGMA journal_mode = WAL');
   db.run('PRAGMA synchronous = NORMAL');
   db.run('PRAGMA cache_size = -64000'); // 64MB RAM page cache
   db.run('PRAGMA temp_store = MEMORY');
+  db.run('PRAGMA mmap_size = 268435456'); // 256MB memory-mapped file I/O for instant reads
+  db.run('PRAGMA busy_timeout = 5000'); // Avoid database lock timeouts
   db.run('PRAGMA foreign_keys = ON');
 });
 
@@ -136,18 +138,23 @@ async function initDb() {
     await run('ALTER TABLE tasks ADD COLUMN parent_id INTEGER');
   } catch (e) {}
 
-  // 9 Mandatory Performance Indexes + Event/Parent Indexes
+  // High-performance database query indexes
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to_id ON tasks(assigned_to_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)');
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_direction ON tasks(direction)');
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_deadline ON tasks(deadline)');
   await run('CREATE INDEX IF NOT EXISTS idx_task_comments_task_id ON task_comments(task_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_task_comments_task_id_id ON task_comments(task_id, id)');
   await run('CREATE INDEX IF NOT EXISTS idx_work_materials_direction ON work_materials(direction)');
   await run('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)');
   await run('CREATE INDEX IF NOT EXISTS idx_users_is_approved ON users(is_approved)');
   await run('CREATE INDEX IF NOT EXISTS idx_users_access_level ON users(access_level)');
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_event_date ON tasks(event_date)');
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_parent_id ON tasks(parent_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_tasks_assigned_status ON tasks(assigned_to_id, status)');
+  await run('CREATE INDEX IF NOT EXISTS idx_users_username_nocase ON users(username COLLATE NOCASE)');
+  await run('CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id)');
+  await run('CREATE INDEX IF NOT EXISTS idx_users_vk_id ON users(vk_id)');
 
   await ensureRootAdmin();
   await ensureDemoAccounts();

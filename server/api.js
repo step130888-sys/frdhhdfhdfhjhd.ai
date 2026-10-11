@@ -610,6 +610,7 @@ router.get('/tasks/calendar', requireAuth, async (req, res) => {
   `);
 
   const eventsMap = new Map();
+  const dateToEventMap = new Map();
   const subtasks = [];
 
   for (const t of allTasks) {
@@ -630,7 +631,7 @@ router.get('/tasks/calendar', requireAuth, async (req, res) => {
     } else {
       const dateKey = t.event_date || (t.deadline ? t.deadline.substring(0, 10) : 'Без даты');
       if (!eventsMap.has(t.id)) {
-        eventsMap.set(t.id, {
+        const ev = {
           id: t.id,
           title: t.title,
           description: t.description,
@@ -638,24 +639,22 @@ router.get('/tasks/calendar', requireAuth, async (req, res) => {
           deadline: t.deadline,
           status: t.status,
           subtasks: []
-        });
+        };
+        eventsMap.set(t.id, ev);
+        if (dateKey !== 'Без даты' && !dateToEventMap.has(dateKey)) {
+          dateToEventMap.set(dateKey, ev);
+        }
       }
     }
   }
 
-  // Attach subtasks to their parent event or virtual group
+  // Attach subtasks to their parent event or virtual group with O(1) lookup
   for (const st of subtasks) {
     if (eventsMap.has(st.parent_id)) {
       eventsMap.get(st.parent_id).subtasks.push(st);
     } else {
       const dateKey = st.event_date || (st.deadline ? st.deadline.substring(0, 10) : 'Без даты');
-      let foundEvent = null;
-      for (const ev of eventsMap.values()) {
-        if (ev.event_date === dateKey) {
-          foundEvent = ev;
-          break;
-        }
-      }
+      let foundEvent = (dateKey !== 'Без даты') ? dateToEventMap.get(dateKey) : null;
       if (!foundEvent) {
         foundEvent = {
           id: 900000 + st.id,
@@ -667,6 +666,9 @@ router.get('/tasks/calendar', requireAuth, async (req, res) => {
           subtasks: []
         };
         eventsMap.set(foundEvent.id, foundEvent);
+        if (dateKey !== 'Без даты') {
+          dateToEventMap.set(dateKey, foundEvent);
+        }
       }
       foundEvent.subtasks.push(st);
     }

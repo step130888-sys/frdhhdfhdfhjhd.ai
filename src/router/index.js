@@ -1,14 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 
-import LoginView from '../views/LoginView.vue';
-import RegisterView from '../views/RegisterView.vue';
-import ContentPlanView from '../views/ContentPlanView.vue';
-import TaskDetailView from '../views/TaskDetailView.vue';
-import ProfileView from '../views/ProfileView.vue';
-import ManagementView from '../views/ManagementView.vue';
-import MaterialsView from '../views/MaterialsView.vue';
-import AdminUsersView from '../views/AdminUsersView.vue';
+// Route-level code-splitting: Views are lazy-loaded on demand
+const LoginView = () => import('../views/LoginView.vue');
+const RegisterView = () => import('../views/RegisterView.vue');
+const ContentPlanView = () => import('../views/ContentPlanView.vue');
+const TaskDetailView = () => import('../views/TaskDetailView.vue');
+const ProfileView = () => import('../views/ProfileView.vue');
+const ManagementView = () => import('../views/ManagementView.vue');
+const MaterialsView = () => import('../views/MaterialsView.vue');
+const AdminUsersView = () => import('../views/AdminUsersView.vue');
 
 const routes = [
   {

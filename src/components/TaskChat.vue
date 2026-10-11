@@ -251,12 +251,28 @@ const sendQuickPhrase = (phrase) => {
   submitMessage();
 };
 
+const handleVisibilityChange = () => {
+  if (document.hidden) {
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+    }
+  } else {
+    fetchComments();
+    if (!pollInterval) {
+      pollInterval = setInterval(fetchComments, 4000);
+    }
+  }
+};
+
 onMounted(() => {
   fetchComments();
   pollInterval = setInterval(fetchComments, 4000);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 });
 
 onUnmounted(() => {
   if (pollInterval) clearInterval(pollInterval);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
 </script>

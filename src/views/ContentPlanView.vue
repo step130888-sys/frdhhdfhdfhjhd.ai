@@ -704,7 +704,6 @@ watch([selectedDirection, selectedStatus], () => {
 });
 
 onMounted(() => {
-  fetchTasks();
-  fetchCalendarEvents();
+  Promise.all([fetchTasks(), fetchCalendarEvents()]);
 });
 </script>

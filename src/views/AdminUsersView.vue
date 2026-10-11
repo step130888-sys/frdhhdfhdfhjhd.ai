@@ -1175,7 +1175,6 @@ const deleteUser = async (u) => {
 };
 
 onMounted(() => {
-  fetchAdminData();
-  fetchTgConfig();
+  Promise.all([fetchAdminData(), fetchTgConfig()]);
 });
 </script>

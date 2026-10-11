@@ -6,6 +6,17 @@ const DB_UPDATE_THROTTLE_MS = 2 * 60 * 1000; // Throttle DB writes to once per 2
 // Map<number, { id, name, username, role, access_level, avatar_url, lastSeen, lastDbUpdate }>
 const activeUsers = new Map();
 
+// Periodic memory hygiene: purge entries inactive for more than 24 hours
+const STALE_PURGE_WINDOW_MS = 24 * 60 * 60 * 1000;
+setInterval(() => {
+  const cutoff = Date.now() - STALE_PURGE_WINDOW_MS;
+  for (const [id, data] of activeUsers.entries()) {
+    if (data.lastSeen < cutoff) {
+      activeUsers.delete(id);
+    }
+  }
+}, 60 * 60 * 1000).unref();
+
 function touchUser(user) {
   if (!user || !user.id) return;
   const now = Date.now();
