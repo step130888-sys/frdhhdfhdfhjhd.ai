@@ -375,44 +375,45 @@ html.dark .border-violet-500\/15 {
   border-color: rgba(252, 180, 213, 0.16) !important;
 }
 
-/* Light Mode Typography (exclude USA debt secret tab where text is ALWAYS white) */
-html:not(.dark) .text-white:not(.usa-debt-page *):not(.usa-debt-page) {
+/* Light Mode Typography (exclude dark classified containers where text must always stay white) */
+html:not(.dark) .text-white:not(.usa-dark-card *):not(.usa-dark-card) {
   color: #18181B !important;
 }
-html:not(.dark) .text-slate-100:not(.usa-debt-page *):not(.usa-debt-page) {
+html:not(.dark) .text-slate-100:not(.usa-dark-card *):not(.usa-dark-card) {
   color: #27272A !important;
 }
-html:not(.dark) .text-slate-200:not(.usa-debt-page *):not(.usa-debt-page) {
+html:not(.dark) .text-slate-200:not(.usa-dark-card *):not(.usa-dark-card) {
   color: #3F3F46 !important;
 }
-html:not(.dark) .text-slate-300:not(.usa-debt-page *):not(.usa-debt-page) {
+html:not(.dark) .text-slate-300:not(.usa-dark-card *):not(.usa-dark-card) {
   color: #52525B !important;
 }
-html:not(.dark) .text-slate-400:not(.usa-debt-page *):not(.usa-debt-page) {
+html:not(.dark) .text-slate-400:not(.usa-dark-card *):not(.usa-dark-card) {
   color: #71717A !important;
 }
 
 /* =========================================================
-   USA DEBT SECRET TAB: ALWAYS 100% PURE WHITE TEXT IN ALL THEMES
+   USA DEBT CLASSIFIED DARK HERO / CARDS: ALWAYS 100% PURE WHITE TEXT IN ALL THEMES
    ========================================================= */
-.usa-debt-page,
-.usa-debt-page h1,
-.usa-debt-page h2,
-.usa-debt-page h3,
-.usa-debt-page h4,
-.usa-debt-page p,
-.usa-debt-page label {
+.usa-dark-card,
+.usa-dark-card h1,
+.usa-dark-card h2,
+.usa-dark-card h3,
+.usa-dark-card h4,
+.usa-dark-card p,
+.usa-dark-card label,
+.usa-dark-card span:not(.keep-badge-color) {
   color: #FFFFFF !important;
 }
-.usa-debt-page input,
-.usa-debt-page textarea {
+.usa-dark-card input,
+.usa-dark-card textarea {
   color: #FFFFFF !important;
-  background-color: #140516 !important;
-  border-color: rgba(252, 180, 213, 0.35) !important;
+  background-color: #120513 !important;
+  border-color: rgba(252, 180, 213, 0.4) !important;
 }
-.usa-debt-page input::placeholder,
-.usa-debt-page textarea::placeholder {
-  color: rgba(255, 255, 255, 0.45) !important;
+.usa-dark-card input::placeholder,
+.usa-dark-card textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* =========================================================
