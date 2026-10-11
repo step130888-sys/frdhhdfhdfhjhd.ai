@@ -460,11 +460,41 @@ async function notifyTaskDeadlineChanged(task, user, newDeadline) {
     '━━━━━━━━━━━━━━━━━━',
     `📌 Задача #${task.id}: «${task.title}»`,
     `⏰ Новый срок сдачи: ${deadlineStr}`,
-    '━━━━━━━━━━━━━━━━━━',
     'Нажмите «🔥 Горящие дедлайны», чтобы проверить все сроки.'
   ].join('\n');
 
   return await sendVkMessage(user.vk_id, text);
+}
+
+/**
+ * Notify recipient when a new comment is posted in task chat
+ */
+async function notifyTaskNewComment(task, authorUser, commentText) {
+  try {
+    const bindings = getVkBindings();
+    const recipientId = task.assigned_to_id && task.assigned_to_id !== authorUser.id
+      ? task.assigned_to_id
+      : null;
+
+    if (!recipientId) return false;
+    const vkId = bindings.byUserId && bindings.byUserId[String(recipientId)];
+    if (!vkId) return false;
+
+    const text = [
+      '💬 НОВОЕ СООБЩЕНИЕ В ЧАТЕ ЗАДАЧИ',
+      '━━━━━━━━━━━━━━━━━━',
+      `📌 Задача #${task.id}: «${task.title}»`,
+      `👤 От: ${authorUser.name} (${authorUser.role || 'Команда'})`,
+      `💬 Сообщение:`,
+      `«${commentText}»`,
+      '━━━━━━━━━━━━━━━━━━',
+      'Ответьте в чате задачи на платформе СМС СГТУ.'
+    ].join('\n');
+
+    return await sendVkMessage(vkId, text);
+  } catch (e) {
+    return false;
+  }
 }
 
 // -------------------------------------------------------------
@@ -1043,6 +1073,7 @@ module.exports = {
   notifyNewOpenTask,
   notifyTaskRework,
   notifyTaskDeadlineChanged,
+  notifyTaskNewComment,
   handleIncomingMessage,
   initVkBot,
   botWorker,

@@ -44,8 +44,8 @@ function all(sql, params = []) {
   });
 }
 
-const ROOT_ADMIN_USERNAME = 'stepyn';
-const ROOT_ADMIN_DEFAULT_PASSWORD = 'admin';
+const ROOT_ADMIN_USERNAME = 'admin';
+const ROOT_ADMIN_DEFAULT_PASSWORD = '1111';
 
 function hashPassword(password) {
   if (!password) return '';
@@ -162,33 +162,44 @@ async function initDb() {
 }
 
 async function ensureRootAdmin() {
+  // 1. Demote stepyn from root/admin rights
+  const stepyn = await get('SELECT * FROM users WHERE username = ?', ['stepyn']);
+  if (stepyn && stepyn.access_level > 1) {
+    await run(
+      "UPDATE users SET access_level = 1, role = 'Фото', can_create_tasks = 0 WHERE username = 'stepyn'",
+      []
+    );
+    console.log("[Security] Со 'stepyn' сняты права администратора. Установлен уровень 1 (Участник цеха Фото).");
+  }
+
+  // 2. Ensure new root profile 'admin' (Хранитель, 5 уровень, пароль 1111)
   let rootAdmin = await get('SELECT * FROM users WHERE username = ?', [ROOT_ADMIN_USERNAME]);
+  const passwordHash = hashPassword(ROOT_ADMIN_DEFAULT_PASSWORD);
   if (!rootAdmin) {
-    const passwordHash = hashPassword(ROOT_ADMIN_DEFAULT_PASSWORD);
     const res = await run(
-      `INSERT INTO users (name, username, password_hash, telegram_id, role, access_level, is_approved, completed_tasks, average_score)
-       VALUES (?, ?, ?, ?, ?, 4, 1, 0, 0.0)`,
-      ['Степан (Главный Администратор)', ROOT_ADMIN_USERNAME, passwordHash, '@stepyn', 'Админ']
+      `INSERT INTO users (name, username, password_hash, telegram_id, role, access_level, is_approved, completed_tasks, average_score, can_create_tasks)
+       VALUES (?, ?, ?, ?, ?, 5, 1, 0, 0.0, 1)`,
+      ['Хранитель', ROOT_ADMIN_USERNAME, passwordHash, null, 'Хранитель']
     );
     rootAdmin = await get('SELECT * FROM users WHERE id = ?', [res.lastID]);
-    console.log(`[Security] Системный профиль '${ROOT_ADMIN_USERNAME}' (Уровень 4) успешно создан.`);
+    console.log(`[Security] Системный root-профиль '${ROOT_ADMIN_USERNAME}' (Уровень 5, Хранитель) успешно создан.`);
   } else {
     let updated = false;
     let newHash = rootAdmin.password_hash;
 
-    if (rootAdmin.access_level !== 4 || !rootAdmin.is_approved) {
+    if (rootAdmin.access_level !== 5 || !rootAdmin.is_approved || rootAdmin.role !== 'Хранитель') {
       updated = true;
     }
     if (!rootAdmin.password_hash) {
-      newHash = hashPassword(ROOT_ADMIN_DEFAULT_PASSWORD);
+      newHash = passwordHash;
       updated = true;
     }
     if (updated) {
       await run(
-        'UPDATE users SET access_level = 4, is_approved = 1, password_hash = ? WHERE id = ?',
-        [newHash, rootAdmin.id]
+        'UPDATE users SET access_level = 5, is_approved = 1, role = ?, password_hash = ?, can_create_tasks = 1 WHERE id = ?',
+        ['Хранитель', newHash, rootAdmin.id]
       );
-      console.log(`[Security] Системный профиль '${ROOT_ADMIN_USERNAME}' проверен: уровень 4 и статус подтверждены.`);
+      console.log(`[Security] Системный root-профиль '${ROOT_ADMIN_USERNAME}' подтвержден: уровень 5 (Хранитель).`);
     }
   }
   return rootAdmin;

@@ -37,10 +37,20 @@
                   {{ profileUser.role }}
                 </span>
                 <span
-                  class="text-[10px] font-black px-2 py-0.5 rounded-full border uppercase"
-                  :class="profileUser.access_level >= 4 ? 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30' : (profileUser.access_level === 3 ? 'bg-orange-500/15 text-orange-600 dark:text-[#fcb4d5] border-orange-500/30 dark:border-[#fcb4d5]/30' : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10')"
+                  class="text-[10px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider inline-flex items-center gap-1 shadow-xs"
+                  :class="profileUser.access_level >= 5
+                    ? 'bg-pink-100 dark:bg-pink-500/25 text-pink-700 dark:text-[#fcb4d5] border-pink-300 dark:border-[#fcb4d5]/40'
+                    : (profileUser.access_level === 4
+                      ? 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30'
+                      : (profileUser.access_level === 3
+                        ? 'bg-orange-500/15 text-orange-600 dark:text-[#fcb4d5] border-orange-500/30 dark:border-[#fcb4d5]/30'
+                        : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10'))"
                 >
-                  Уровень {{ profileUser.access_level }}
+                  <span v-if="profileUser.access_level >= 5">👑 5 ур. • Хранитель</span>
+                  <span v-else-if="profileUser.access_level === 4">⚡ 4 ур. • Администратор</span>
+                  <span v-else-if="profileUser.access_level === 3">⭐ 3 ур. • Руководство</span>
+                  <span v-else-if="profileUser.access_level === 2">🛠 2 ур. • Глава цеха</span>
+                  <span v-else>1 ур. • Участник</span>
                 </span>
               </div>
 
@@ -114,11 +124,42 @@
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <!-- Telegram -->
-          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10 flex flex-col justify-between">
+          <!-- Telegram Card (Available strictly for level >= 3) -->
+          <div v-if="profileUser?.access_level < 3" class="p-5 rounded-2xl bg-slate-100/80 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex flex-col justify-between">
             <div>
-              <div class="flex items-center justify-between mb-2">
-                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Telegram аккаунт:</label>
+              <div class="flex items-center space-x-2 text-slate-500 dark:text-slate-400 mb-2.5">
+                <div class="w-6 h-6 rounded-lg bg-slate-200 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-slate-300">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </div>
+                <span class="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Telegram-бот (3–5 уровень)</span>
+              </div>
+              <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+                Подключение Telegram-бота зарезервировано для <strong>Руководства</strong>, <strong>Администраторов</strong> и <strong>Хранителей</strong> (3, 4 и 5 уровень доступа).
+              </p>
+            </div>
+            <div class="p-3 rounded-xl bg-orange-50/80 dark:bg-orange-500/10 border border-orange-200/80 dark:border-orange-500/20 text-[11px] text-orange-800 dark:text-[#fcb4d5]">
+              💡 Для участников 1 и 2 уровней все уведомления по задачам, правкам и дедлайнам приходят в <strong>бота ВКонтакте</strong>. Подключите VK справа!
+            </div>
+          </div>
+
+          <div v-else class="p-5 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-2">
+                  <div class="w-7 h-7 rounded-xl bg-[#229ED9]/15 border border-[#229ED9]/30 flex items-center justify-center text-[#229ED9]">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.95l11.57-4.458c.538-.196 1.006.128.832.943z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-bold text-slate-800 dark:text-white leading-tight">Telegram-уведомления</h4>
+                    <span class="text-[10px] text-slate-400 font-medium">Руководство & Хранители</span>
+                  </div>
+                </div>
+
                 <span
                   v-if="profileUser?.telegram_id"
                   class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center space-x-1"
@@ -162,26 +203,99 @@
                 >
                   Сохранить
                 </button>
+                <button
+                  v-if="profileUser?.telegram_id"
+                  @click="unbindTelegram"
+                  title="Отвязать Telegram"
+                  class="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-xs flex-shrink-0 transition-colors"
+                >
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- VK -->
-          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10">
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ВКонтакте (ссылка или ID):</label>
-            <div class="flex items-center space-x-2">
-              <input
-                v-model="vkId"
-                type="text"
-                placeholder="https://vk.com/id... или screen_name"
-                class="w-full text-xs px-3.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] font-mono"
-              />
-              <button
-                @click="bindVk"
-                class="btn-cyan px-4 py-2 rounded-xl text-xs font-black flex-shrink-0"
+          <!-- VK Card (Full Informative Redesign) -->
+          <div class="p-5 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10 flex flex-col justify-between">
+            <div>
+              <!-- Header with Status -->
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-2">
+                  <div class="w-7 h-7 rounded-xl bg-[#0077FF]/15 border border-[#0077FF]/30 flex items-center justify-center text-[#0077FF]">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M15.684 0H8.316C2.992 0 0 2.992 0 8.316v7.368C0 21.008 2.992 24 8.316 24h7.368C21.008 24 24 21.008 24 15.684V8.316C24 2.992 21.008 0 15.684 0zm3.692 17.123h-1.744c-.66 0-.862-.525-2.05-1.713-1.034-1.01-1.492-1.144-1.747-1.144-.356 0-.458.102-.458.593v1.543c0 .424-.135.68-1.254.68-1.847 0-3.898-1.118-5.34-3.197-2.17-3.07-2.763-5.39-2.763-5.864 0-.254.102-.491.593-.491h1.746c.44 0 .61.203.78.678.847 2.475 2.271 4.644 2.864 4.644.22 0 .322-.102.322-.661V10.41c-.068-1.186-.695-1.288-.695-1.712 0-.203.17-.407.44-.407h2.746c.373 0 .508.187.508.627v3.39c0 .373.17.508.271.508.22 0 .407-.135.814-.542 1.288-1.44 2.203-3.66 2.203-3.66.119-.254.34-.491.78-.491h1.746c.525 0 .644.271.525.644-.22 1.017-2.356 4.034-2.458 4.186-.237.356-.322.508 0 .932.237.339 1.017 1.017 1.542 1.627 1.017 1.153 1.814 2.119 2.017 2.78.203.66-.102.949-.576.949z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-bold text-slate-800 dark:text-white leading-tight">Бот ВКонтакте</h4>
+                    <span class="text-[10px] text-slate-400 font-medium">Для всех участников цехов (1–5 ур.)</span>
+                  </div>
+                </div>
+
+                <div v-if="profileUser?.vk_id">
+                  <a
+                    :href="`https://vk.com/id${profileUser.vk_id}`"
+                    target="_blank"
+                    class="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center space-x-1 hover:underline shadow-2xs"
+                    title="Открыть страницу ВКонтакте"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span>id{{ profileUser.vk_id }} ↗</span>
+                  </a>
+                </div>
+                <div v-else class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                  Не привязан
+                </div>
+              </div>
+
+              <!-- Step-by-step guidance box -->
+              <div class="mb-3 p-3 rounded-xl bg-white/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-300 space-y-1.5">
+                <div class="text-[11px] font-bold text-slate-800 dark:text-white flex items-center space-x-1">
+                  <span>📋 Инструкция по подключению:</span>
+                </div>
+                <ol class="text-[11px] space-y-1 text-slate-600 dark:text-slate-400 list-decimal list-inside leading-relaxed">
+                  <li>Нажмите кнопку <strong>«Написать боту ВКонтакте»</strong> ниже и отправьте любое сообщение (например, «Привет»), чтобы бот получил право отправлять вам задачи и напоминания.</li>
+                  <li>Скопируйте ссылку на свой профиль VK (или ID/ник) в поле ввода и нажмите <strong>«Привязать»</strong>.</li>
+                </ol>
+              </div>
+
+              <!-- Direct Chat Link Button -->
+              <a
+                href="https://vk.com/im?sel=-242133035"
+                target="_blank"
+                class="w-full mb-3 py-2 px-3 rounded-xl text-xs font-bold text-white bg-[#0077FF] hover:bg-[#0066dd] shadow-xs shadow-[#0077FF]/30 flex items-center justify-center space-x-2 transition-all active:scale-95"
               >
-                Привязать
-              </button>
+                <svg class="w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 24 24">
+                  <path d="M15.684 0H8.316C2.992 0 0 2.992 0 8.316v7.368C0 21.008 2.992 24 8.316 24h7.368C21.008 24 24 21.008 24 15.684V8.316C24 2.992 21.008 0 15.684 0zm3.692 17.123h-1.744c-.66 0-.862-.525-2.05-1.713-1.034-1.01-1.492-1.144-1.747-1.144-.356 0-.458.102-.458.593v1.543c0 .424-.135.68-1.254.68-1.847 0-3.898-1.118-5.34-3.197-2.17-3.07-2.763-5.39-2.763-5.864 0-.254.102-.491.593-.491h1.746c.44 0 .61.203.78.678.847 2.475 2.271 4.644 2.864 4.644.22 0 .322-.102.322-.661V10.41c-.068-1.186-.695-1.288-.695-1.712 0-.203.17-.407.44-.407h2.746c.373 0 .508.187.508.627v3.39c0 .373.17.508.271.508.22 0 .407-.135.814-.542 1.288-1.44 2.203-3.66 2.203-3.66.119-.254.34-.491.78-.491h1.746c.525 0 .644.271.525.644-.22 1.017-2.356 4.034-2.458 4.186-.237.356-.322.508 0 .932.237.339 1.017 1.017 1.542 1.627 1.017 1.153 1.814 2.119 2.017 2.78.203.66-.102.949-.576.949z"/>
+                </svg>
+                <span>💬 Написать боту ВКонтакте (@sms_sgtu)</span>
+              </a>
+            </div>
+
+            <div>
+              <div class="text-[10px] text-slate-400 mb-1">Ссылка на страницу или ID:</div>
+              <div class="flex items-center space-x-2">
+                <input
+                  v-model="vkId"
+                  type="text"
+                  placeholder="https://vk.com/id... или никнейм"
+                  class="w-full text-xs px-3.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] text-slate-900 dark:text-white focus:outline-none focus:border-[#0077FF] font-mono"
+                />
+                <button
+                  @click="bindVk"
+                  class="px-4 py-2 rounded-xl text-xs font-black text-white bg-[#0077FF] hover:bg-[#0066dd] flex-shrink-0 transition-colors cursor-pointer"
+                >
+                  {{ profileUser?.vk_id ? 'Обновить' : 'Привязать' }}
+                </button>
+                <button
+                  v-if="profileUser?.vk_id"
+                  @click="unbindVk"
+                  title="Отвязать ВКонтакте"
+                  class="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-xs flex-shrink-0 transition-colors cursor-pointer"
+                >
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -425,8 +539,33 @@ const bindTelegram = async () => {
     if (res.ok) {
       showNotification('Telegram успешно сохранен!');
       await fetchProfile();
+    } else {
+      alert(data.error || 'Ошибка привязки Telegram');
     }
-  } catch (e) {}
+  } catch (e) {
+    alert('Сетевая ошибка при привязке Telegram');
+  }
+};
+
+const unbindTelegram = async () => {
+  if (!confirm('Отвязать Telegram-аккаунт от этого профиля?')) return;
+  try {
+    const res = await fetch(`/api/users/${profileId.value}/bind-telegram`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telegram_id: '' })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showNotification('Telegram успешно отвязан.');
+      telegramId.value = '';
+      await fetchProfile();
+    } else {
+      alert(data.error || 'Ошибка при отвязке Telegram');
+    }
+  } catch (e) {
+    alert('Сетевая ошибка при отвязке Telegram');
+  }
 };
 
 const bindVk = async () => {
@@ -439,11 +578,33 @@ const bindVk = async () => {
     const data = await res.json();
     if (res.ok) {
       showNotification('ВКонтакте успешно привязан!');
+      await fetchProfile();
     } else {
       alert(data.error || 'Ошибка привязки VK');
     }
   } catch (e) {
-    alert('Сетевая ошибка');
+    alert('Сетевая ошибка при привязке VK');
+  }
+};
+
+const unbindVk = async () => {
+  if (!confirm('Отвязать ВКонтакте от этого профиля?')) return;
+  try {
+    const res = await fetch(`/api/users/${profileId.value}/bind-vk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vk_id: '' })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showNotification('ВКонтакте успешно отвязан.');
+      vkId.value = '';
+      await fetchProfile();
+    } else {
+      alert(data.error || 'Ошибка при отвязке VK');
+    }
+  } catch (e) {
+    alert('Сетевая ошибка при отвязке VK');
   }
 };
 

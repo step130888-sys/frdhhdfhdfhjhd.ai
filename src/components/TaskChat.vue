@@ -77,21 +77,35 @@
 
             <!-- Role Badge -->
             <span
-              v-if="c.user_level >= 3"
-              class="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 font-mono flex items-center space-x-1"
+              v-if="c.user_level >= 5"
+              class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-pink-100 dark:bg-pink-500/25 text-pink-700 dark:text-[#fcb4d5] border border-pink-300 dark:border-[#fcb4d5]/40 font-mono flex items-center space-x-1 shadow-xs"
+            >
+              <span>👑</span>
+              <span>Хранитель</span>
+            </span>
+            <span
+              v-else-if="c.user_level === 4"
+              class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-500/40 font-mono flex items-center space-x-1"
+            >
+              <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>Админ</span>
+            </span>
+            <span
+              v-else-if="c.user_level === 3"
+              class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 font-mono flex items-center space-x-1"
             >
               <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <span>Руководство</span>
             </span>
             <span
               v-else-if="c.user_level === 2"
-              class="text-[9px] font-black px-1.5 py-0.2 rounded bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30 font-mono"
+              class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30 font-mono"
             >
               Глава цеха
             </span>
             <span
               v-else-if="c.is_author_assignee"
-              class="text-[9px] font-black px-1.5 py-0.2 rounded bg-orange-50 dark:bg-[#fcb4d5]/15 text-orange-700 dark:text-[#fcb4d5] border border-orange-200 dark:border-[#fcb4d5]/30 font-mono"
+              class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-orange-50 dark:bg-[#fcb4d5]/15 text-orange-700 dark:text-[#fcb4d5] border border-orange-200 dark:border-[#fcb4d5]/30 font-mono"
             >
               Исполнитель
             </span>
@@ -212,7 +226,7 @@ const fetchComments = async () => {
     if (res.ok) {
       const data = await res.json();
       const prevLength = comments.value.length;
-      comments.value = data.comments || [];
+      comments.value = Array.isArray(data) ? data : (data.comments || []);
       if (comments.value.length > prevLength) {
         scrollToBottom();
       }

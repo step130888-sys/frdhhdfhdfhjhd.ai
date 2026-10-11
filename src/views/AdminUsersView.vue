@@ -168,6 +168,7 @@
                 <option :value="2">2 (Глава цеха)</option>
                 <option :value="3">3 (Руководство)</option>
                 <option :value="4">4 (Главный администратор)</option>
+                <option :value="5">5 (Хранитель)</option>
               </select>
             </div>
 
@@ -258,6 +259,7 @@
             <option value="Моушен">Моушен</option>
             <option value="СММ">СММ</option>
             <option value="Руководство">Руководство</option>
+            <option value="Хранитель">Хранитель</option>
           </select>
 
           <!-- Level Filter -->
@@ -270,6 +272,7 @@
             <option :value="2">2 ур. (Глава цеха)</option>
             <option :value="3">3 ур. (Руководство)</option>
             <option :value="4">4 ур. (Администратор)</option>
+            <option :value="5">5 ур. (Хранитель)</option>
           </select>
 
           <!-- Sort Selector -->
@@ -326,8 +329,8 @@
                     <div>
                       <div class="font-bold text-slate-900 dark:text-white flex items-center space-x-1.5 group-hover:text-orange-600 dark:group-hover:text-[#fcb4d5] transition-colors">
                         <span>{{ u.name }}</span>
-                        <span v-if="u.username === 'stepyn'" class="text-[9px] font-black px-1.5 py-0.2 rounded bg-red-600 text-white font-mono">
-                          ROOT
+                        <span v-if="u.username === 'admin'" class="text-[9px] font-black px-1.5 py-0.2 rounded bg-pink-600 text-white font-mono shadow-xs">
+                          ROOT ХРАНИТЕЛЬ
                         </span>
                         <span v-if="u.is_online" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" title="В сети"></span>
                       </div>
@@ -343,9 +346,15 @@
                 <td class="py-3 px-4 text-center">
                   <span
                     class="text-[10px] font-black px-2 py-0.5 rounded-full border uppercase font-mono"
-                    :class="u.access_level >= 4 ? 'bg-red-50 dark:bg-red-500/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30' : (u.access_level === 3 ? 'bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30' : 'bg-slate-100 dark:bg-slate-700/20 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600/30')"
+                    :class="u.access_level >= 5
+                      ? 'bg-pink-100 dark:bg-pink-500/25 text-pink-700 dark:text-[#fcb4d5] border-pink-300 dark:border-[#fcb4d5]/40 shadow-xs'
+                      : (u.access_level === 4
+                        ? 'bg-red-50 dark:bg-red-500/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30'
+                        : (u.access_level === 3
+                          ? 'bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30'
+                          : 'bg-slate-100 dark:bg-slate-700/20 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600/30'))"
                   >
-                    {{ u.access_level }} ур.
+                    {{ u.access_level >= 5 ? '5 ур. (Хранитель)' : `${u.access_level} ур.` }}
                   </span>
                 </td>
 
@@ -377,14 +386,14 @@
                     @click="inspectUser(u, 'edit')"
                     class="px-2.5 py-1 text-xs font-bold text-orange-700 dark:text-kedrRose hover:text-orange-900 dark:hover:text-white bg-orange-50 dark:bg-kedrRose/10 hover:bg-orange-100 dark:hover:bg-kedrRose/20 rounded-lg border border-orange-200 dark:border-kedrRose/30 transition-all inline-flex items-center space-x-1"
                   >
-                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
                     </svg>
                     <span>Редактировать</span>
                   </button>
 
                   <button
-                    v-if="u.username !== 'stepyn'"
+                    v-if="u.username !== 'admin'"
                     @click="deleteUser(u)"
                     class="px-2 py-1 text-xs font-bold text-rose-700 dark:text-rose-300 hover:text-rose-900 dark:hover:text-white bg-rose-50 dark:bg-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/40 rounded-lg border border-rose-200 dark:border-rose-500/30 transition-all inline-flex items-center justify-center"
                     title="Удалить профиль с освобождением задач"
@@ -696,11 +705,11 @@
                     v-model="editForm.username"
                     type="text"
                     required
-                    :disabled="selectedUser.username === 'stepyn'"
+                    :disabled="selectedUser.username === 'admin'"
                     class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0A0A0D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#121218] disabled:opacity-40 disabled:cursor-not-allowed font-mono"
                   />
-                  <span v-if="selectedUser.username === 'stepyn'" class="text-[10px] text-red-600 dark:text-red-400 mt-1 block">
-                    Системный логин 'stepyn' защищен от изменения
+                  <span v-if="selectedUser.username === 'admin'" class="text-[10px] text-pink-600 dark:text-[#fcb4d5] mt-1 block font-bold">
+                    Системный root-логин 'admin' (Хранитель) защищен от изменения
                   </span>
                 </div>
 
@@ -740,21 +749,23 @@
                     <option value="Моушен">Моушен</option>
                     <option value="СММ">СММ</option>
                     <option value="Руководство">Руководство</option>
+                    <option value="Хранитель">Хранитель</option>
                   </select>
                 </div>
 
                 <!-- Access Level -->
                 <div>
-                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Уровень доступа (1..4):</label>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Уровень доступа (1..5):</label>
                   <select
                     v-model.number="editForm.access_level"
-                    :disabled="selectedUser.username === 'stepyn'"
+                    :disabled="selectedUser.username === 'admin'"
                     class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0A0A0D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#121218] disabled:opacity-40"
                   >
                     <option :value="1">1 уровень — Участник направления</option>
                     <option :value="2">2 уровень — Глава цеха</option>
                     <option :value="3">3 уровень — Руководство медиацентра</option>
                     <option :value="4">4 уровень — Главный администратор</option>
+                    <option :value="5">5 уровень — Хранитель (Pink Crown)</option>
                   </select>
                 </div>
 
@@ -943,7 +954,8 @@ const editForm = ref({
 });
 
 const getLevelBadgeClass = (lvl) => {
-  if (lvl >= 4) return 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30';
+  if (lvl >= 5) return 'bg-pink-100 dark:bg-pink-500/25 text-pink-700 dark:text-[#fcb4d5] border-pink-300 dark:border-[#fcb4d5]/40 shadow-xs';
+  if (lvl === 4) return 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30';
   if (lvl === 3) return 'bg-orange-500/15 text-orange-600 dark:text-[#fcb4d5] border-orange-500/30 dark:border-[#fcb4d5]/30';
   if (lvl === 2) return 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30';
   return 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10';

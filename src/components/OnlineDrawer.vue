@@ -67,7 +67,13 @@
                 <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{{ u.role }}</span>
                 <!-- Level Badge -->
                 <span
-                  v-if="u.access_level >= 4"
+                  v-if="u.access_level >= 5"
+                  class="text-[9px] font-black px-1.5 py-0.5 rounded bg-pink-100 dark:bg-pink-500/25 text-pink-700 dark:text-[#fcb4d5] border border-pink-300 dark:border-[#fcb4d5]/40"
+                >
+                  👑 Хранитель
+                </span>
+                <span
+                  v-else-if="u.access_level === 4"
                   class="text-[9px] font-black px-1.5 py-0.2 rounded bg-red-50 dark:bg-red-500/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/30"
                 >
                   Админ

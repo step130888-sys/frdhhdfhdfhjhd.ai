@@ -16,6 +16,7 @@ export const useAuthStore = () => {
   const isLeader = computed(() => accessLevel.value >= 3);
   const isWorkshopHead = computed(() => accessLevel.value === 2);
   const isSuperAdmin = computed(() => accessLevel.value >= 4);
+  const isGuardian = computed(() => accessLevel.value >= 5);
   const canCreateTasks = computed(() => {
     if (!state.user) return false;
     return isLeader.value || isWorkshopHead.value || Boolean(state.user.can_create_tasks);
@@ -123,6 +124,7 @@ export const useAuthStore = () => {
     isLeader,
     isWorkshopHead,
     isSuperAdmin,
+    isGuardian,
     canCreateTasks,
     onlineUsers: computed(() => state.onlineUsers),
     onlineCount: computed(() => state.onlineCount),

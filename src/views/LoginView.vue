@@ -24,7 +24,7 @@
             type="text"
             required
             autocomplete="username"
-            placeholder="stepyn"
+            placeholder="admin"
             class="w-full text-xs px-4 py-3 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-slate-50 dark:bg-[#14151D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-[#fcb4d5]/20 transition-all"
           />
         </div>
@@ -119,12 +119,12 @@ const errorMsg = ref('');
 
 const demoAccounts = [
   {
-    roleType: 'superadmin',
-    label: 'Суперадмин',
-    username: 'stepyn',
-    password: 'admin',
-    levelTag: 'LVL 4',
-    badgeClass: 'bg-red-500/20 text-red-300 border border-red-500/30'
+    roleType: 'guardian',
+    label: 'Хранитель (Root)',
+    username: 'admin',
+    password: '1111',
+    levelTag: 'LVL 5',
+    badgeClass: 'bg-pink-100 dark:bg-pink-500/25 text-pink-700 dark:text-[#fcb4d5] border border-pink-300 dark:border-[#fcb4d5]/40'
   },
   {
     roleType: 'leader',

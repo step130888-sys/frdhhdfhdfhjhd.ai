@@ -143,12 +143,13 @@
               <div class="text-left hidden sm:block">
                 <div class="text-xs font-semibold text-slate-800 dark:text-white leading-tight flex items-center space-x-1 group-hover:text-orange-600 dark:group-hover:text-[#fcb4d5] transition-colors">
                   <span class="truncate max-w-[100px]">{{ user.name ? user.name.split(' ')[0] : '' }}</span>
-                  <svg v-if="user.access_level >= 3" class="w-3 h-3 text-amber-500 fill-amber-500 inline shrink-0" viewBox="0 0 24 24">
+                  <span v-if="user.access_level >= 5" class="text-[9px] font-black px-1.5 py-0.5 rounded-md bg-pink-100 dark:bg-pink-500/25 text-pink-700 dark:text-[#fcb4d5] border border-pink-300 dark:border-[#fcb4d5]/40 leading-none shadow-xs">👑 Хранитель</span>
+                  <svg v-else-if="user.access_level >= 3" class="w-3 h-3 text-amber-500 fill-amber-500 inline shrink-0" viewBox="0 0 24 24">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                   </svg>
                 </div>
                 <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-none mt-0.5">
-                  {{ user.role }} • {{ user.access_level }} ур.
+                  {{ user.access_level >= 5 ? 'Хранитель' : user.role }} • {{ user.access_level }} ур.
                 </div>
               </div>
             </router-link>

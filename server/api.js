@@ -390,14 +390,15 @@ router.post('/users/:id/update', requireAuth, async (req, res) => {
   const isSelf = (req.user.id === profileId);
   const isLeaderOrAdmin = (req.user.access_level >= 3);
   const isAdmin = (req.user.access_level >= 4);
+  const isGuardian = (req.user.access_level >= 5);
 
   if (!isSelf && !isLeaderOrAdmin) {
     return res.status(403).json({ error: 'Недостаточно прав для редактирования профиля.' });
   }
 
-  // Protection for root admin
-  if (targetUser.username === db.ROOT_ADMIN_USERNAME && !isSelf && !isAdmin) {
-    return res.status(403).json({ error: "Системный профиль 'stepyn' защищен от изменений." });
+  // Protection for root admin (Хранитель)
+  if (targetUser.username === db.ROOT_ADMIN_USERNAME && !isSelf && !isGuardian) {
+    return res.status(403).json({ error: `Системный профиль '${db.ROOT_ADMIN_USERNAME}' (Хранитель) защищен от изменений.` });
   }
 
   const name = req.body.name ? req.body.name.trim() : null;
@@ -420,7 +421,7 @@ router.post('/users/:id/update', requireAuth, async (req, res) => {
 
   if (username && username !== targetUser.username) {
     if (targetUser.username === db.ROOT_ADMIN_USERNAME) {
-      // Cannot rename stepyn
+      // Cannot rename root admin
     } else {
       const existing = await db.get('SELECT id FROM users WHERE LOWER(username) = ? AND id != ?', [username, profileId]);
       if (existing) {
@@ -432,9 +433,10 @@ router.post('/users/:id/update', requireAuth, async (req, res) => {
 
   if (isLeaderOrAdmin && accessLevel !== null && !isNaN(accessLevel)) {
     if (targetUser.username === db.ROOT_ADMIN_USERNAME) {
-      newLevel = 4; // Immutable protection for stepyn
+      newLevel = 5; // Immutable protection for root admin (Хранитель)
     } else {
-      newLevel = Math.max(1, Math.min(isAdmin ? 4 : 3, accessLevel));
+      const maxAllowed = isGuardian ? 5 : (isAdmin ? 4 : 3);
+      newLevel = Math.max(1, Math.min(maxAllowed, accessLevel));
     }
   }
 
@@ -474,8 +476,20 @@ router.post('/users/:id/avatar', requireAuth, upload.single('avatar_file'), asyn
 
 router.post('/users/:id/bind-telegram', requireAuth, async (req, res) => {
   const profileId = parseInt(req.params.id, 10);
+  const targetUser = await db.get('SELECT * FROM users WHERE id = ?', [profileId]);
+  if (!targetUser) {
+    return res.status(404).json({ error: 'Пользователь не найден.' });
+  }
+
   if (req.user.id !== profileId && req.user.access_level < 4) {
     return res.status(403).json({ error: 'Недостаточно прав.' });
+  }
+
+  // Requirement 3: Telegram only for level 3, 4, 5
+  if (targetUser.access_level < 3) {
+    return res.status(403).json({
+      error: 'Подключение к Telegram доступно только для участников с уровнем доступа 3, 4 и 5 (Руководство, Администраторы, Хранители).'
+    });
   }
 
   const telegramId = (req.body.telegram_id || '').trim();
@@ -1231,7 +1245,7 @@ router.get('/tasks/:id/comments', requireAuth, async (req, res) => {
     is_author_assignee: Boolean(task.assigned_to_id && task.assigned_to_id === c.user_id)
   }));
 
-  res.json(mapped);
+  res.json({ success: true, comments: mapped });
 });
 
 router.post('/tasks/:id/comments', requireAuth, async (req, res) => {
@@ -1266,9 +1280,16 @@ router.post('/tasks/:id/comments', requireAuth, async (req, res) => {
     is_author_assignee: Boolean(task.assigned_to_id && task.assigned_to_id === req.user.id)
   };
 
-  // Bot notification for chat messages
+  // Bot notifications for chat messages
   try {
-    await telegramService.notifyTaskNewComment(task, req.user, message);
+    if (typeof telegramService.notifyTaskNewComment === 'function') {
+      await telegramService.notifyTaskNewComment(task, req.user, message);
+    }
+  } catch (e) {}
+  try {
+    if (typeof vkService.notifyTaskNewComment === 'function') {
+      await vkService.notifyTaskNewComment(task, req.user, message);
+    }
   } catch (e) {}
 
   res.json({ success: true, comment: newComment });
@@ -1397,9 +1418,10 @@ router.post('/admin/users/:id/approve', requireAuth, requireLevel(4), async (req
     return res.status(404).json({ error: 'Пользователь не найден.' });
   }
 
+  const maxLevel = req.user.access_level >= 5 ? 5 : 4;
   await db.run(
     'UPDATE users SET is_approved = 1, access_level = ? WHERE id = ?',
-    [Math.max(1, Math.min(4, accessLevel)), profileId]
+    [Math.max(1, Math.min(maxLevel, accessLevel)), profileId]
   );
   invalidateUserCache(profileId);
 
@@ -1419,7 +1441,7 @@ router.post('/admin/users/:id/reject', requireAuth, requireLevel(4), async (req,
   }
 
   if (targetUser.username === db.ROOT_ADMIN_USERNAME) {
-    return res.status(403).json({ error: "Системный профиль 'stepyn' защищен от любых изменений." });
+    return res.status(403).json({ error: `Системный root-профиль '${db.ROOT_ADMIN_USERNAME}' защищен от удаления.` });
   }
 
   await db.run('DELETE FROM users WHERE id = ?', [profileId]);

@@ -549,11 +549,11 @@
                     v-model="editForm.username"
                     type="text"
                     required
-                    :disabled="selectedUser.username === 'stepyn'"
+                    :disabled="selectedUser.username === 'admin'"
                     class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0A0A0D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#121218] disabled:opacity-40 disabled:cursor-not-allowed font-mono"
                   />
-                  <span v-if="selectedUser.username === 'stepyn'" class="text-[10px] text-red-400 mt-1 block">
-                    Системный логин 'stepyn' защищен от изменения
+                  <span v-if="selectedUser.username === 'admin'" class="text-[10px] text-pink-600 dark:text-[#fcb4d5] mt-1 block font-bold">
+                    Системный root-логин 'admin' (Хранитель) защищен от изменения
                   </span>
                 </div>
 
@@ -593,21 +593,23 @@
                     <option value="Моушен">Моушен</option>
                     <option value="СММ">СММ</option>
                     <option value="Руководство">Руководство</option>
+                    <option value="Хранитель">Хранитель</option>
                   </select>
                 </div>
 
                 <!-- Access Level -->
                 <div>
-                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Уровень доступа (1..4):</label>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Уровень доступа (1..5):</label>
                   <select
                     v-model.number="editForm.access_level"
-                    :disabled="selectedUser.username === 'stepyn'"
+                    :disabled="selectedUser.username === 'admin'"
                     class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0A0A0D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#121218] disabled:opacity-40"
                   >
                     <option :value="1">1 уровень — Участник направления</option>
                     <option :value="2">2 уровень — Глава цеха</option>
                     <option :value="3">3 уровень — Руководство медиацентра</option>
                     <option :value="4">4 уровень — Главный администратор</option>
+                    <option :value="5">5 уровень — Хранитель (Pink Crown)</option>
                   </select>
                 </div>
 
@@ -787,6 +789,7 @@ const editForm = ref({
 });
 
 const getLevelBadgeClass = (lvl) => {
+  if (lvl >= 5) return 'bg-pink-100 dark:bg-pink-500/25 text-pink-700 dark:text-[#fcb4d5] border-pink-300 dark:border-[#fcb4d5]/40 shadow-xs';
   if (lvl >= 4) return 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30';
   if (lvl === 3) return 'bg-orange-500/15 text-orange-600 dark:text-[#fcb4d5] border-orange-500/30 dark:border-[#fcb4d5]/30';
   if (lvl === 2) return 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30';

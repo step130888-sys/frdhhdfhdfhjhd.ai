@@ -1,35 +1,59 @@
 import { ref } from 'vue';
 
-const savedTheme = typeof localStorage !== 'undefined' ? localStorage.getItem('kedr_theme') : null;
-// Default to light unless user previously selected dark or explicitly prefers dark
-const isDark = ref(savedTheme ? savedTheme === 'dark' : false);
+const getInitialTheme = () => {
+  if (typeof localStorage !== 'undefined') {
+    const saved = localStorage.getItem('kedr_theme');
+    if (saved === 'dark') return true;
+    if (saved === 'light') return false;
+  }
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  return false;
+};
+
+const isDark = ref(getInitialTheme());
 
 export const useThemeStore = () => {
-  const applyTheme = (dark) => {
+  const applyTheme = (dark, save = true) => {
     isDark.value = dark;
-    const root = document.documentElement;
-    if (dark) {
-      root.classList.add('dark');
-      root.classList.remove('light');
-      localStorage.setItem('kedr_theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      root.classList.add('light');
-      localStorage.setItem('kedr_theme', 'light');
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      if (dark) {
+        root.classList.add('dark');
+        root.classList.remove('light');
+      } else {
+        root.classList.remove('dark');
+        root.classList.add('light');
+      }
+    }
+    if (save && typeof localStorage !== 'undefined') {
+      localStorage.setItem('kedr_theme', dark ? 'dark' : 'light');
     }
   };
 
   const toggleTheme = () => {
-    applyTheme(!isDark.value);
+    applyTheme(!isDark.value, true);
   };
 
   const initTheme = () => {
+    if (typeof window === 'undefined') return;
     const saved = localStorage.getItem('kedr_theme');
     if (saved) {
-      applyTheme(saved === 'dark');
+      applyTheme(saved === 'dark', false);
     } else {
-      // Default to light mode for the requested fresh white theme
-      applyTheme(false);
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(prefersDark, false);
+    }
+
+    if (window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      mediaQuery.addEventListener('change', (e) => {
+        const explicit = localStorage.getItem('kedr_theme');
+        if (!explicit) {
+          applyTheme(e.matches, false);
+        }
+      });
     }
   };
 
@@ -40,3 +64,4 @@ export const useThemeStore = () => {
     applyTheme
   };
 };
+
