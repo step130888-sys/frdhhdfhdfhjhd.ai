@@ -1,6 +1,7 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="cyber-glass rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-white/60 dark:border-white/10 backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
+  <transition name="modal">
+    <div v-if="isOpen" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div class="cyber-glass rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-white/60 dark:border-white/10 backdrop-blur-3xl">
       <!-- Header -->
       <div class="flex items-center space-x-3 mb-2">
         <div class="w-9 h-9 rounded-xl bg-orange-500/10 dark:bg-kedrRose/15 border border-orange-500/20 dark:border-kedrRose/30 flex items-center justify-center text-orange-600 dark:text-kedrRose">
@@ -114,6 +115,7 @@
       </form>
     </div>
   </div>
+</transition>
 </template>
 
 <script setup>

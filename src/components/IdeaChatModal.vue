@@ -1,8 +1,9 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-    <div
-      class="cyber-glass bg-white dark:bg-[#0E0F17] rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-    >
+  <transition name="modal">
+    <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="close">
+      <div
+        class="cyber-glass bg-white dark:bg-[#0E0F17] rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden"
+      >
       <!-- Modal Header -->
       <div class="px-5 py-4 border-b border-black/[0.06] dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.02] flex items-center justify-between gap-3 flex-shrink-0">
         <div class="flex items-center space-x-3 min-w-0">
@@ -174,6 +175,7 @@
       </div>
     </div>
   </div>
+</transition>
 </template>
 
 <script setup>

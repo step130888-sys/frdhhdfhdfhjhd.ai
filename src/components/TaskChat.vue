@@ -139,7 +139,7 @@
         :key="phrase"
         type="button"
         @click="sendQuickPhrase(phrase)"
-        class="flex-shrink-0 px-2.5 py-1 rounded-lg bg-white dark:bg-[#181924] hover:bg-orange-50 dark:hover:bg-[#fcb4d5]/15 text-slate-700 dark:text-slate-300 hover:text-orange-600 dark:hover:text-[#fcb4d5] border border-black/[0.06] dark:border-white/[0.08] transition-all text-[11px] font-medium shadow-2xs active:scale-95"
+        class="flex-shrink-0 px-2.5 py-1 rounded-lg bg-white dark:bg-[#181924] hover:bg-orange-50 dark:hover:bg-[#fcb4d5]/15 text-slate-700 dark:text-slate-300 hover:text-orange-600 dark:hover:text-[#fcb4d5] border border-black/[0.06] dark:border-white/[0.08] transition-[transform,background-color,border-color,color] duration-150 text-[11px] font-medium shadow-2xs active:scale-[0.97]"
       >
         {{ phrase }}
       </button>
@@ -154,14 +154,14 @@
             @keydown.enter.exact.prevent="submitMessage"
             type="text"
             placeholder="Напишите сообщение в чат задачи... (Enter для отправки)"
-            class="w-full text-xs px-4 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-slate-50 dark:bg-[#14151D] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-[#fcb4d5]/20 transition-all"
+            class="w-full text-xs px-4 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-slate-50 dark:bg-[#14151D] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-[#fcb4d5]/20 transition-[border-color,box-shadow,background-color] duration-150"
           />
         </div>
         
         <button
           type="submit"
           :disabled="!inputMessage.trim() || sending"
-          class="btn-neon text-white dark:text-black rounded-2xl px-4 py-3 min-h-[44px] min-w-[44px] flex items-center justify-center space-x-1.5 transition-all disabled:opacity-40 flex-shrink-0 text-xs font-black shadow-sm"
+          class="btn-neon text-white dark:text-black rounded-2xl px-4 py-3 min-h-[44px] min-w-[44px] flex items-center justify-center space-x-1.5 transition-[transform,background-color,box-shadow] duration-150 disabled:opacity-40 flex-shrink-0 text-xs font-black shadow-sm"
           title="Отправить сообщение"
         >
           <span>{{ sending ? '...' : 'Отправить' }}</span>

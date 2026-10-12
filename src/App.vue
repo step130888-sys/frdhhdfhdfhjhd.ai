@@ -117,16 +117,17 @@ onUnmounted(() => {
 </script>
 
 <style>
-.toast-enter-active,
+.toast-enter-active {
+  transition: transform 220ms var(--ease-out), opacity 200ms ease-out;
+  will-change: transform, opacity;
+}
 .toast-leave-active {
-  transition: all 0.3s ease;
+  transition: transform 160ms var(--ease-out), opacity 140ms ease-in;
+  will-change: transform, opacity;
 }
-.toast-enter-from {
-  opacity: 0;
-  transform: translateY(20px);
-}
+.toast-enter-from,
 .toast-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(16px) scale(0.96);
 }
 </style>

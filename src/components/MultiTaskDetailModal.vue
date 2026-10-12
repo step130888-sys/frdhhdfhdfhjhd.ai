@@ -1,10 +1,11 @@
 <template>
-  <div
-    v-if="isOpen && event"
-    class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md"
-    @click.self="$emit('close')"
-  >
-    <div class="cyber-glass max-w-4xl w-full max-h-[92vh] flex flex-col rounded-3xl border border-white/60 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
+  <transition name="modal">
+    <div
+      v-if="isOpen && event"
+      class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md"
+      @click.self="$emit('close')"
+    >
+      <div class="cyber-glass max-w-4xl w-full max-h-[92vh] flex flex-col rounded-3xl border border-white/60 dark:border-white/10 shadow-2xl overflow-hidden backdrop-blur-3xl">
       
       <!-- Modal Top Bar -->
       <div class="px-6 py-5 bg-white/40 dark:bg-white/[0.04] backdrop-blur-xl border-b border-black/[0.05] dark:border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
@@ -233,6 +234,7 @@
 
     </div>
   </div>
+</transition>
 </template>
 
 <script setup>

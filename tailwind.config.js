@@ -53,6 +53,9 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'system-ui', 'sans-serif'],
+      },
+      spacing: {
+        '4.5': '1.125rem',
       }
     },
   },

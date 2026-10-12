@@ -6,7 +6,7 @@
       "name": "Алексей Смирнов",
       "role": "Админ",
       "access_level": 4,
-      "updatedAt": "2026-10-11T00:18:02.814Z"
+      "updatedAt": "2026-10-12T08:41:48.245Z"
     },
     "987654321": {
       "userId": 11,
@@ -14,15 +14,15 @@
       "name": "Анна Павлова",
       "role": "Фото",
       "access_level": 1,
-      "updatedAt": "2026-10-11T00:18:02.820Z"
+      "updatedAt": "2026-10-12T08:41:48.250Z"
     },
     "5564592345": {
       "userId": 41,
       "username": "stepyn",
       "name": "Степан (Главный Администратор)",
-      "role": "Админ",
-      "access_level": 4,
-      "updatedAt": "2026-10-11T00:18:02.825Z"
+      "role": "Фото",
+      "access_level": 1,
+      "updatedAt": "2026-10-12T08:41:48.254Z"
     }
   },
   "byUserId": {

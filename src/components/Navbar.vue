@@ -7,7 +7,7 @@
         <router-link
           to="/secret-debt-usa"
           title="Секретный архив Хранителей: Гос-Долг USA"
-          class="px-2 py-1 rounded-xl border border-pink-400/50 dark:border-[#fcb4d5]/50 bg-pink-100/90 dark:bg-[#1a0817]/95 hover:bg-pink-200 dark:hover:bg-pink-900/60 text-pink-900 dark:text-[#fcb4d5] text-[10px] font-black flex items-center space-x-1 transition-all shadow-sm active:scale-95 group backdrop-blur-md"
+          class="px-2 py-1 rounded-xl border border-pink-400/50 dark:border-[#fcb4d5]/50 bg-pink-100/90 dark:bg-[#1a0817]/95 hover:bg-pink-200 dark:hover:bg-pink-900/60 text-pink-900 dark:text-[#fcb4d5] text-[10px] font-black flex items-center space-x-1 transition-[transform,background-color,border-color] duration-150 shadow-sm active:scale-[0.97] group backdrop-blur-md"
           :class="$route.path === '/secret-debt-usa' ? 'ring-2 ring-pink-500' : ''"
         >
           <span class="text-xs">🇺🇸</span>
@@ -40,7 +40,8 @@
         <nav v-if="isLoggedIn" ref="navDockRef" class="relative hidden md:flex items-center gap-1.5 p-1.5 rounded-2xl glass-pill-dock shrink-0">
           <!-- Animated Sliding Indicator: Transparent Liquid Frosted Glass in both themes -->
           <div
-            class="absolute top-0 left-0 rounded-xl pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] z-0 will-change-transform bg-white/55 dark:bg-[#151620]/80 shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.95),0_4px_16px_-2px_rgba(249,115,22,0.18)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.18),0_4px_20px_rgba(252,180,213,0.16)] border border-orange-500/30 dark:border-[#fcb4d5]/35 backdrop-blur-2xl"
+            class="absolute top-0 left-0 rounded-xl pointer-events-none z-0 will-change-transform bg-white/55 dark:bg-[#151620]/80 shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.95),0_4px_16px_-2px_rgba(249,115,22,0.18)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.18),0_4px_20px_rgba(252,180,213,0.16)] border border-orange-500/30 dark:border-[#fcb4d5]/35 backdrop-blur-2xl"
+            style="transition: transform 240ms var(--ease-out), width 240ms var(--ease-out), opacity 180ms ease-out;"
             :style="navIndicatorStyle"
           >
             <div class="absolute inset-0 rounded-xl bg-gradient-to-b from-white/75 via-white/15 to-orange-500/[0.04] dark:from-white/15 dark:to-transparent pointer-events-none"></div>
@@ -114,7 +115,7 @@
           <!-- Modern Theme Toggle Button -->
           <button
             @click="toggleTheme"
-            class="p-2 rounded-xl border border-black/[0.07] dark:border-white/[0.08] bg-black/[0.02] hover:bg-black/[0.05] dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 transition-all shrink-0 cursor-pointer shadow-xs active:scale-95"
+            class="p-2 rounded-xl border border-black/[0.07] dark:border-white/[0.08] bg-black/[0.02] hover:bg-black/[0.05] dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 transition-[transform,background-color,border-color] duration-150 shrink-0 cursor-pointer shadow-xs active:scale-[0.97]"
             :title="isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'"
             aria-label="Переключение темы"
           >
@@ -132,7 +133,7 @@
           <!-- Online Trigger Button -->
           <button
             @click="toggleOnlineDrawer"
-            class="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-black/[0.02] hover:bg-black/[0.05] dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-black/[0.07] dark:border-white/[0.08] transition-all text-xs font-semibold shadow-xs group shrink-0 active:scale-95"
+            class="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-black/[0.02] hover:bg-black/[0.05] dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-black/[0.07] dark:border-white/[0.08] transition-[transform,background-color,border-color] duration-150 text-xs font-semibold shadow-xs group shrink-0 active:scale-[0.97]"
             title="Кто сейчас в сети"
           >
             <span class="relative flex h-2 w-2">

@@ -403,7 +403,7 @@
       <div v-if="isMe || isLeader" class="cyber-glass rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 shadow-sm transition-colors">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <div class="flex items-center space-x-3">
-            <div class="w-9 h-9 rounded-2xl bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shadow-xs">
+            <div class="w-9 h-9 rounded-2xl bg-amber-500/15 dark:bg-pink-500/20 border border-amber-500/30 dark:border-pink-500/30 flex items-center justify-center text-amber-600 dark:text-[#fcb4d5] shadow-xs">
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2v1"/><path d="M12 21v1"/><path d="M4.93 4.93l.7.7"/><path d="M18.36 18.36l.7.7"/><path d="M2 12h1"/><path d="M21 12h1"/><path d="M4.93 19.07l.7-.7"/><path d="M18.36 5.64l.7-.7"/>
                 <circle cx="12" cy="12" r="5"/>
@@ -412,7 +412,7 @@
             <div>
               <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
                 <span>Предложенные идеи и инициативы</span>
-                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 dark:bg-pink-500/20 text-amber-700 dark:text-[#fcb4d5] border border-amber-500/30 dark:border-pink-500/30">
                   {{ userIdeas.length }}
                 </span>
               </h2>
@@ -447,7 +447,7 @@
             v-for="item in userIdeas"
             :key="item.id"
             @click="openIdeaChat(item.id)"
-            class="p-4.5 rounded-2xl bg-white/60 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 hover:border-amber-500/40 dark:hover:border-amber-400/40 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+            class="p-5 rounded-2xl bg-white/60 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 hover:border-amber-500/40 dark:hover:border-amber-400/40 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
           >
             <div>
               <div class="flex items-center justify-between gap-2 mb-2">

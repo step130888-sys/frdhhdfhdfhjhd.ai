@@ -185,7 +185,7 @@ const updateIndicator = (animated = true) => {
     const height = btn.offsetHeight;
 
     const transitionStyle = (animated && !isInitial.value)
-      ? 'transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), width 0.36s cubic-bezier(0.22, 1, 0.36, 1), height 0.36s ease, opacity 0.22s ease'
+      ? 'transform 0.24s cubic-bezier(0.23, 1, 0.32, 1), width 0.24s cubic-bezier(0.23, 1, 0.32, 1), height 0.20s ease, opacity 0.18s ease'
       : 'none';
 
     indicatorStyle.value = {
@@ -213,7 +213,7 @@ function selectItem(val, idx) {
       width: `${btn.offsetWidth}px`,
       height: `${btn.offsetHeight}px`,
       opacity: 1,
-      transition: 'transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), width 0.36s cubic-bezier(0.22, 1, 0.36, 1), height 0.36s ease, opacity 0.22s ease'
+      transition: 'transform 0.24s cubic-bezier(0.23, 1, 0.32, 1), width 0.24s cubic-bezier(0.23, 1, 0.32, 1), height 0.20s ease, opacity 0.18s ease'
     };
   }
   emit('update:modelValue', val);

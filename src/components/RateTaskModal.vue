@@ -1,6 +1,7 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="cyber-glass rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-slate-200 dark:border-white/10 transition-colors bg-white dark:bg-[#0c0c10]">
+  <transition name="modal">
+    <div v-if="isOpen" class="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div class="cyber-glass rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-slate-200 dark:border-white/10 transition-colors bg-white dark:bg-[#0c0c10]">
       <!-- Header -->
       <div class="flex items-center space-x-3 mb-2">
         <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shadow-xs">
@@ -75,6 +76,7 @@
       </form>
     </div>
   </div>
+</transition>
 </template>
 
 <script setup>

@@ -11,6 +11,11 @@
 
 :root {
   color-scheme: light;
+  /* Emil Kowalski Signature Design Engineering Easing Curves */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
   --bg-app: #F5F7FA;
   --bg-card: rgba(255, 255, 255, 0.68);
   --bg-card-solid: #FFFFFF;
@@ -181,17 +186,19 @@ html.dark .apple-glass-card:hover {
   font-weight: 700;
   border: 1px solid rgba(249, 115, 22, 0.4);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 6px -1px rgba(249, 115, 22, 0.3);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 160ms var(--ease-out), background-color 150ms ease, border-color 150ms ease, box-shadow 160ms var(--ease-out);
   cursor: pointer;
   position: relative;
   overflow: hidden;
 }
 
-.btn-neon:hover,
-.btn-primary-glass:hover {
-  background: #EA580C;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 14px -2px rgba(249, 115, 22, 0.4);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .btn-neon:hover,
+  .btn-primary-glass:hover {
+    background: #EA580C;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 14px -2px rgba(249, 115, 22, 0.4);
+    transform: translateY(-1px);
+  }
 }
 
 html.dark .btn-neon,
@@ -203,17 +210,20 @@ html.dark .btn-primary-glass {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 10px rgba(252, 180, 213, 0.25);
 }
 
-html.dark .btn-neon:hover,
-html.dark .btn-primary-glass:hover {
-  background: #FDF2F8;
-  color: #000000;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 4px 16px rgba(252, 180, 213, 0.35);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .btn-neon:hover,
+  html.dark .btn-primary-glass:hover {
+    background: #FDF2F8;
+    color: #000000;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 4px 16px rgba(252, 180, 213, 0.35);
+    transform: translateY(-1px);
+  }
 }
 
 .btn-neon:active,
 .btn-primary-glass:active {
-  transform: translateY(0) scale(0.98);
+  transform: scale(0.97) !important;
+  transition-duration: 80ms !important;
 }
 
 /* Secondary Button / Glass Pill */
@@ -224,17 +234,19 @@ html.dark .btn-primary-glass:hover {
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   font-weight: 600;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 160ms var(--ease-out), background-color 150ms ease, border-color 150ms ease, box-shadow 160ms var(--ease-out), color 150ms ease;
   cursor: pointer;
 }
 
-.btn-cyan:hover,
-.btn-secondary-glass:hover {
-  background: #FFF7ED;
-  border-color: rgba(249, 115, 22, 0.4);
-  color: #EA580C;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  .btn-cyan:hover,
+  .btn-secondary-glass:hover {
+    background: #FFF7ED;
+    border-color: rgba(249, 115, 22, 0.4);
+    color: #EA580C;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.08);
+  }
 }
 
 html.dark .btn-cyan,
@@ -246,13 +258,28 @@ html.dark .btn-secondary-glass {
   font-weight: 600;
 }
 
-html.dark .btn-cyan:hover,
-html.dark .btn-secondary-glass:hover {
-  background: rgba(252, 180, 213, 0.1);
-  border-color: rgba(252, 180, 213, 0.35);
-  color: #FCB4D5;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .btn-cyan:hover,
+  html.dark .btn-secondary-glass:hover {
+    background: rgba(252, 180, 213, 0.1);
+    border-color: rgba(252, 180, 213, 0.35);
+    color: #FCB4D5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.btn-cyan:active,
+.btn-secondary-glass:active {
+  transform: scale(0.97) !important;
+  transition-duration: 80ms !important;
+}
+
+/* Tactile Active Press Feedback: Instant responsive buttons */
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: scale(0.97) !important;
+  transition-duration: 80ms !important;
 }
 
 /* =========================================================
@@ -562,79 +589,133 @@ html:not(.dark) .shadow-2xl {
 }
 
 /* =========================================================
-   Apple Fluid Glass Transitions (Soft, Depth-Aware Motion)
+   Apple Fluid Glass Transitions (Emil Kowalski Motion Engine)
+   - Snappy durations (<250ms) for high perceived responsiveness
+   - Strong custom ease-out curve (cubic-bezier(0.23, 1, 0.32, 1))
+   - Asymmetric exit timing (exit faster than enter)
    ========================================================= */
 
 /* 1. Page Route Transition (Between Content-Plan, Materials, etc.) */
 .page-swipe-enter-active {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 220ms var(--ease-out), opacity 180ms ease-out;
   will-change: transform, opacity;
 }
 
 .page-swipe-leave-active {
-  transition: transform 0.20s cubic-bezier(0.25, 1, 0.5, 1),
-              opacity 0.18s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 140ms ease-in, opacity 120ms ease-in;
   will-change: transform, opacity;
 }
 
 .page-swipe-enter-from {
   opacity: 0;
-  transform: translateY(8px) scale(0.996);
+  transform: translateY(6px) scale(0.995);
 }
 
 .page-swipe-leave-to {
   opacity: 0;
-  transform: translateY(-6px) scale(0.996);
+  transform: translateY(-4px) scale(0.995);
 }
 
 /* 2. Soft View Mode Transition (Between Calendar & List) */
 .tab-swipe-enter-active {
-  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 200ms var(--ease-out), opacity 170ms ease-out;
   will-change: transform, opacity;
 }
 
 .tab-swipe-leave-active {
-  transition: transform 0.18s cubic-bezier(0.25, 1, 0.5, 1),
-              opacity 0.16s ease;
+  transition: transform 130ms ease-in, opacity 110ms ease-in;
   will-change: transform, opacity;
 }
 
 .tab-swipe-enter-from {
   opacity: 0;
-  transform: translateY(6px);
+  transform: translateY(4px);
 }
 
 .tab-swipe-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 
 /* 3. Department / Workshop Filter Transition (Between Photo, Design, Video, etc.) */
 .dept-swap-enter-active {
-  transition: transform 0.30s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 190ms var(--ease-out), opacity 160ms ease-out;
   will-change: transform, opacity;
 }
 
 .dept-swap-leave-active {
-  transition: transform 0.16s cubic-bezier(0.25, 1, 0.5, 1),
-              opacity 0.14s ease;
+  transition: transform 120ms ease-in, opacity 100ms ease-in;
   will-change: transform, opacity;
 }
 
 .dept-swap-enter-from {
   opacity: 0;
-  transform: translateY(6px);
+  transform: translateY(4px);
 }
 
 .dept-swap-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 
-/* Glass Pill Dock */
+/* 4. Universal Native Modal Physics (Origin & Scale Aware, Never scale(0)) */
+.modal-enter-active {
+  transition: opacity 220ms var(--ease-out);
+}
+.modal-leave-active {
+  transition: opacity 160ms var(--ease-out);
+}
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active > div,
+.modal-enter-active .cyber-glass {
+  transition: transform 220ms var(--ease-out), opacity 200ms ease-out;
+}
+.modal-leave-active > div,
+.modal-leave-active .cyber-glass {
+  transition: transform 160ms var(--ease-out), opacity 140ms ease-in;
+}
+
+.modal-enter-from > div,
+.modal-enter-from .cyber-glass {
+  opacity: 0;
+  transform: scale(0.96) translateY(6px);
+}
+.modal-leave-to > div,
+.modal-leave-to .cyber-glass {
+  opacity: 0;
+  transform: scale(0.97) translateY(4px);
+}
+
+/* 5. Online Drawer Backdrop Transition (Fade in/out) */
+.drawer-backdrop-enter-active {
+  transition: opacity 240ms var(--ease-out);
+}
+.drawer-backdrop-leave-active {
+  transition: opacity 180ms ease;
+}
+.drawer-backdrop-enter-from,
+.drawer-backdrop-leave-to {
+  opacity: 0;
+}
+
+/* 6. Form Expand / Collapse Transition */
+.expand-enter-active {
+  transition: transform 200ms var(--ease-out), opacity 180ms ease-out;
+}
+.expand-leave-active {
+  transition: transform 150ms var(--ease-out), opacity 130ms ease;
+}
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.99);
+}
+
+/* 7. Glass Pill Dock */
 .glass-pill-dock {
   background: rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(24px) saturate(180%);
@@ -649,5 +730,29 @@ html.dark .glass-pill-dock {
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12), 0 6px 20px -2px rgba(0, 0, 0, 0.5);
+}
+
+/* 8. Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .modal-enter-from > div,
+  .modal-leave-to > div,
+  .modal-enter-from .cyber-glass,
+  .modal-leave-to .cyber-glass,
+  .page-swipe-enter-from,
+  .page-swipe-leave-to,
+  .tab-swipe-enter-from,
+  .tab-swipe-leave-to,
+  .dept-swap-enter-from,
+  .dept-swap-leave-to,
+  .expand-enter-from,
+  .expand-leave-to {
+    transform: none !important;
+  }
 }
 

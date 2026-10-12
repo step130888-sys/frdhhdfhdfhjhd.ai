@@ -1,8 +1,9 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-    <div
-      class="cyber-glass bg-white dark:bg-[#0E0F17] rounded-3xl w-full max-w-lg p-6 border border-slate-200 dark:border-white/10 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-    >
+  <transition name="modal">
+    <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="close">
+      <div
+        class="cyber-glass bg-white dark:bg-[#0E0F17] rounded-3xl w-full max-w-lg p-6 border border-slate-200 dark:border-white/10 shadow-2xl relative overflow-hidden"
+      >
       <div class="flex items-center justify-between mb-5">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shadow-xs">
@@ -79,6 +80,7 @@
       </form>
     </div>
   </div>
+</transition>
 </template>
 
 <script setup>

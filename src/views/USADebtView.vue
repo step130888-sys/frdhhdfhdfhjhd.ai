@@ -68,12 +68,12 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       
       <!-- Metric 1: Live USA Debt -->
-      <div class="cyber-glass rounded-2xl p-4.5 border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#101016]/90 shadow-xs flex flex-col justify-between">
+      <div class="cyber-glass rounded-2xl p-5 border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#101016]/90 shadow-xs flex flex-col justify-between min-h-[148px]">
         <div class="flex items-center justify-between mb-2">
           <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Госдолг USA (Live)
           </span>
-          <div class="w-7 h-7 rounded-lg bg-pink-500/10 dark:bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-600 dark:text-[#fcb4d5]">
+          <div class="w-7 h-7 rounded-lg bg-pink-500/10 dark:bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-600 dark:text-[#fcb4d5] shrink-0">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect width="20" height="12" x="2" y="6" rx="2"/>
               <circle cx="12" cy="12" r="2"/>
@@ -81,43 +81,43 @@
             </svg>
           </div>
         </div>
-        <div class="font-mono text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <div class="font-mono text-lg sm:text-xl xl:text-2xl font-black text-slate-900 dark:text-white tracking-tight my-1 truncate">
           ${{ formattedDebt }}
         </div>
         <div class="flex items-center space-x-1.5 mt-2.5 pt-2 border-t border-slate-100 dark:border-white/5 text-[11px] text-pink-600 dark:text-pink-400 font-semibold">
-          <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span>
-          <span>Обновление в реальном времени</span>
+          <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse shrink-0"></span>
+          <span class="truncate">Обновление в реальном времени</span>
         </div>
       </div>
 
       <!-- Metric 2: Growth Speed -->
-      <div class="cyber-glass rounded-2xl p-4.5 border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#101016]/90 shadow-xs flex flex-col justify-between">
+      <div class="cyber-glass rounded-2xl p-5 border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#101016]/90 shadow-xs flex flex-col justify-between min-h-[148px]">
         <div class="flex items-center justify-between mb-2">
           <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Прирост в секунду
           </span>
-          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
               <polyline points="17 6 23 6 23 12"/>
             </svg>
           </div>
         </div>
-        <div class="font-mono text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+        <div class="font-mono text-lg sm:text-xl xl:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight my-1 truncate">
           +$102,400 / сек
         </div>
         <div class="flex items-center space-x-1.5 mt-2.5 pt-2 border-t border-slate-100 dark:border-white/5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-          <span>+$6,144,000 каждую минуту</span>
+          <span class="truncate">+$6,144,000 каждую минуту</span>
         </div>
       </div>
 
       <!-- Metric 3: Debt Per Citizen -->
-      <div class="cyber-glass rounded-2xl p-4.5 border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#101016]/90 shadow-xs flex flex-col justify-between">
+      <div class="cyber-glass rounded-2xl p-5 border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#101016]/90 shadow-xs flex flex-col justify-between min-h-[148px]">
         <div class="flex items-center justify-between mb-2">
           <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
             На каждого гражданина
           </span>
-          <div class="w-7 h-7 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+          <div class="w-7 h-7 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
@@ -126,21 +126,21 @@
             </svg>
           </div>
         </div>
-        <div class="font-mono text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <div class="font-mono text-lg sm:text-xl xl:text-2xl font-black text-slate-900 dark:text-white tracking-tight my-1 truncate">
           ${{ formattedDebtPerCitizen }}
         </div>
         <div class="flex items-center space-x-1.5 mt-2.5 pt-2 border-t border-slate-100 dark:border-white/5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-          <span>Население США: ~336 млн чел.</span>
+          <span class="truncate">Население США: ~336 млн чел.</span>
         </div>
       </div>
 
       <!-- Metric 4: Keeper Notes Count -->
-      <div class="cyber-glass rounded-2xl p-4.5 border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#101016]/90 shadow-xs flex flex-col justify-between">
+      <div class="cyber-glass rounded-2xl p-5 border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#101016]/90 shadow-xs flex flex-col justify-between min-h-[148px]">
         <div class="flex items-center justify-between mb-2">
           <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Заметок в архиве
           </span>
-          <div class="w-7 h-7 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+          <div class="w-7 h-7 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
@@ -149,11 +149,11 @@
             </svg>
           </div>
         </div>
-        <div class="font-mono text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <div class="font-mono text-lg sm:text-xl xl:text-2xl font-black text-slate-900 dark:text-white tracking-tight my-1 truncate">
           {{ notes.length }}
         </div>
         <div class="flex items-center space-x-1.5 mt-2.5 pt-2 border-t border-slate-100 dark:border-white/5 text-[11px] text-amber-700 dark:text-amber-300 font-semibold">
-          <span>📌 {{ pinnedCount }} закреплено в топе</span>
+          <span class="truncate">📌 {{ pinnedCount }} закреплено в топе</span>
         </div>
       </div>
 
@@ -714,13 +714,15 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.expand-enter-active,
+.expand-enter-active {
+  transition: transform 200ms var(--ease-out), opacity 180ms ease-out;
+}
 .expand-leave-active {
-  transition: all 0.25s ease-out;
+  transition: transform 150ms var(--ease-out), opacity 130ms ease;
 }
 .expand-enter-from,
 .expand-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-6px) scale(0.99);
 }
 </style>

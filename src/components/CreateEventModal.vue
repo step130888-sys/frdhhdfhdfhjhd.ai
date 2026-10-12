@@ -1,10 +1,11 @@
 <template>
-  <div
-    v-if="isOpen"
-    class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md"
-    @click.self="$emit('close')"
-  >
-    <div class="cyber-glass max-w-2xl w-full max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden bg-white dark:bg-[#0c0c10] animate-in fade-in zoom-in-95 duration-200">
+  <transition name="modal">
+    <div
+      v-if="isOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md"
+      @click.self="$emit('close')"
+    >
+      <div class="cyber-glass max-w-2xl w-full max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden bg-white dark:bg-[#0c0c10]">
       
       <!-- Modal Header -->
       <div class="px-6 py-4 bg-slate-50 dark:bg-[#101016] border-b border-slate-200 dark:border-white/10 flex items-center justify-between flex-shrink-0">
@@ -134,6 +135,7 @@
       </form>
     </div>
   </div>
+</transition>
 </template>
 
 <script setup>

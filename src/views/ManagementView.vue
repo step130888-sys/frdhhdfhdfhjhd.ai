@@ -70,15 +70,15 @@
     <div class="mb-10">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div class="flex items-center space-x-2.5">
-          <div class="w-7 h-7 rounded-lg bg-amber-500/15 dark:bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300">
+          <div class="w-7 h-7 rounded-lg bg-amber-500/15 dark:bg-pink-500/20 border border-amber-400/30 dark:border-pink-500/30 flex items-center justify-center text-amber-600 dark:text-[#fcb4d5]">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2v1"/><path d="M12 21v1"/><path d="M4.93 4.93l.7.7"/><path d="M18.36 18.36l.7.7"/><path d="M2 12h1"/><path d="M21 12h1"/><path d="M4.93 19.07l.7-.7"/><path d="M18.36 5.64l.7-.7"/>
               <circle cx="12" cy="12" r="5"/>
             </svg>
           </div>
-          <h2 class="text-sm font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-300 flex items-center space-x-2">
+          <h2 class="text-sm font-extrabold uppercase tracking-wider text-amber-700 dark:text-[#fcb4d5] flex items-center space-x-2">
             <span>Банк идей от команды</span>
-            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 dark:bg-pink-500/20 text-amber-700 dark:text-[#fcb4d5] border border-amber-500/30 dark:border-pink-500/30">
               {{ teamIdeas.length }}
             </span>
           </h2>
@@ -99,8 +99,8 @@
             @click="ideaStatusFilter = st.value"
             class="px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all cursor-pointer"
             :class="ideaStatusFilter === st.value
-              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs'
-              : 'bg-white dark:bg-[#14141c] text-slate-700 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-amber-500'"
+              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-orange-500 shadow-xs dark:bg-none dark:bg-[#FCB4D5] dark:text-[#0F0F14] dark:border-[#FCB4D5] dark:shadow-sm dark:shadow-pink-500/30'
+              : 'bg-white dark:bg-[#14141c] text-slate-700 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-amber-500 dark:hover:border-[#fcb4d5]/50 dark:hover:text-[#fcb4d5]'"
           >
             {{ st.label }}
           </button>
@@ -115,7 +115,7 @@
         <div
           v-for="idea in filteredTeamIdeas"
           :key="idea.id"
-          class="cyber-glass-card rounded-2xl p-5 flex flex-col justify-between bg-white dark:bg-[#14141c] border border-slate-200 dark:border-white/10 hover:border-amber-500/50 transition-all shadow-xs"
+          class="cyber-glass-card rounded-2xl p-5 flex flex-col justify-between bg-white dark:bg-[#14141c] border border-slate-200 dark:border-white/10 hover:border-amber-500/50 dark:hover:border-[#fcb4d5]/50 transition-all shadow-xs"
         >
           <div>
             <!-- Header: Status + Date -->

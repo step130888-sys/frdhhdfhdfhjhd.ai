@@ -1,7 +1,7 @@
 <template>
   <div
     @click="goToTask"
-    class="cyber-glass-card rounded-2xl p-4 md:p-5 flex flex-col justify-between group cursor-pointer transition-all relative border border-black/[0.06] dark:border-white/[0.07] hover:border-orange-500/40 dark:hover:border-[#fcb4d5]/40 hover:-translate-y-0.5 shadow-xs hover:shadow-md"
+    class="cyber-glass-card rounded-2xl p-4 md:p-5 flex flex-col justify-between group cursor-pointer relative border border-black/[0.06] dark:border-white/[0.07] hover:border-orange-500/40 dark:hover:border-[#fcb4d5]/40 hover:-translate-y-0.5 shadow-xs hover:shadow-md active:scale-[0.985] transition-[transform,border-color,box-shadow] duration-180"
   >
     <div>
       <!-- Top Badges: Direction & Status -->

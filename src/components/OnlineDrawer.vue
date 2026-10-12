@@ -1,15 +1,18 @@
 <template>
   <div>
-    <!-- Backdrop -->
-    <div
-      v-if="isOnlineDrawerOpen"
-      @click="toggleOnlineDrawer"
-      class="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-50 transition-opacity"
-    ></div>
+    <!-- Backdrop with smooth fade -->
+    <transition name="drawer-backdrop">
+      <div
+        v-if="isOnlineDrawerOpen"
+        @click="toggleOnlineDrawer"
+        class="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-50"
+      ></div>
+    </transition>
 
-    <!-- Sliding Panel (Liquid Glass Apple Drawer) -->
+    <!-- Sliding Panel (Liquid Glass Apple Drawer with iOS cubic-bezier) -->
     <div
-      class="fixed top-0 right-0 h-full w-80 md:w-96 bg-white/75 dark:bg-[#090A0E]/80 backdrop-blur-3xl border-l border-white/60 dark:border-white/[0.08] z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-out"
+      class="fixed top-0 right-0 h-full w-80 md:w-96 bg-white/75 dark:bg-[#090A0E]/80 backdrop-blur-3xl border-l border-white/60 dark:border-white/[0.08] z-50 shadow-2xl flex flex-col transform will-change-transform"
+      style="transition: transform 280ms var(--ease-drawer);"
       :class="isOnlineDrawerOpen ? 'translate-x-0' : 'translate-x-full'"
     >
       <!-- Header -->
@@ -46,7 +49,7 @@
           :key="u.id"
           :to="`/profile/${u.id}`"
           @click="toggleOnlineDrawer"
-          class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#14151D] hover:bg-black/[0.02] dark:hover:bg-white/[0.03] border border-black/[0.06] dark:border-white/[0.08] hover:border-orange-500/40 dark:hover:border-[#fcb4d5]/40 shadow-2xs transition-all group active:scale-98"
+          class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-[#14151D] hover:bg-black/[0.02] dark:hover:bg-white/[0.03] border border-black/[0.06] dark:border-white/[0.08] hover:border-orange-500/40 dark:hover:border-[#fcb4d5]/40 shadow-2xs transition-[transform,background-color,border-color] duration-150 group active:scale-[0.98]"
         >
           <div class="flex items-center space-x-3 min-w-0">
             <!-- Avatar with pulse ring -->
