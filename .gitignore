@@ -4,3 +4,9 @@ dist/
 .env
 *.db-shm
 *.db-wal
+scripts/deploy_singbox.cjs
+scripts/parse_subscription.cjs
+scripts/check_remote_vpn.cjs
+scripts/test_remote_bot.cjs
+scripts/test_bot_live.cjs
+scripts/set_server_proxy.cjs

@@ -212,6 +212,31 @@ function getProxyDispatcher() {
   if (!proxy) return null;
   if (proxy === cachedProxy && cachedAgent) return cachedAgent;
   try {
+    if (proxy.startsWith('socks')) {
+      const { Agent } = require('undici');
+      const { SocksClient } = require('socks');
+      const parsed = new URL(proxy);
+      cachedAgent = new Agent({
+        connect(opts, cb) {
+          SocksClient.createConnection({
+            proxy: {
+              host: parsed.hostname,
+              port: Number(parsed.port) || 10808,
+              type: 5,
+              userId: parsed.username || undefined,
+              password: parsed.password || undefined
+            },
+            command: 'connect',
+            destination: { host: opts.host, port: Number(opts.port) }
+          }, (err, info) => {
+            if (err) return cb(err, null);
+            cb(null, info.socket);
+          });
+        }
+      });
+      cachedProxy = proxy;
+      return cachedAgent;
+    }
     const { ProxyAgent } = require('undici');
     cachedAgent = new ProxyAgent(proxy);
     cachedProxy = proxy;
@@ -261,30 +286,56 @@ function getMainReplyKeyboard(user = null) {
       { text: '🔥 Горящие дедлайны' }
     ]);
 
-    keyboard.push([
-      { text: '🟢 Свободные задачи' }
-    ]);
-
     if (user.access_level >= 3) {
       keyboard.push([
         { text: '📋 Задачи на проверке' },
         { text: '👥 Заявки на регистрацию' }
       ]);
       keyboard.push([
-        { text: '➕ Добавить участника' },
+        { text: '🟢 Свободные задачи' },
+        { text: '➕ Добавить участника' }
+      ]);
+      keyboard.push([
+        { text: '👤 Мой профиль' },
         { text: '📊 Статистика медиацентра' }
+      ]);
+      keyboard.push([
+        { text: '👑 Зарегистрировать чат' },
+        { text: '🆔 Мой Chat ID' }
+      ]);
+      keyboard.push([
+        { text: 'ℹ️ Помощь' },
+        { text: '🚪 Отвязать аккаунт' }
       ]);
     } else if (user.access_level === 2) {
       keyboard.push([
         { text: '📋 Задачи на проверке' },
+        { text: '🟢 Свободные задачи' }
+      ]);
+      keyboard.push([
+        { text: '👤 Мой профиль' },
         { text: '📊 Статистика медиацентра' }
       ]);
+      keyboard.push([
+        { text: '🆔 Мой Chat ID' },
+        { text: 'ℹ️ Помощь' }
+      ]);
+      keyboard.push([
+        { text: '🚪 Отвязать аккаунт' }
+      ]);
+    } else {
+      keyboard.push([
+        { text: '🟢 Свободные задачи' },
+        { text: '👤 Мой профиль' }
+      ]);
+      keyboard.push([
+        { text: '🆔 Мой Chat ID' },
+        { text: 'ℹ️ Помощь' }
+      ]);
+      keyboard.push([
+        { text: '🚪 Отвязать аккаунт' }
+      ]);
     }
-
-    keyboard.push([
-      { text: '👤 Мой профиль' },
-      { text: 'ℹ️ Помощь' }
-    ]);
   } else {
     keyboard.push([
       { text: '📝 Подать заявку на регистрацию' }
@@ -294,6 +345,7 @@ function getMainReplyKeyboard(user = null) {
       { text: '🔑 Привязать аккаунт' }
     ]);
     keyboard.push([
+      { text: '🆔 Мой Chat ID' },
       { text: 'ℹ️ Помощь' }
     ]);
   }
@@ -862,6 +914,50 @@ class TelegramBotWorker {
     const tgUserId = String(fromUser.id);
     const tgUsername = fromUser.username;
     const msg = cb.message;
+
+    if (cbData === 'cmd:myid') {
+      await answerCallbackQuery(cbId, `🆔 Ваш Chat ID: ${tgUserId}`, true);
+      return;
+    }
+
+    if (cbData === 'cmd:ask_unbind') {
+      await answerCallbackQuery(cbId);
+      const kbd = {
+        inline_keyboard: [
+          [
+            { text: '⚠️ Да, отвязать', callback_data: 'cmd:do_unbind' },
+            { text: '❌ Отмена', callback_data: 'cmd:cancel_unbind' }
+          ]
+        ]
+      };
+      if (msg) {
+        await sendTelegramMessage(String(msg.chat.id), '❓ <b>Вы уверены, что хотите отвязать Telegram?</b>\nОповещения о дедлайнах и задачах будут отключены.', kbd);
+      }
+      return;
+    }
+
+    if (cbData === 'cmd:do_unbind') {
+      const chatId = msg ? String(msg.chat.id) : tgUserId;
+      const usr = await findLinkedTelegramUser(chatId, tgUserId, tgUsername);
+      if (usr) {
+        await db.run('UPDATE users SET telegram_id = NULL WHERE id = ?', [usr.id]);
+        removeTelegramBinding(chatId);
+        removeTelegramBinding(usr.id);
+        await answerCallbackQuery(cbId, '✅ Аккаунт отвязан!');
+        await sendTelegramMessage(chatId, `✅ Аккаунт <b>${usr.name}</b> успешно отвязан.`, getMainReplyKeyboard(null));
+      } else {
+        await answerCallbackQuery(cbId, 'Аккаунт не привязан', true);
+      }
+      return;
+    }
+
+    if (cbData === 'cmd:cancel_unbind') {
+      await answerCallbackQuery(cbId, 'Отменено');
+      if (msg) {
+        await editTelegramMessage(String(msg.chat.id), msg.message_id, '✅ Отвязка аккаунта отменена.', { inline_keyboard: [] });
+      }
+      return;
+    }
 
     if (cbData.startsWith('rework:')) {
       const parts = cbData.split(':');
@@ -1534,6 +1630,13 @@ class TelegramBotWorker {
 
     if (isProfile) {
       if (!linkedUser) {
+        const guestKbd = {
+          inline_keyboard: [
+            [
+              { text: '🆔 Узнать Chat ID', callback_data: 'cmd:myid' }
+            ]
+          ]
+        };
         await sendTelegramMessage(
           chatId,
           '👤 <b>ВАШ TELEGRAM НЕ ПРИВЯЗАН К ПЛАТФОРМЕ</b>\n\n' +
@@ -1541,7 +1644,8 @@ class TelegramBotWorker {
           'Чтобы привязать аккаунт:\n' +
           '1. Откройте профиль на сайте и нажмите «Подключить Telegram»\n' +
           '2. Или напишите команду прямо сюда:\n' +
-          '<code>/bind &lt;ваш_логин&gt; &lt;пароль&gt;</code>'
+          '<code>/bind &lt;ваш_логин&gt; &lt;пароль&gt;</code>',
+          guestKbd
         );
         return;
       }
@@ -1561,7 +1665,15 @@ class TelegramBotWorker {
         `🆔 <b>Telegram Chat ID:</b> <code>${chatId}</code>\n\n` +
         `🌐 <a href="http://localhost:8000/profile/${linkedUser.id}">Открыть профиль на сайте</a>`
       );
-      await sendTelegramMessage(chatId, profileCard);
+      const profileKbd = {
+        inline_keyboard: [
+          [
+            { text: '🆔 Узнать Chat ID', callback_data: 'cmd:myid' },
+            { text: '🚪 Отвязать Telegram', callback_data: 'cmd:ask_unbind' }
+          ]
+        ]
+      };
+      await sendTelegramMessage(chatId, profileCard, profileKbd);
       return;
     }
 
@@ -1872,25 +1984,31 @@ class TelegramBotWorker {
       const isAdmin = linkedUser && linkedUser.access_level >= 3;
       const helpText = (
         'ℹ️ <b>СПРАВКА ПО БОТУ МЕДИАЦЕНТРА (@ping_sstu_bot):</b>\n\n' +
-        '🔘 <b>Быстрые кнопки внизу экрана (плашки):</b>\n' +
+        '🔘 <b>Кнопки на клавиатуре (внизу экрана):</b>\n' +
         '• <b>📋 Мои задачи</b> — список ваших задач в работе и на доработке\n' +
         '• <b>🔥 Горящие дедлайны</b> — задачи со сроком менее 48ч или просроченные\n' +
         '• <b>🟢 Свободные задачи</b> — просмотр открытых задач в контент-плане\n' +
         (isLead ? '• <b>📋 Задачи на проверке</b> — очередь работ с кнопками быстрой оценки (1–10) и доработкой\n' : '') +
-        (isAdmin ? '• <b>👥 Заявки на регистрацию</b> — модерация и одобрение новых участников\n• <b>➕ Добавить участника</b> — ручное добавление новичка в цех\n• <b>📊 Статистика медиацентра</b> — сводка команды\n' : '') +
+        (isAdmin ? '• <b>👥 Заявки на регистрацию</b> — модерация и одобрение новых участников\n• <b>➕ Добавить участника</b> — ручное добавление новичка в цех\n• <b>👑 Зарегистрировать чат</b> — привязать этот чат как чат руководства для уведомлений и оценок\n' : '') +
         '• <b>👤 Мой профиль</b> — ваши данные, цех, уровень и рейтинг\n' +
+        '• <b>📊 Статистика медиацентра</b> — общая сводка команды\n' +
+        '• <b>🆔 Мой Chat ID</b> — ваш цифровой Chat ID для привязки и уведомлений\n' +
+        '• <b>🚪 Отвязать аккаунт</b> — отвязать Telegram от профиля\n' +
+        (!linkedUser ? '• <b>🔑 Привязать аккаунт</b> — инструкция по подключению Telegram\n• <b>📝 Подать заявку на регистрацию</b> — анкета в команду медиацентра\n' : '') +
         '• <b>ℹ️ Помощь</b> — эта справка\n\n' +
         '📤 <b>Сдача работ:</b>\n' +
         'Просто отправьте боту файл, фото или видео с указанием номера задачи в подписи (например: <code>#12</code>).\n\n' +
-        '⌨️ <b>Текстовые команды:</b>\n' +
+        '⌨️ <b>Команды и меню [ Меню ]:</b>\n' +
+        '• <code>/start</code> — перезапустить клавиатуру и меню\n' +
         '• <code>/register</code> — подать заявку на вступление в медиацентр\n' +
         '• <code>/bind &lt;логин&gt; &lt;пароль&gt;</code> — связать аккаунт\n' +
+        '• <code>/unbind</code> — отвязать Telegram от профиля\n' +
+        '• <code>/myid</code> — показать ваш цифровой Chat ID\n' +
         '• <code>/review</code> — открыть очередь проверки задач\n' +
         '• <code>/rate &lt;ID&gt; &lt;оценка 1-10&gt;</code> — выставить оценку задаче\n' +
         '• <code>/rework &lt;ID&gt; [замечания]</code> — вернуть на доработку\n' +
-        (isAdmin ? '• <code>/pending</code> — список ожидающих заявок на регистрацию\n• <code>/add_user &lt;логин&gt; &lt;цех&gt; &lt;ФИО&gt;</code> — добавить участника\n' : '') +
-        '• <code>/myid</code> — показать ваш цифровой Chat ID\n' +
-        '• <code>/unbind</code> — отвязать Telegram'
+        (isAdmin ? '• <code>/candidates</code> (/pending) — заявки на регистрацию\n• <code>/add_user &lt;логин&gt; &lt;цех&gt; &lt;ФИО&gt;</code> — добавить участника\n• <code>/setchat</code> — зарегистрировать чат руководства\n' : '') +
+        '• <code>/help</code> — показать эту справку'
       );
       await sendTelegramMessage(chatId, helpText);
       return;
@@ -1924,34 +2042,104 @@ class TelegramBotWorker {
       return;
     }
 
-    // 12. /setchat
-    if (rawText.startsWith('/setchat') || rawText.startsWith('/register_chat')) {
+    // 12. /setchat, 👑 Зарегистрировать чат
+    const isSetChat = rawText.startsWith('/setchat') ||
+                      rawText.startsWith('/register_chat') ||
+                      cleanText.includes('зарегистрировать чат') ||
+                      cleanText.includes('чат руководства');
+
+    if (isSetChat) {
+      if (!linkedUser) {
+        await sendTelegramMessage(chatId, '⚠️ Сначала привяжите аккаунт руководителя: <code>/bind &lt;логин&gt; &lt;пароль&gt;</code>');
+        return;
+      }
+      if (linkedUser.access_level < 3) {
+        await sendTelegramMessage(chatId, `🔒 Настройка чата руководства доступна только руководителям и администраторам (3–4 ур.). Ваш профиль: ${linkedUser.name} (Ур. ${linkedUser.access_level}).`);
+        return;
+      }
       saveConfig({ leadership_group_chat_id: chatId });
       await sendTelegramMessage(
         chatId,
         '👑 <b>ЧАТ РУКОВОДСТВА УСПЕШНО ЗАРЕГИСТРИРОВАН!</b>\n\n' +
-        `ID чата: <code>${chatId}</code> сохранен в системе.\nСюда будут направляться все сданные задачи с кнопками для выставления оценок.`
+        `ID чата: <code>${chatId}</code> сохранен в системе.\nСюда будут направляться все сданные задачи с интерактивными кнопками для выставления оценок и заявки новых кандидатов.`
       );
       return;
     }
 
-    // 13. /myid
-    if (rawText === '/myid') {
-      await sendTelegramMessage(chatId, `🆔 Ваш Telegram Chat ID: <code>${chatId}</code>`);
+    // 13. /myid, 🆔 Мой Chat ID
+    const isMyId = rawText === '/myid' ||
+                   rawText.startsWith('/myid@') ||
+                   cleanText.includes('мой chat id') ||
+                   cleanText.includes('мой id') ||
+                   cleanText === 'chat id' ||
+                   cleanText === 'id';
+
+    if (isMyId) {
+      const tgUsernameStr = tgUsername ? ` (@${tgUsername})` : '';
+      const nameStr = linkedUser ? `\n👤 <b>Привязанный профиль:</b> ${linkedUser.name} (Цех: ${linkedUser.role}, Ур. ${linkedUser.access_level})` : '\n⚠️ <i>Профиль на сайте пока не привязан.</i>';
+      await sendTelegramMessage(
+        chatId,
+        '🆔 <b>ВАШИ ИДЕНТИФИКАТОРЫ В TELEGRAM:</b>\n\n' +
+        `• <b>Chat ID:</b> <code>${chatId}</code>\n` +
+        `• <b>User ID:</b> <code>${tgUserId}</code>${tgUsernameStr}${nameStr}\n\n` +
+        '💡 <i>Этот ID используется для отправки персональных уведомлений и подтверждения прав доступа.</i>'
+      );
       return;
     }
 
-    // 14. /unbind
-    if (rawText === '/unbind' || cleanText === 'отвязать' || cleanText === 'выйти') {
+    // 14. /unbind, 🚪 Отвязать аккаунт
+    const isUnbind = rawText === '/unbind' ||
+                     rawText.startsWith('/unbind@') ||
+                     cleanText.includes('отвязать аккаунт') ||
+                     cleanText === 'отвязать' ||
+                     cleanText === 'выйти';
+
+    if (isUnbind) {
       const usr = await findLinkedTelegramUser(chatId, tgUserId, tgUsername);
       if (usr) {
         await db.run('UPDATE users SET telegram_id = NULL WHERE id = ?', [usr.id]);
         removeTelegramBinding(chatId);
         removeTelegramBinding(usr.id);
-        await sendTelegramMessage(chatId, `✅ Аккаунт <b>${usr.name}</b> отвязан. Оповещения отключены.`, getMainReplyKeyboard(null));
+        await sendTelegramMessage(
+          chatId,
+          `✅ Аккаунт <b>${usr.name}</b> успешно отвязан от Telegram. Оповещения о задачах отключены.`,
+          getMainReplyKeyboard(null)
+        );
       } else {
-        await sendTelegramMessage(chatId, 'ℹ️ Ваш Telegram не был привязан ни к одному аккаунту.', getMainReplyKeyboard(null));
+        await sendTelegramMessage(
+          chatId,
+          'ℹ️ Ваш Telegram не привязан ни к одному аккаунту.',
+          getMainReplyKeyboard(null)
+        );
       }
+      return;
+    }
+
+    // 15. 🔑 Привязать аккаунт
+    const isBindClick = cleanText.includes('привязать аккаунт') ||
+                        cleanText === 'привязать' ||
+                        cleanText === 'войти' ||
+                        cleanText === 'вход';
+
+    if (isBindClick) {
+      if (linkedUser) {
+        await sendTelegramMessage(
+          chatId,
+          `✅ Ваш Telegram уже привязан к профилю: <b>${linkedUser.name}</b> (${linkedUser.role}, Ур. ${linkedUser.access_level}).`,
+          getMainReplyKeyboard(linkedUser)
+        );
+        return;
+      }
+      const bindHelp = (
+        '🔑 <b>ПРИВЯЗКА TELEGRAM К ПРОФИЛЮ МЕДИАЦЕНТРА</b>\n\n' +
+        '🔹 <b>Способ 1 — прямо в этом чате:</b>\n' +
+        'Отправьте команду:\n' +
+        '<code>/bind &lt;ваш_логин&gt; &lt;ваш_пароль&gt;</code>\n' +
+        '<i>(Например: <code>/bind stepyn 123456</code>)</i>\n\n' +
+        '🔹 <b>Способ 2 — через сайт:</b>\n' +
+        'Войдите в личный кабинет на сайте и в профиле нажмите кнопку <b>«Подключить Telegram»</b>.'
+      );
+      await sendTelegramMessage(chatId, bindHelp);
       return;
     }
 
@@ -2093,9 +2281,38 @@ class TelegramBotWorker {
 
 const botWorker = new TelegramBotWorker();
 
+async function registerBotCommands() {
+  const commands = [
+    { command: 'start', description: '🏠 Главное меню и клавиатура' },
+    { command: 'tasks', description: '📌 Мои текущие задачи' },
+    { command: 'deadlines', description: '🔥 Горящие дедлайны' },
+    { command: 'open', description: '🟢 Свободные задачи контент-плана' },
+    { command: 'profile', description: '👤 Мой профиль и статистика' },
+    { command: 'stats', description: '📊 Общая статистика медиацентра' },
+    { command: 'review', description: '📋 Задачи на проверке (Руководство)' },
+    { command: 'candidates', description: '👥 Заявки кандидатов (Руководство)' },
+    { command: 'myid', description: '🆔 Мой Telegram Chat ID' },
+    { command: 'bind', description: '🔑 Привязать аккаунт платформы' },
+    { command: 'unbind', description: '🚪 Отвязать аккаунт от Telegram' },
+    { command: 'setchat', description: '👑 Назначить этот чат чатом руководства' },
+    { command: 'help', description: '❓ Справка по возможностям бота' }
+  ];
+  try {
+    const res = await callTelegramApi('setMyCommands', { commands });
+    if (res && res.ok) {
+      console.log('[TelegramBot] ✅ Bot commands registered successfully in native menu.');
+    } else {
+      console.warn('[TelegramBot] ⚠️ setMyCommands response:', res);
+    }
+  } catch (err) {
+    console.error('[TelegramBot] ❌ Failed to register bot commands:', err.message);
+  }
+}
+
 async function initTelegramBot() {
   await syncTelegramBindings();
   botWorker.start();
+  registerBotCommands().catch(err => console.error('[TelegramBot] registerBotCommands error:', err.message));
 }
 
 module.exports = {
@@ -2123,6 +2340,7 @@ module.exports = {
   sendTestNotification,
   testTelegramConnection,
   initTelegramBot,
+  registerBotCommands,
   botWorker,
   persistTelegramBinding,
   removeTelegramBinding,
