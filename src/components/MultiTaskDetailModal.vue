@@ -34,8 +34,8 @@
           </div>
         </div>
 
-        <!-- Header Actions: Edit & Close -->
-        <div class="flex items-center space-x-2.5 self-start sm:self-auto">
+        <!-- Header Actions: Edit, Delete & Close -->
+        <div class="flex items-center space-x-2.5 self-start sm:self-auto flex-wrap gap-y-2">
           <button
             v-if="isLeader && event.id < 900000"
             @click="$emit('edit', event)"
@@ -44,7 +44,19 @@
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
             </svg>
-            <span>Редактировать мульти-задачу</span>
+            <span>Редактировать</span>
+          </button>
+
+          <button
+            v-if="isLeader && event.id < 900000"
+            @click="$emit('delete', event)"
+            class="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-xs font-bold transition-all flex items-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer"
+            title="Удалить мульти-задачу"
+          >
+            <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+            </svg>
+            <span>Удалить</span>
           </button>
           
           <button
@@ -244,7 +256,7 @@ const props = defineProps({
   isLeader: Boolean
 });
 
-const emit = defineEmits(['close', 'edit']);
+const emit = defineEmits(['close', 'edit', 'delete']);
 
 const getDirBadgeClasses = (dir) => {
   switch (dir) {

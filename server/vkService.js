@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const db = require('./db');
+const { loginRateLimiter } = require('./security');
 
 const CONFIG_PATH = path.join(__dirname, 'vk_config.json');
 
@@ -537,17 +538,26 @@ async function handleIncomingMessage(message) {
       return;
     }
 
+    const botCheck = loginRateLimiter.checkBotAttempt(`vk_${fromId}`);
+    if (!botCheck.allowed) {
+      await sendVkMessage(fromId, botCheck.message);
+      return;
+    }
+
     const username = parts[1].trim();
     const password = parts.slice(2).join(' ').trim();
 
     const candidate = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username.toLowerCase()]);
     if (!candidate || !db.verifyPassword(password, candidate.password_hash)) {
+      const fail = loginRateLimiter.recordBotFailure(`vk_${fromId}`);
       await sendVkMessage(
         fromId,
-        '❌ Неверный логин или пароль от платформы. Проверьте данные и попробуйте снова.'
+        `❌ Неверный логин или пароль.\n${fail.message}`
       );
       return;
     }
+
+    loginRateLimiter.recordBotSuccess(`vk_${fromId}`);
 
     // Bind VK ID to user with persistent sync
     await db.run('UPDATE users SET vk_id = NULL WHERE vk_id = ? AND id != ?', [fromId, candidate.id]);

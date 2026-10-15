@@ -11,6 +11,7 @@ const telegramService = require('./telegramService');
 const vkService = require('./vkService');
 const gdriveService = require('./gdriveService');
 const telegramAuth = require('./telegramAuth');
+const { loginRateLimiter } = require('./security');
 
 // Multer storage configuration
 const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
@@ -67,11 +68,30 @@ router.post('/auth/login', async (req, res) => {
     return res.status(400).json({ error: 'Укажите логин и пароль.' });
   }
 
+  // 1. Check brute-force rate limit (max 3 failed attempts)
+  const rateCheck = loginRateLimiter.check(req, username);
+  if (!rateCheck.allowed) {
+    return res.status(429).json({
+      error: rateCheck.message,
+      locked: true,
+      waitMinutes: rateCheck.waitMinutes
+    });
+  }
+
   const user = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username]);
 
   if (!user || !db.verifyPassword(password, user.password_hash)) {
-    return res.status(401).json({ error: 'Неверный логин или пароль.' });
+    const failureResult = loginRateLimiter.recordFailure(req, username);
+    const status = failureResult.locked ? 429 : 401;
+    return res.status(status).json({
+      error: failureResult.message,
+      locked: failureResult.locked,
+      remaining: failureResult.remaining
+    });
   }
+
+  // Login successful: reset failed attempts counter
+  loginRateLimiter.recordSuccess(req, username);
 
   if (!user.is_approved) {
     return res.status(403).json({
@@ -224,10 +244,19 @@ router.post('/auth/telegram-session/:token/bind-and-login', async (req, res) => 
     return res.status(400).json({ error: 'Укажите логин и пароль.' });
   }
 
+  // Brute-force check
+  const rateCheck = loginRateLimiter.check(req, username);
+  if (!rateCheck.allowed) {
+    return res.status(429).json({ error: rateCheck.message, locked: true });
+  }
+
   const user = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [username]);
   if (!user || !db.verifyPassword(password, user.password_hash)) {
-    return res.status(401).json({ error: 'Неверный логин или пароль.' });
+    const failureResult = loginRateLimiter.recordFailure(req, username);
+    return res.status(failureResult.locked ? 429 : 401).json({ error: failureResult.message });
   }
+
+  loginRateLimiter.recordSuccess(req, username);
 
   if (!user.is_approved) {
     return res.status(403).json({ error: 'Ваш профиль ожидает одобрения администратором.' });
@@ -829,6 +858,155 @@ router.post('/tasks/multi/:id/update', requireAuth, requireLevel(3, 'Редак�
       deadline,
       subtasks: updatedSubtasks
     }
+  });
+});
+
+// DELETE /tasks/multi/:id - Delete a multi-task and all associated subtasks
+router.delete('/tasks/multi/:id', requireAuth, requireLevel(3, 'Удалять мульти-задачи могут только руководители (3 и 4 уровень).'), async (req, res) => {
+  const multiId = parseInt(req.params.id, 10);
+  if (isNaN(multiId)) {
+    return res.status(400).json({ error: 'Некорректный ID мульти-задачи.' });
+  }
+
+  const parentTask = await db.get('SELECT * FROM tasks WHERE id = ?', [multiId]);
+  if (!parentTask) {
+    return res.status(404).json({ error: 'Мульти-задача не найдена.' });
+  }
+
+  // Find subtasks
+  const subtasks = await db.all('SELECT id FROM tasks WHERE parent_id = ?', [multiId]);
+  const allIds = [multiId, ...subtasks.map(s => s.id)];
+
+  // Delete all comments
+  for (const tid of allIds) {
+    await db.run('DELETE FROM task_comments WHERE task_id = ?', [tid]);
+  }
+
+  // Delete subtasks
+  await db.run('DELETE FROM tasks WHERE parent_id = ?', [multiId]);
+
+  // Delete parent task
+  await db.run('DELETE FROM tasks WHERE id = ?', [multiId]);
+
+  res.json({
+    success: true,
+    message: `Мульти-задача «${parentTask.title}» и связанные с ней цеховые подзадачи (${subtasks.length}) успешно удалены.`
+  });
+});
+
+// DELETE /tasks/:id - Delete a single task
+router.delete('/tasks/:id', requireAuth, async (req, res) => {
+  const taskId = parseInt(req.params.id, 10);
+  if (isNaN(taskId)) {
+    return res.status(400).json({ error: 'Некорректный ID задачи.' });
+  }
+
+  const task = await db.get('SELECT * FROM tasks WHERE id = ?', [taskId]);
+  if (!task) {
+    return res.status(404).json({ error: 'Задача не найдена.' });
+  }
+
+  // Permission check:
+  // Level 3-5: can delete any task
+  // Level 2: can delete tasks in their department
+  const isLeaderOrAdmin = req.user.access_level >= 3;
+  const isHeadOfWorkshop = req.user.access_level === 2 && req.user.role === task.direction;
+
+  if (!isLeaderOrAdmin && !isHeadOfWorkshop) {
+    return res.status(403).json({
+      error: 'Удалять задачи могут только руководители (3-5 ур.) или глава соответствующего цеха.'
+    });
+  }
+
+  // Delete comments
+  await db.run('DELETE FROM task_comments WHERE task_id = ?', [taskId]);
+
+  // If this task has subtasks, clean them up or delete them
+  const subtasks = await db.all('SELECT id FROM tasks WHERE parent_id = ?', [taskId]);
+  if (subtasks.length > 0) {
+    for (const st of subtasks) {
+      await db.run('DELETE FROM task_comments WHERE task_id = ?', [st.id]);
+    }
+    await db.run('DELETE FROM tasks WHERE parent_id = ?', [taskId]);
+  }
+
+  // Delete the task itself
+  await db.run('DELETE FROM tasks WHERE id = ?', [taskId]);
+
+  // If the task was assigned to someone who completed it, recalculate their stats
+  if (task.assigned_to_id && task.status === 'done') {
+    await db.run(`
+      UPDATE users SET 
+        completed_tasks = (SELECT COUNT(*) FROM tasks WHERE assigned_to_id = ? AND status = 'done'),
+        average_score = COALESCE((SELECT ROUND(AVG(score), 1) FROM tasks WHERE assigned_to_id = ? AND status = 'done' AND score IS NOT NULL), 0.0)
+      WHERE id = ?
+    `, [task.assigned_to_id, task.assigned_to_id, task.assigned_to_id]);
+    invalidateUserCache(task.assigned_to_id);
+  }
+
+  res.json({
+    success: true,
+    message: `Задача #${taskId} «${task.title}» успешно удалена.`
+  });
+});
+
+// POST /tasks/bulk-delete - Delete multiple tasks in one batch operation
+router.post('/tasks/bulk-delete', requireAuth, async (req, res) => {
+  const rawIds = req.body.task_ids;
+  if (!Array.isArray(rawIds) || rawIds.length === 0) {
+    return res.status(400).json({ error: 'Не указан список ID задач для удаления.' });
+  }
+
+  const taskIds = rawIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id) && id > 0);
+  if (taskIds.length === 0) {
+    return res.status(400).json({ error: 'Некорректный список ID задач.' });
+  }
+
+  const isLeaderOrAdmin = req.user.access_level >= 3;
+  let deletedCount = 0;
+  const userStatsToUpdate = new Set();
+
+  for (const tid of taskIds) {
+    const task = await db.get('SELECT * FROM tasks WHERE id = ?', [tid]);
+    if (!task) continue;
+
+    const canDelete = isLeaderOrAdmin || (req.user.access_level === 2 && req.user.role === task.direction);
+    if (!canDelete) continue;
+
+    // Delete comments
+    await db.run('DELETE FROM task_comments WHERE task_id = ?', [tid]);
+
+    // Delete subtasks if any
+    const subtasks = await db.all('SELECT id FROM tasks WHERE parent_id = ?', [tid]);
+    for (const st of subtasks) {
+      await db.run('DELETE FROM task_comments WHERE task_id = ?', [st.id]);
+    }
+    await db.run('DELETE FROM tasks WHERE parent_id = ?', [tid]);
+
+    // Delete task
+    await db.run('DELETE FROM tasks WHERE id = ?', [tid]);
+    deletedCount++;
+
+    if (task.assigned_to_id && task.status === 'done') {
+      userStatsToUpdate.add(task.assigned_to_id);
+    }
+  }
+
+  // Recalculate stats for affected users
+  for (const uid of userStatsToUpdate) {
+    await db.run(`
+      UPDATE users SET 
+        completed_tasks = (SELECT COUNT(*) FROM tasks WHERE assigned_to_id = ? AND status = 'done'),
+        average_score = COALESCE((SELECT ROUND(AVG(score), 1) FROM tasks WHERE assigned_to_id = ? AND status = 'done' AND score IS NOT NULL), 0.0)
+      WHERE id = ?
+    `, [uid, uid, uid]);
+    invalidateUserCache(uid);
+  }
+
+  res.json({
+    success: true,
+    deleted_count: deletedCount,
+    message: `Успешно удалено задач: ${deletedCount}.`
   });
 });
 

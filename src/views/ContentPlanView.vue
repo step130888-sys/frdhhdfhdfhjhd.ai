@@ -240,7 +240,7 @@
               <button
                 v-if="isLeader && ev.id < 900000"
                 @click.stop="openEditMultiTask(ev)"
-                class="px-3 py-1.5 rounded-xl bg-orange-50 dark:bg-rose-500/20 hover:bg-orange-100 dark:hover:bg-rose-500/30 text-orange-700 dark:text-rose-200 border border-orange-200 dark:border-rose-400/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs"
+                class="px-3 py-1.5 rounded-xl bg-orange-50 dark:bg-rose-500/20 hover:bg-orange-100 dark:hover:bg-rose-500/30 text-orange-700 dark:text-rose-200 border border-orange-200 dark:border-rose-400/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
                 title="Редактировать мульти-задачу и подразделения"
               >
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -248,6 +248,19 @@
                   <path d="m15 5 4 4"/>
                 </svg>
                 <span>Редактировать</span>
+              </button>
+
+              <!-- Delete Multi-Task button (Level 3-4 only) -->
+              <button
+                v-if="isLeader && ev.id < 900000"
+                @click.stop="deleteMultiTask(ev)"
+                class="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
+                title="Удалить мульти-задачу и все её цеховые подзадачи"
+              >
+                <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                </svg>
+                <span>Удалить</span>
               </button>
             </div>
           </div>
@@ -368,15 +381,42 @@
         </button>
       </div>
 
-      <!-- Workshop Filters (Apple Animated Liquid Glass Pill Dock) -->
-      <div class="mb-4 flex flex-wrap gap-2.5 items-center">
-        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 text-[11px] uppercase tracking-wider">Цех:</span>
-        <AnimatedPills
-          v-model="selectedDirection"
-          :items="directionTabs"
-          variant="glass"
-          size="sm"
-        />
+      <!-- Workshop Filters & Selection Mode Toolbar -->
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap gap-2.5 items-center">
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 text-[11px] uppercase tracking-wider">Цех:</span>
+          <AnimatedPills
+            v-model="selectedDirection"
+            :items="directionTabs"
+            variant="glass"
+            size="sm"
+          />
+        </div>
+
+        <!-- Bulk Selection Controls (Level 2-5) -->
+        <div v-if="canManageTasks && tasks.length > 0" class="flex items-center space-x-2 text-xs">
+          <button
+            type="button"
+            @click="toggleSelectionMode"
+            class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-2xs active:scale-95"
+            :class="isSelectionMode ? 'bg-orange-500/20 text-orange-600 dark:text-[#fcb4d5] border-orange-500/30 shadow-xs' : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-black/10 dark:border-white/10 hover:border-orange-400'"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            <span>{{ isSelectionMode ? 'Завершить выбор' : 'Выбрать задачи' }}</span>
+          </button>
+
+          <template v-if="isSelectionMode">
+            <button
+              type="button"
+              @click="toggleSelectAll"
+              class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 font-bold transition-colors cursor-pointer"
+            >
+              {{ selectedTaskIds.size === tasks.length ? 'Снять выбор' : 'Выбрать все' }}
+            </button>
+          </template>
+        </div>
       </div>
 
       <!-- Status Filters (Apple Animated Liquid Glass Pill Dock) -->
@@ -415,10 +455,49 @@
             v-for="task in tasks"
             :key="task.id"
             :task="task"
+            :can-delete="canDeleteSingleTask(task)"
+            :selectable="isSelectionMode"
+            :is-selected="selectedTaskIds.has(task.id)"
+            @toggle-select="toggleTaskSelection"
+            @delete="deleteSingleTask"
           />
         </div>
       </transition>
     </div>
+    </transition>
+
+    <!-- Sticky Bulk Delete Action Bar -->
+    <transition name="toast">
+      <div
+        v-if="isSelectionMode && selectedTaskIds.size > 0"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 dark:bg-[#151622]/95 backdrop-blur-2xl border border-white/20 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center justify-between gap-4 max-w-lg w-[92%]"
+      >
+        <div class="flex items-center space-x-2 text-xs font-bold shrink-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
+          <span>Выбрано: <strong class="text-orange-400 font-mono text-sm">{{ selectedTaskIds.size }}</strong></span>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button
+            type="button"
+            @click="bulkDeleteTasks"
+            class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs transition-all shadow-md active:scale-95 flex items-center space-x-1.5 cursor-pointer"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+            </svg>
+            <span>Удалить ({{ selectedTaskIds.size }})</span>
+          </button>
+
+          <button
+            type="button"
+            @click="cancelSelectionMode"
+            class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 font-bold text-xs transition-colors cursor-pointer"
+          >
+            Отмена
+          </button>
+        </div>
+      </div>
     </transition>
 
     <!-- Modals -->
@@ -442,6 +521,7 @@
       :is-leader="isLeader"
       @close="showDetailModal = false"
       @edit="onEditFromDetail"
+      @delete="deleteMultiTask"
     />
 
   </div>
@@ -584,6 +664,131 @@ const onEditFromDetail = (ev) => {
 const closeMultiTaskModal = () => {
   showMultiTaskModal.value = false;
   editingEvent.value = null;
+};
+
+// Management & Deletion Permissions
+const canManageTasks = computed(() => {
+  if (!user.value) return false;
+  return isLeader.value || (user.value.access_level === 2);
+});
+
+const canDeleteSingleTask = (task) => {
+  if (!user.value || !task) return false;
+  if (isLeader.value) return true; // Level 3-5
+  if (user.value.access_level === 2 && user.value.role === task.direction) return true;
+  return false;
+};
+
+// Selection State for Bulk Operations
+const isSelectionMode = ref(false);
+const selectedTaskIds = ref(new Set());
+
+const toggleSelectionMode = () => {
+  isSelectionMode.value = !isSelectionMode.value;
+  if (!isSelectionMode.value) {
+    selectedTaskIds.value = new Set();
+  }
+};
+
+const cancelSelectionMode = () => {
+  isSelectionMode.value = false;
+  selectedTaskIds.value = new Set();
+};
+
+const toggleTaskSelection = (taskOrId) => {
+  const id = typeof taskOrId === 'object' && taskOrId !== null ? taskOrId.id : taskOrId;
+  const newSet = new Set(selectedTaskIds.value);
+  if (newSet.has(id)) {
+    newSet.delete(id);
+  } else {
+    newSet.add(id);
+  }
+  selectedTaskIds.value = newSet;
+};
+
+const toggleSelectAll = () => {
+  if (selectedTaskIds.value.size === tasks.value.length) {
+    selectedTaskIds.value = new Set();
+  } else {
+    const eligible = tasks.value.filter(t => canDeleteSingleTask(t)).map(t => t.id);
+    selectedTaskIds.value = new Set(eligible);
+  }
+};
+
+// Single & Multi Task Deletion Handlers
+const deleteSingleTask = async (task) => {
+  if (!confirm(`Вы действительно хотите удалить задачу #${task.id} «${task.title}»? Это действие необратимо.`)) {
+    return;
+  }
+  try {
+    const res = await fetch(`/api/tasks/${task.id}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Ошибка при удалении задачи');
+    }
+    showNotification(`Задача #${task.id} успешно удалена`, 'success');
+    if (selectedTaskIds.value.has(task.id)) {
+      const newSet = new Set(selectedTaskIds.value);
+      newSet.delete(task.id);
+      selectedTaskIds.value = newSet;
+    }
+    await Promise.all([fetchTasks(), fetchCalendarEvents()]);
+  } catch (err) {
+    console.error('Delete task failed:', err);
+    showNotification(err.message, 'error');
+  }
+};
+
+const bulkDeleteTasks = async () => {
+  const ids = Array.from(selectedTaskIds.value);
+  if (ids.length === 0) return;
+  if (!confirm(`Вы действительно хотите удалить выбранные задачи (${ids.length} шт.)? Это действие необратимо.`)) {
+    return;
+  }
+  try {
+    const res = await fetch('/api/tasks/bulk-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task_ids: ids })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Ошибка при массовом удалении задач');
+    }
+    showNotification(data.message || `Успешно удалено задач: ${data.deleted_count}`, 'success');
+    selectedTaskIds.value = new Set();
+    isSelectionMode.value = false;
+    await Promise.all([fetchTasks(), fetchCalendarEvents()]);
+  } catch (err) {
+    console.error('Bulk delete failed:', err);
+    showNotification(err.message, 'error');
+  }
+};
+
+const deleteMultiTask = async (ev) => {
+  if (!ev || !ev.id) return;
+  const count = ev.subtasks ? ev.subtasks.length : 0;
+  if (!confirm(`Вы действительно хотите удалить мульти-задачу «${ev.title}» и все привязанные цеховые подзадачи (${count} шт.)? Это действие необратимо.`)) {
+    return;
+  }
+  try {
+    const res = await fetch(`/api/tasks/multi/${ev.id}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Ошибка при удалении мульти-задачи');
+    }
+    showNotification(data.message || `Мульти-задача «${ev.title}» успешно удалена`, 'success');
+    showDetailModal.value = false;
+    selectedDetailEvent.value = null;
+    await Promise.all([fetchCalendarEvents(), fetchTasks()]);
+  } catch (err) {
+    console.error('Delete multi-task failed:', err);
+    showNotification(err.message, 'error');
+  }
 };
 
 const getDirColor = (dir) => {

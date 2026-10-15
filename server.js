@@ -38,6 +38,11 @@ app.use('/uploads', express.static(uploadsDir, {
   }
 }));
 
+const { sqlInjectionProtectionMiddleware } = require('./server/security');
+
+// Security: Protection against SQL Injection
+app.use(sqlInjectionProtectionMiddleware);
+
 // Auth & Session caching middleware
 app.use(getCurrentUserMiddleware);
 

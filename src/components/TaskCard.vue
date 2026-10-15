@@ -15,21 +15,46 @@
           <span>{{ task.direction }}</span>
         </span>
 
-        <!-- Status Badge -->
-        <span
-          class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider border flex items-center space-x-1.5"
-          :class="getStatusClasses(task.status)"
-        >
-          <span class="relative flex h-1.5 w-1.5">
-            <span v-if="task.status === 'in_progress' || task.status === 'review'" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-current"></span>
-            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-current"></span>
+        <div class="flex items-center space-x-1.5">
+          <!-- Multi-selection Checkbox -->
+          <input
+            v-if="selectable"
+            type="checkbox"
+            :checked="isSelected"
+            @click.stop="$emit('toggle-select', task.id)"
+            class="rounded text-orange-500 focus:ring-orange-500/20 cursor-pointer w-4 h-4 mr-0.5 accent-orange-500"
+            title="Выбрать для группового удаления"
+          />
+
+          <!-- Status Badge -->
+          <span
+            class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider border flex items-center space-x-1.5"
+            :class="getStatusClasses(task.status)"
+          >
+            <span class="relative flex h-1.5 w-1.5">
+              <span v-if="task.status === 'in_progress' || task.status === 'review'" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-current"></span>
+              <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-current"></span>
+            </span>
+            <span v-if="task.status === 'open'">Свободна</span>
+            <span v-else-if="task.status === 'in_progress'">В работе</span>
+            <span v-else-if="task.status === 'review'">На проверке</span>
+            <span v-else-if="task.status === 'done'">Готово ({{ task.score }}/10)</span>
+            <span v-else-if="task.status === 'rework'">Доработка</span>
           </span>
-          <span v-if="task.status === 'open'">Свободна</span>
-          <span v-else-if="task.status === 'in_progress'">В работе</span>
-          <span v-else-if="task.status === 'review'">На проверке</span>
-          <span v-else-if="task.status === 'done'">Готово ({{ task.score }}/10)</span>
-          <span v-else-if="task.status === 'rework'">Доработка</span>
-        </span>
+
+          <!-- Delete Quick Action Button -->
+          <button
+            v-if="canDelete"
+            type="button"
+            @click.stop="$emit('delete', task)"
+            class="p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-all cursor-pointer opacity-70 hover:opacity-100 active:scale-90"
+            title="Удалить задачу"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Task Title -->
@@ -122,8 +147,22 @@ const props = defineProps({
   task: {
     type: Object,
     required: true
+  },
+  canDelete: {
+    type: Boolean,
+    default: false
+  },
+  selectable: {
+    type: Boolean,
+    default: false
+  },
+  isSelected: {
+    type: Boolean,
+    default: false
   }
 });
+
+const emit = defineEmits(['delete', 'toggle-select']);
 
 const router = useRouter();
 

@@ -184,6 +184,19 @@
               </svg>
               <span>Отправить на доработку</span>
             </button>
+
+            <!-- 5. Delete Task (Level 3-5 or Level 2 head of department) -->
+            <button
+              v-if="canDeleteTask"
+              @click="deleteTask"
+              class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-xs active:scale-95 cursor-pointer ml-auto"
+              title="Удалить задачу навсегда"
+            >
+              <svg class="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+              </svg>
+              <span>Удалить задачу</span>
+            </button>
           </div>
         </div>
 
@@ -223,7 +236,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import TaskChat from '../components/TaskChat.vue';
 import SubmitWorkModal from '../components/SubmitWorkModal.vue';
@@ -231,6 +244,7 @@ import RateTaskModal from '../components/RateTaskModal.vue';
 import ReworkTaskModal from '../components/ReworkTaskModal.vue';
 
 const route = useRoute();
+const router = useRouter();
 const { user, isLeader, isWorkshopHead, showNotification } = useAuthStore();
 
 const taskId = computed(() => parseInt(route.params.id, 10));
@@ -260,6 +274,33 @@ const canRework = computed(() => {
   if (isWorkshopHead.value && user.value.role === task.value.direction) return true;
   return false;
 });
+
+const canDeleteTask = computed(() => {
+  if (!task.value || !user.value) return false;
+  if (user.value.access_level >= 3) return true;
+  if (user.value.access_level === 2 && user.value.role === task.value.direction) return true;
+  return false;
+});
+
+const deleteTask = async () => {
+  if (!task.value) return;
+  const isSubtask = Boolean(task.value.parent_id);
+  const confirmMsg = isSubtask
+    ? `Вы уверены, что хотите удалить подзадачу #${taskId.value} «${task.value.title}»?`
+    : `Вы действительно хотите удалить задачу #${taskId.value} «${task.value.title}»? Это действие нельзя отменить.`;
+
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const res = await fetch(`/api/tasks/${taskId.value}`, { credentials: 'include', method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Ошибка удаления задачи');
+    showNotification(data.message || 'Задача успешно удалена', 'success');
+    router.push('/content-plan');
+  } catch (err) {
+    showNotification(err.message, 'error');
+  }
+};
 
 const fetchTask = async () => {
   if (!taskId.value) return;

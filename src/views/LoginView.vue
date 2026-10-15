@@ -60,46 +60,6 @@
           Подать заявку на вступление
         </router-link>
       </div>
-
-      <!-- Quick Demo Login Tabs -->
-      <div class="mt-8 pt-6 border-t border-black/10 dark:border-white/10">
-        <div class="flex items-center justify-between mb-3">
-          <span class="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
-            <span class="w-2 h-2 rounded-full bg-orange-500 dark:bg-rose-400 animate-ping"></span>
-            <span>Быстрый вход для проверки ролей:</span>
-          </span>
-          <span class="text-[10px] text-orange-600 dark:text-rose-300 font-mono">1 клик</span>
-        </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <button
-            v-for="acc in demoAccounts"
-            :key="acc.username"
-            type="button"
-            @click="quickLogin(acc.username, acc.password)"
-            class="group text-left p-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-black/60 hover:bg-orange-50/60 dark:hover:bg-white/5 hover:border-orange-400 dark:hover:border-rose-400/50 transition-all text-xs flex flex-col justify-between shadow-2xs"
-          >
-            <div class="flex items-center justify-between w-full mb-1">
-              <span class="font-bold text-slate-800 dark:text-white group-hover:text-orange-600 dark:group-hover:text-rose-300 transition-colors flex items-center space-x-1.5">
-                <!-- SVG Icon for role -->
-                <svg v-if="acc.roleType === 'superadmin'" class="w-3.5 h-3.5 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <svg v-else-if="acc.roleType === 'leader'" class="w-3.5 h-3.5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                <svg v-else-if="acc.roleType === 'head'" class="w-3.5 h-3.5 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-                <svg v-else-if="acc.roleType === 'photographer'" class="w-3.5 h-3.5 text-sky-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                <svg v-else class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span>{{ acc.label }}</span>
-              </span>
-              <span :class="acc.badgeClass" class="text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                {{ acc.levelTag }}
-              </span>
-            </div>
-            <div class="text-[10px] text-slate-400 font-mono flex items-center justify-between">
-              <span>@{{ acc.username }}</span>
-              <span class="text-slate-500 group-hover:text-orange-600 dark:group-hover:text-rose-300 transition-colors">Войти →</span>
-            </div>
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -117,49 +77,6 @@ const password = ref('');
 const loading = ref(false);
 const errorMsg = ref('');
 
-const demoAccounts = [
-  {
-    roleType: 'guardian',
-    label: 'Хранитель (Root)',
-    username: 'admin',
-    password: '1111',
-    levelTag: 'LVL 5',
-    badgeClass: 'bg-pink-100 dark:bg-pink-500/25 text-pink-700 dark:text-[#fcb4d5] border border-pink-300 dark:border-[#fcb4d5]/40'
-  },
-  {
-    roleType: 'leader',
-    label: 'Руководство',
-    username: 'leader',
-    password: 'admin',
-    levelTag: 'LVL 3',
-    badgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-  },
-  {
-    roleType: 'head',
-    label: 'Глава цеха (Дизайн)',
-    username: 'head_design',
-    password: 'admin',
-    levelTag: 'LVL 2',
-    badgeClass: 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-  },
-  {
-    roleType: 'photographer',
-    label: 'Участник (Фото)',
-    username: 'photographer',
-    password: 'admin',
-    levelTag: 'LVL 1',
-    badgeClass: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-  },
-  {
-    roleType: 'pending',
-    label: 'Новая заявка',
-    username: 'newbie',
-    password: 'admin',
-    levelTag: 'Ожидает',
-    badgeClass: 'bg-slate-500/20 text-slate-300 border border-slate-500/30'
-  }
-];
-
 const handleLogin = async () => {
   errorMsg.value = '';
   loading.value = true;
@@ -171,11 +88,5 @@ const handleLogin = async () => {
   } finally {
     loading.value = false;
   }
-};
-
-const quickLogin = async (u, p) => {
-  username.value = u;
-  password.value = p;
-  await handleLogin();
 };
 </script>

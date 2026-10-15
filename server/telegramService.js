@@ -3,6 +3,7 @@ const path = require('path');
 const db = require('./db');
 const gdriveService = require('./gdriveService');
 const telegramAuth = require('./telegramAuth');
+const { loginRateLimiter } = require('./security');
 
 const CONFIG_PATH = path.join(__dirname, 'bot_config.json');
 
@@ -1382,12 +1383,19 @@ class TelegramBotWorker {
 
     // 4. /bind <login> <pass>
     if (rawText.startsWith('/bind')) {
+      const botCheck = loginRateLimiter.checkBotAttempt(chatId);
+      if (!botCheck.allowed) {
+        await sendTelegramMessage(chatId, botCheck.message);
+        return;
+      }
+
       const parts = rawText.split(/\s+/);
       if (parts.length === 3) {
         const login = parts[1].trim().toLowerCase();
         const pwd = parts[2].trim();
         const usr = await db.get('SELECT * FROM users WHERE LOWER(username) = ?', [login]);
         if (usr && db.verifyPassword(pwd, usr.password_hash)) {
+          loginRateLimiter.recordBotSuccess(chatId);
           await db.run('UPDATE users SET telegram_id = NULL WHERE telegram_id = ? AND id != ?', [chatId, usr.id]);
           await db.run('UPDATE users SET telegram_id = ? WHERE id = ?', [chatId, usr.id]);
           usr.telegram_id = chatId;
@@ -1400,7 +1408,8 @@ class TelegramBotWorker {
             kbd
           );
         } else {
-          await sendTelegramMessage(chatId, '❌ Неверный логин или пароль. Попробуйте еще раз.');
+          const fail = loginRateLimiter.recordBotFailure(chatId);
+          await sendTelegramMessage(chatId, fail.message);
         }
       } else {
         await sendTelegramMessage(chatId, 'ℹ️ Формат команды: <code>/bind &lt;ваш_логин&gt; &lt;ваш_пароль&gt;</code>');
