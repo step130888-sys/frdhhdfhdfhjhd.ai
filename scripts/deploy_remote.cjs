@@ -3,7 +3,7 @@ const { Client } = require('ssh2');
 const conn = new Client();
 conn.on('ready', () => {
   console.log('SSH connection established');
-  const cmd = `cd /home/stepyn/sms-media && git stash && git pull origin main && npm run build && echo 1488 | sudo -S systemctl restart sms-sgtu.service && systemctl is-active sms-sgtu.service`;
+  const cmd = `cd /home/stepyn/sms-media && git stash && git pull origin main && node scripts/cleanup_data.cjs && npm run build && echo 1488 | sudo -S systemctl restart sms-sgtu.service && systemctl is-active sms-sgtu.service`;
   conn.exec(cmd, (err, stream) => {
     if (err) {
       console.error('Exec error:', err);
