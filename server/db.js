@@ -201,8 +201,7 @@ async function initDb() {
   await run('CREATE INDEX IF NOT EXISTS idx_guardian_notes_pinned_created ON guardian_notes(is_pinned DESC, id DESC)');
 
   await ensureRootAdmin();
-  await ensureDemoAccounts();
-  await ensureSampleEventTasks();
+  // Demo accounts and sample tasks disabled per user cleanup request
 }
 
 async function ensureRootAdmin() {
