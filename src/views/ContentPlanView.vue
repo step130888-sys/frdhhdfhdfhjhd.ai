@@ -1,8 +1,8 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
     
-    <!-- Top Bar: Header and View Mode Switcher (Static right) -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <!-- Top Bar: Header and View Mode Switcher encased in Liquid Glass frame -->
+    <div class="cyber-glass rounded-3xl p-5 sm:p-7 mb-8 border border-white/80 dark:border-white/10 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <div class="flex items-center space-x-3 mb-1">
           <div class="w-9 h-9 rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 border border-orange-500/20 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5] shadow-xs">
@@ -47,9 +47,6 @@
         </AnimatedPills>
       </div>
     </div>
-
-    <!-- Mode Swipe Transition -->
-    <transition name="tab-swipe" mode="out-in">
 
     <!-- CALENDAR VIEW MODE: Multi-tasks with 1 to 5 flexible departments -->
     <div v-if="viewMode === 'calendar'" key="calendar" class="space-y-6">
@@ -107,8 +104,8 @@
         @create-on-date="onCreateOnDate"
       />
 
-      <!-- Multi-tasks Section Header & Filter Toolbar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 pb-1 border-b border-black/[0.06] dark:border-white/[0.08]">
+      <!-- Multi-tasks Section Header & Filter Toolbar (Encased in Liquid Glass) -->
+      <div class="p-4 sm:p-5 rounded-2xl cyber-glass border border-white/80 dark:border-white/10 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div class="flex items-center space-x-2.5">
           <div class="w-2.5 h-2.5 rounded-full bg-orange-500 dark:bg-[#fcb4d5] animate-pulse"></div>
           <h2 class="text-sm sm:text-base font-black uppercase tracking-wider text-slate-800 dark:text-white">
@@ -196,7 +193,7 @@
           title="Нажмите на карточку для просмотра деталей мульти-задачи"
         >
           <!-- Multi-task Header (Liquid Glass) -->
-          <div class="p-5 md:p-6 bg-white/40 dark:bg-white/[0.04] backdrop-blur-2xl border-b border-black/[0.05] dark:border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="p-5 md:p-6 bg-white/40 dark:bg-white/[0.04] border-b border-black/[0.05] dark:border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex items-start md:items-center space-x-4">
               <!-- Date Badge -->
               <div class="flex-shrink-0 text-center px-4 py-2.5 rounded-2xl bg-orange-50 dark:bg-rose-500/15 border border-orange-200 dark:border-rose-400/30 shadow-xs group-hover/card:border-orange-400 dark:group-hover/card:border-rose-400/50 transition-colors">
@@ -266,7 +263,7 @@
           </div>
 
           <!-- Subtasks Grid: Liquid Glass Translucent Surface -->
-          <div class="p-5 md:p-6 bg-white/20 dark:bg-black/25 backdrop-blur-2xl transition-colors">
+          <div class="p-5 md:p-6 bg-white/20 dark:bg-black/25 transition-colors">
             <div v-if="!ev.subtasks || ev.subtasks.length === 0" class="text-xs text-slate-400 italic py-2">
               В этой мульти-задаче пока нет подзадач.
             </div>
@@ -353,86 +350,88 @@
 
     <!-- LIST VIEW MODE: "Все задачи" Grid with Entire Clickable Card -->
     <div v-else key="list">
-      <!-- Subheader with Create Task Button -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-black/10 dark:border-white/10">
-        <div class="flex items-center space-x-2.5">
-          <div class="w-7 h-7 rounded-lg bg-orange-50 dark:bg-rose-500/15 border border-orange-200 dark:border-rose-400/30 flex items-center justify-center text-orange-600 dark:text-rose-300">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-              <path d="m9 14 2 2 4-4"/>
-            </svg>
+      <!-- List View Controls Dock (Encased in Liquid Glass) -->
+      <div class="cyber-glass rounded-3xl p-5 sm:p-6 mb-8 border border-white/80 dark:border-white/10 shadow-md space-y-4">
+        <!-- Subheader with Create Task Button -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-black/[0.06] dark:border-white/[0.08]">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-lg bg-orange-50 dark:bg-rose-500/15 border border-orange-200 dark:border-rose-400/30 flex items-center justify-center text-orange-600 dark:text-rose-300">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                <path d="m9 14 2 2 4-4"/>
+              </svg>
+            </div>
+            <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-800 dark:text-white">
+              Все задачи медиацентра
+            </h2>
+            <span class="text-xs text-slate-400 font-mono">({{ tasks.length }})</span>
           </div>
-          <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-800 dark:text-white">
-            Все задачи медиацентра
-          </h2>
-          <span class="text-xs text-slate-400 font-mono">({{ tasks.length }})</span>
+
+          <button
+            v-if="canCreateTasks"
+            @click="showCreateModal = true"
+            class="btn-neon px-4 py-2 rounded-xl text-xs font-black text-white shadow-md flex items-center space-x-2 self-start sm:self-auto"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Создать задачу</span>
+          </button>
         </div>
 
-        <button
-          v-if="canCreateTasks"
-          @click="showCreateModal = true"
-          class="btn-neon px-4 py-2 rounded-xl text-xs font-black text-white shadow-md flex items-center space-x-2 self-start sm:self-auto"
-        >
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          <span>Создать задачу</span>
-        </button>
-      </div>
+        <!-- Workshop Filters & Selection Mode Toolbar -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap gap-2.5 items-center">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 text-[11px] uppercase tracking-wider">Цех:</span>
+            <AnimatedPills
+              v-model="selectedDirection"
+              :items="directionTabs"
+              variant="glass"
+              size="sm"
+            />
+          </div>
 
-      <!-- Workshop Filters & Selection Mode Toolbar -->
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap gap-2.5 items-center">
-          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 text-[11px] uppercase tracking-wider">Цех:</span>
+          <!-- Bulk Selection Controls (Level 2-5) -->
+          <div v-if="canManageTasks && tasks.length > 0" class="flex items-center space-x-2 text-xs">
+            <button
+              type="button"
+              @click="toggleSelectionMode"
+              class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-2xs active:scale-95"
+              :class="isSelectionMode ? 'bg-orange-500/20 text-orange-600 dark:text-[#fcb4d5] border-orange-500/30 shadow-xs' : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-black/10 dark:border-white/10 hover:border-orange-400'"
+            >
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              <span>{{ isSelectionMode ? 'Завершить выбор' : 'Выбрать задачи' }}</span>
+            </button>
+
+            <template v-if="isSelectionMode">
+              <button
+                type="button"
+                @click="toggleSelectAll"
+                class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 font-bold transition-colors cursor-pointer"
+              >
+                {{ selectedTaskIds.size === tasks.length ? 'Снять выбор' : 'Выбрать все' }}
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Status Filters (Apple Animated Liquid Glass Pill Dock) -->
+        <div class="flex flex-wrap gap-2.5 items-center pt-1">
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 text-[11px] uppercase tracking-wider">Статус:</span>
           <AnimatedPills
-            v-model="selectedDirection"
-            :items="directionTabs"
-            variant="glass"
+            v-model="selectedStatus"
+            :items="statusTabs"
+            variant="soft"
             size="sm"
           />
         </div>
-
-        <!-- Bulk Selection Controls (Level 2-5) -->
-        <div v-if="canManageTasks && tasks.length > 0" class="flex items-center space-x-2 text-xs">
-          <button
-            type="button"
-            @click="toggleSelectionMode"
-            class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer shadow-2xs active:scale-95"
-            :class="isSelectionMode ? 'bg-orange-500/20 text-orange-600 dark:text-[#fcb4d5] border-orange-500/30 shadow-xs' : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-black/10 dark:border-white/10 hover:border-orange-400'"
-          >
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-            </svg>
-            <span>{{ isSelectionMode ? 'Завершить выбор' : 'Выбрать задачи' }}</span>
-          </button>
-
-          <template v-if="isSelectionMode">
-            <button
-              type="button"
-              @click="toggleSelectAll"
-              class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 font-bold transition-colors cursor-pointer"
-            >
-              {{ selectedTaskIds.size === tasks.length ? 'Снять выбор' : 'Выбрать все' }}
-            </button>
-          </template>
-        </div>
       </div>
 
-      <!-- Status Filters (Apple Animated Liquid Glass Pill Dock) -->
-      <div class="mb-7 flex flex-wrap gap-2.5 items-center pb-4 border-b border-black/[0.06] dark:border-white/[0.08]">
-        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 text-[11px] uppercase tracking-wider">Статус:</span>
-        <AnimatedPills
-          v-model="selectedStatus"
-          :items="statusTabs"
-          variant="soft"
-          size="sm"
-        />
-      </div>
-
-      <!-- Task Cards Grid with Smooth Department & Filter Transition -->
-      <transition name="dept-swap" mode="out-in">
-        <div v-if="loading" key="loading" class="text-center py-20 text-slate-400 text-xs font-medium">
+      <!-- Task Cards Grid -->
+      <div v-if="loading" key="loading" class="text-center py-20 text-slate-400 text-xs font-medium">
           <div class="animate-spin w-8 h-8 border-2 border-orange-500 dark:border-rose-500 border-t-transparent rounded-full mx-auto mb-3"></div>
           Загрузка контент-плана...
         </div>
@@ -462,9 +461,7 @@
             @delete="deleteSingleTask"
           />
         </div>
-      </transition>
     </div>
-    </transition>
 
     <!-- Sticky Bulk Delete Action Bar -->
     <transition name="toast">

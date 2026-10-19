@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
-    <!-- Header -->
-    <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <!-- Header (Encased in Liquid Glass) -->
+    <div class="cyber-glass rounded-3xl p-5 sm:p-7 mb-8 border border-white/80 dark:border-white/10 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <div class="flex items-center space-x-3 mb-1">
           <div class="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shadow-sm dark:shadow-lg dark:shadow-amber-950/50">

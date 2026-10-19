@@ -3,6 +3,22 @@
     <!-- Navbar (Desktop top + Mobile bottom) -->
     <Navbar />
 
+    <!-- Global Midjourney Autonomous Iridescent Fluid Wave Canvas (Entire Site) -->
+    <canvas
+      ref="asciiCanvas"
+      class="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-700 z-0 will-change-transform transform-gpu"
+      :class="isAuthPage ? 'opacity-90 dark:opacity-95' : 'opacity-35 dark:opacity-45'"
+      style="contain: strict; transform: translateZ(0);"
+    ></canvas>
+
+    <!-- Dark Mode Deep Ambient Scrim (Weakened by 10% on app, rolled back on login page) -->
+    <div v-if="!isAuthPage" class="fixed inset-0 pointer-events-none hidden dark:block bg-[#08090C]/65 z-0 transition-opacity duration-500"></div>
+    <div v-if="!isAuthPage" class="fixed inset-0 pointer-events-none hidden dark:block bg-gradient-to-b from-[#08090C]/40 via-[#08090C]/60 to-[#08090C]/80 z-0 transition-opacity duration-500"></div>
+
+    <!-- Light Mode Ambient Scrim (Weakened by 10% on app, rolled back on login page) -->
+    <div v-if="!isAuthPage" class="fixed inset-0 pointer-events-none block dark:hidden bg-[#F8FAFC]/60 z-0 transition-opacity duration-500"></div>
+    <div v-if="!isAuthPage" class="fixed inset-0 pointer-events-none block dark:hidden bg-gradient-to-b from-white/20 via-white/45 to-white/65 z-0 transition-opacity duration-500"></div>
+
     <!-- Ambient Glass Lighting Orbs (Fixed background refraction for Liquid Glass) -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
       <div class="absolute -top-32 left-1/4 w-96 h-96 rounded-full bg-orange-400/10 dark:bg-[#fcb4d5]/10 blur-3xl"></div>
@@ -64,15 +80,41 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 import Navbar from './components/Navbar.vue';
 import OnlineDrawer from './components/OnlineDrawer.vue';
 import { useAuthStore } from './stores/auth';
 import { useThemeStore } from './stores/theme';
 
+const route = useRoute();
+const isAuthPage = computed(() => {
+  return route?.path === '/login' || route?.path === '/register';
+});
+
 const { notification, fetchMe, heartbeat } = useAuthStore();
 const { initTheme } = useThemeStore();
 let heartbeatInterval = null;
+
+// --------------------------------------------------------------------------
+// GLOBAL MIDJOURNEY AUTONOMOUS IRIDESCENT FLUID WAVE ENGINE
+// High-DPI, Silk Topographic Ribbons, Chromatic Shimmer & Generative Scintillation
+// Zero mouse dependency — 100% autonomous hypnotic fluid dynamics across entire site
+// --------------------------------------------------------------------------
+const asciiCanvas = ref(null);
+let animationFrameId = null;
+
+// Dark theme glyph sets
+const GLYPHS_PEAK = ['✦', '✧', '◈', '◇', '▲', '1', '0', 'X', 'Z', 'K', 'E', 'D', 'R', '*', '#', '%'];
+const GLYPHS_HIGH = ['+', '=', '~', '/', '\\', '§', '8', '3', '7', 'a', 'm', 'w', 'v'];
+const GLYPHS_MID  = [':', ';', '|', '!', 'i', 'r', 'c', 's', 'o', '°'];
+const GLYPHS_LOW  = ['·', '.', '~', '^', ':', ','];
+
+// Light theme glyph sets (airy, architectural, clean)
+const GLYPHS_LIGHT_PEAK = ['+', '×', '•', '·', 'o', 'x', '1', '0', '~'];
+const GLYPHS_LIGHT_HIGH = ['·', ':', '+', '~', '-', '=', '·'];
+const GLYPHS_LIGHT_MID  = ['·', ':', '~', '.', '·'];
+const GLYPHS_LIGHT_LOW  = ['·', '.'];
 
 const getToastClasses = (type) => {
   switch (type) {
@@ -102,17 +144,217 @@ const handleVisibilityChange = () => {
   }
 };
 
+let resizeCanvas = null;
+
 onMounted(() => {
   initTheme();
   fetchMe();
   // 60-second online heartbeat (pauses on inactive tabs)
   heartbeatInterval = setInterval(heartbeat, 60000);
   document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  // Initialize Global Wave Canvas
+  const canvas = asciiCanvas.value;
+  if (canvas) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (ctx) {
+      let width = 0;
+      let height = 0;
+      let cols = 0;
+      let rows = 0;
+      const charWidth = 14;
+      const charHeight = 20;
+
+      resizeCanvas = () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        cols = Math.ceil(width / charWidth);
+        rows = Math.ceil(height / charHeight);
+      };
+
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      let time = 0;
+      let lastFrameTime = 0;
+      const BUCKET_COUNT = 8;
+      const buckets = Array.from({ length: BUCKET_COUNT }, () => []);
+
+      const render = (now) => {
+        animationFrameId = requestAnimationFrame(render);
+        if (document.hidden) return;
+        // Frame throttling: ~38 FPS prevents GPU compositing stalls on complex views
+        if (now && now - lastFrameTime < 26) return;
+        lastFrameTime = now || 0;
+
+        time += 0.012;
+        const isDark = document.documentElement.classList.contains('dark');
+
+        for (let i = 0; i < BUCKET_COUNT; i++) {
+          buckets[i].length = 0;
+        }
+
+        ctx.clearRect(0, 0, width, height);
+        ctx.font = '500 11px "JetBrains Mono", "SF Mono", "Fira Code", monospace';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+
+        const t = time * 0.45;
+
+        for (let r = 0; r < rows; r++) {
+          const ny = r / rows;
+          const y = (r + 0.5) * charHeight;
+
+          for (let c = 0; c < cols; c++) {
+            const nx = c / cols;
+            const x = (c + 0.5) * charWidth;
+
+            const rx = nx * 3.4 - ny * 1.6;
+            const ry = nx * 1.6 + ny * 3.4;
+
+            const h1 = Math.sin(rx * 2.8 + t * 0.95 + Math.sin(ry * 2.0 - t * 0.65));
+            const h2 = Math.cos(ry * 3.2 - t * 0.85 + Math.cos(rx * 2.2 + t * 0.45));
+            const h3 = Math.sin((rx + ry) * 1.9 - t * 1.25);
+            const distCenter = Math.hypot(nx - 0.5, ny - 0.5);
+            const h4 = Math.sin(distCenter * 5.2 - t * 1.35);
+
+            const field = h1 * 0.42 + h2 * 0.36 + h3 * 0.14 + h4 * 0.08;
+
+            const ripple1 = Math.sin(field * 9.5 + t * 1.85);
+            const ripple2 = Math.cos(field * 14.5 - t * 1.3 + nx * 2.4);
+
+            const crest1 = Math.pow(Math.max(0, (ripple1 + 1) * 0.5), 2.6);
+            const crest2 = Math.pow(Math.max(0, (ripple2 + 1) * 0.5), 3.2);
+            let intensity = Math.min(1, Math.max(0, crest1 * 0.62 + crest2 * 0.48));
+
+            if (intensity < 0.14) continue;
+
+            const charSeed = Math.floor(
+              Math.abs(Math.sin(c * 12.9898 + r * 78.233 + Math.floor(t * 3.2) * 0.1) * 43758.5453)
+            );
+
+            const shimmerPhase = field * 4.2 + t * 1.6 + nx * 3.0 + ny * 1.5;
+            const shimmerVal = Math.sin(shimmerPhase);
+
+            let char = '·';
+            let bucketIdx = 0;
+
+            if (isDark) {
+              if (intensity > 0.82) {
+                char = GLYPHS_PEAK[charSeed % GLYPHS_PEAK.length];
+                bucketIdx = 7;
+              } else if (intensity > 0.62) {
+                char = GLYPHS_HIGH[charSeed % GLYPHS_HIGH.length];
+                if (shimmerVal > 0.28) {
+                  bucketIdx = 6;
+                } else if (shimmerVal < -0.28) {
+                  bucketIdx = 5;
+                } else {
+                  bucketIdx = 4;
+                }
+              } else if (intensity > 0.38) {
+                char = GLYPHS_MID[charSeed % GLYPHS_MID.length];
+                bucketIdx = 3;
+              } else if (intensity > 0.24) {
+                char = GLYPHS_LOW[charSeed % GLYPHS_LOW.length];
+                bucketIdx = 2;
+              } else {
+                char = '·';
+                bucketIdx = 1;
+              }
+            } else {
+              if (intensity > 0.82) {
+                char = GLYPHS_LIGHT_PEAK[charSeed % GLYPHS_LIGHT_PEAK.length];
+                bucketIdx = 7;
+              } else if (intensity > 0.62) {
+                char = GLYPHS_LIGHT_HIGH[charSeed % GLYPHS_LIGHT_HIGH.length];
+                if (shimmerVal > 0.22) {
+                  bucketIdx = 6;
+                } else if (shimmerVal < -0.22) {
+                  bucketIdx = 5;
+                } else {
+                  bucketIdx = 4;
+                }
+              } else if (intensity > 0.38) {
+                char = GLYPHS_LIGHT_MID[charSeed % GLYPHS_LIGHT_MID.length];
+                bucketIdx = 3;
+              } else if (intensity > 0.24) {
+                char = GLYPHS_LIGHT_LOW[charSeed % GLYPHS_LIGHT_LOW.length];
+                bucketIdx = 2;
+              } else {
+                char = '·';
+                bucketIdx = 1;
+              }
+            }
+
+            buckets[bucketIdx].push(x, y, char);
+          }
+        }
+
+        if (isDark) {
+          const STYLES_DARK = [
+            'transparent',
+            'rgba(148, 163, 184, 0.14)',
+            'rgba(148, 163, 184, 0.30)',
+            'rgba(203, 213, 225, 0.52)',
+            'rgba(221, 214, 254, 0.78)',
+            'rgba(56, 189, 248, 0.90)',
+            'rgba(244, 114, 182, 0.92)',
+            'rgba(255, 255, 255, 0.98)'
+          ];
+
+          for (let b = 1; b < BUCKET_COUNT; b++) {
+            const batch = buckets[b];
+            if (batch.length === 0) continue;
+            ctx.fillStyle = STYLES_DARK[b];
+            for (let i = 0; i < batch.length; i += 3) {
+              ctx.fillText(batch[i + 2], batch[i], batch[i + 1]);
+            }
+          }
+        } else {
+          const STYLES_LIGHT = [
+            'transparent',
+            'rgba(148, 163, 184, 0.20)',
+            'rgba(148, 163, 184, 0.36)',
+            'rgba(100, 116, 139, 0.50)',
+            'rgba(71, 85, 105, 0.65)',
+            'rgba(99, 102, 241, 0.50)',
+            'rgba(217, 119, 6, 0.55)',
+            'rgba(30, 41, 59, 0.76)'
+          ];
+
+          for (let b = 1; b < BUCKET_COUNT; b++) {
+            const batch = buckets[b];
+            if (batch.length === 0) continue;
+            ctx.fillStyle = STYLES_LIGHT[b];
+            for (let i = 0; i < batch.length; i += 3) {
+              ctx.fillText(batch[i + 2], batch[i], batch[i + 1]);
+            }
+          }
+        }
+      };
+
+      animationFrameId = requestAnimationFrame(render);
+    }
+  }
 });
 
 onUnmounted(() => {
   if (heartbeatInterval) clearInterval(heartbeatInterval);
   document.removeEventListener('visibilitychange', handleVisibilityChange);
+  if (resizeCanvas) {
+    window.removeEventListener('resize', resizeCanvas);
+  }
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+  }
 });
 </script>
 

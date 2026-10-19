@@ -1,5 +1,5 @@
 <template>
-  <div class="cyber-glass rounded-3xl p-4 sm:p-6 mb-8 border border-white/60 dark:border-white/10 shadow-sm relative overflow-hidden backdrop-blur-2xl transition-all">
+  <div class="cyber-glass rounded-3xl p-4 sm:p-6 mb-8 border border-white/60 dark:border-white/10 shadow-sm relative overflow-hidden transition-all">
     <!-- Top Header: Month navigation & Quick actions -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-black/[0.06] dark:border-white/[0.08]">
       <div class="flex items-center space-x-3">
@@ -103,7 +103,7 @@
 
             <span
               v-if="cell.isToday"
-              class="w-1.5 h-1.5 rounded-full bg-orange-500 dark:bg-[#fcb4d5] animate-ping"
+              class="w-2 h-2 rounded-full bg-orange-500 dark:bg-[#fcb4d5] shadow-xs ring-2 ring-orange-500/40 dark:ring-[#fcb4d5]/40"
               title="Сегодня"
             ></span>
           </div>
@@ -145,7 +145,8 @@
       <div class="flex items-center justify-between mb-2">
         <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
           <svg class="w-3.5 h-3.5 text-orange-500 dark:text-[#fcb4d5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <span>{{ selectedDate ? `Мульти-задачи на ${formatSelectedDateText}:` : 'Быстрый переход к мульти-задачам месяца:' }}</span>
+          <span v-if="selectedDate">Мульти-задачи на {{ formatSelectedDateText }}:</span>
+          <span v-else>Быстрый переход к мульти-задачам месяца:</span>
         </span>
 
         <span v-if="displayPillsEvents.length > 0" class="text-[10px] text-slate-400 font-mono">

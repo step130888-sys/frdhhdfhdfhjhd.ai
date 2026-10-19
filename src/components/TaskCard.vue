@@ -32,7 +32,7 @@
             :class="getStatusClasses(task.status)"
           >
             <span class="relative flex h-1.5 w-1.5">
-              <span v-if="task.status === 'in_progress' || task.status === 'review'" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-current"></span>
+              <span v-if="task.status === 'in_progress' || task.status === 'review'" class="animate-pulse absolute inline-flex h-full w-full rounded-full opacity-75 bg-current"></span>
               <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-current"></span>
             </span>
             <span v-if="task.status === 'open'">Свободна</span>
