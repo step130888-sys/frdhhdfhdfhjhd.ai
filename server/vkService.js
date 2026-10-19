@@ -306,9 +306,22 @@ function getMainKeyboard() {
 }
 
 /**
- * Send VK direct message to user
+ * Empty reply keyboard to completely hide buttons in VK client
  */
-async function sendVkMessage(userId, message, keyboard = null) {
+function getEmptyKeyboard() {
+  return {
+    one_time: true,
+    buttons: []
+  };
+}
+
+/**
+ * Send VK direct message to user
+ * @param {string|number} userId VK user id / screen name
+ * @param {string} message text content
+ * @param {object|null|undefined} keyboard optional VK keyboard object. If omitted or null, no keyboard is sent.
+ */
+async function sendVkMessage(userId, message, keyboard = undefined) {
   if (!userId) return false;
   const token = getGroupToken();
   if (!token) return false;
@@ -325,14 +338,12 @@ async function sendVkMessage(userId, message, keyboard = null) {
     message: message
   };
 
-  if (keyboard !== null) {
+  if (keyboard !== undefined && keyboard !== null) {
     params.keyboard = keyboard;
-  } else {
-    params.keyboard = getMainKeyboard();
   }
 
   let res = await callVkApi('messages.send', params);
-  if (!res && keyboard === null) {
+  if (!res && params.keyboard) {
     // Retry without keyboard if bot keyboard features are not yet enabled in VK settings
     const fallbackParams = Object.assign({}, params);
     delete fallbackParams.keyboard;
@@ -533,14 +544,15 @@ async function handleIncomingMessage(message) {
     if (parts.length < 3) {
       await sendVkMessage(
         fromId,
-        '⚠️ Для привязки укажите логин и пароль:\n/login <логин> <пароль>\n\nПример:\n/login ivan_photo 123456'
+        '⚠️ Для привязки укажите логин и пароль:\n/login <логин> <пароль>\n\nПример:\n/login ivan_photo 123456',
+        getEmptyKeyboard()
       );
       return;
     }
 
     const botCheck = loginRateLimiter.checkBotAttempt(`vk_${fromId}`);
     if (!botCheck.allowed) {
-      await sendVkMessage(fromId, botCheck.message);
+      await sendVkMessage(fromId, botCheck.message, getEmptyKeyboard());
       return;
     }
 
@@ -552,7 +564,8 @@ async function handleIncomingMessage(message) {
       const fail = loginRateLimiter.recordBotFailure(`vk_${fromId}`);
       await sendVkMessage(
         fromId,
-        `❌ Неверный логин или пароль.\n${fail.message}`
+        `❌ Неверный логин или пароль.\n${fail.message}`,
+        getEmptyKeyboard()
       );
       return;
     }
@@ -573,35 +586,18 @@ async function handleIncomingMessage(message) {
     return;
   }
 
-  // Command: Unlink (/unlink)
-  if (cleanText === '/unlink' || cleanText === 'отвязать' || cleanText === 'выйти') {
-    if (user) {
-      await db.run('UPDATE users SET vk_id = NULL WHERE id = ?', [user.id]);
-      removeVkBinding(fromId);
-      removeVkBinding(user.id);
-      await sendVkMessage(fromId, '👋 Ваш аккаунт успешно отвязан от бота.');
-    } else {
-      await sendVkMessage(fromId, 'У вас нет привязанного аккаунта.');
-    }
+  // 100% full silence for unauthenticated users:
+  // If user is not authenticated, do not reply to any messages, clicks, or /start commands at all.
+  if (!user) {
     return;
   }
 
-  // If user is NOT linked yet
-  if (!user) {
-    const unlinkedHelp = [
-      '👋 Приветствуем в боте Медиацентра ОСО СГТУ им. Гагарина Ю.А.!',
-      '━━━━━━━━━━━━━━━━━━',
-      'Бот создан для просмотра ваших назначенных задач, горящих дедлайнов и личной статистики.',
-      '',
-      '🔑 Чтобы привязать ваш профиль, отправьте сообщение:',
-      '/login <ваш_логин> <ваш_пароль>',
-      '',
-      'Например:',
-      '/login ivan_photo 1111',
-      '',
-      'Либо укажите ваш VK ID на сайте в личном профиле.'
-    ].join('\n');
-    await sendVkMessage(fromId, unlinkedHelp);
+  // Command: Unlink (/unlink)
+  if (cleanText === '/unlink' || cleanText === 'отвязать' || cleanText === 'выйти') {
+    await db.run('UPDATE users SET vk_id = NULL WHERE id = ?', [user.id]);
+    removeVkBinding(fromId);
+    removeVkBinding(user.id);
+    await sendVkMessage(fromId, '👋 Ваш аккаунт успешно отвязан от бота. Кнопки меню скрыты.', getEmptyKeyboard());
     return;
   }
 
@@ -1078,6 +1074,7 @@ module.exports = {
   callVkApi,
   sendVkMessage,
   getMainKeyboard,
+  getEmptyKeyboard,
   notifyTaskAssigned,
   notifyTaskForceAssigned,
   notifyNewOpenTask,
