@@ -1,9 +1,21 @@
 node_modules/
 dist/
 *.log
+
+# Secrets & Environment Variables (Never commit to Git!)
 .env
+.env.*
+server/.vault_key
+*.key
+*.pem
+service_account*.json
+
+# Database & Locks
+*.sqlite
 *.db-shm
 *.db-wal
+
+# Local deployment & diagnostic scripts with sensitive IPs/creds
 scripts/deploy_singbox.cjs
 scripts/parse_subscription.cjs
 scripts/check_remote_vpn.cjs

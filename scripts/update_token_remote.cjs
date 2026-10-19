@@ -15,10 +15,10 @@ conn.on('ready', () => {
     'git pull origin main',
     `sed -i 's/^TELEGRAM_BOT_TOKEN=.*/TELEGRAM_BOT_TOKEN=${newToken}/' .env`,
     `python3 -c "import json; p='server/bot_config.json'; f=open(p,'r+'); d=json.load(f); d['bot_token']='${newToken}'; f.seek(0); json.dump(d,f,indent=2); f.truncate()"`,
-    'echo 1488 | sudo -S systemctl restart sms-sgtu.service',
+    `echo ${process.env.DEPLOY_SSH_PASSWORD || '1488'} | sudo -S systemctl restart sms-sgtu.service`,
     'sleep 2',
     'systemctl is-active sms-sgtu.service',
-    'echo 1488 | sudo -S journalctl -u sms-sgtu.service -n 25 --no-pager'
+    `echo ${process.env.DEPLOY_SSH_PASSWORD || '1488'} | sudo -S journalctl -u sms-sgtu.service -n 25 --no-pager`
   ];
 
   conn.exec(commands.join(' && '), (err, stream) => {
@@ -37,8 +37,8 @@ conn.on('ready', () => {
 }).on('error', err => {
   console.error('Connection error:', err);
 }).connect({
-  host: '192.168.1.152',
-  port: 22,
-  username: 'stepyn',
-  password: '1488'
+  host: process.env.DEPLOY_SSH_HOST || '192.168.1.152',
+  port: parseInt(process.env.DEPLOY_SSH_PORT || '22', 10),
+  username: process.env.DEPLOY_SSH_USER || 'stepyn',
+  password: process.env.DEPLOY_SSH_PASSWORD || '1488'
 });

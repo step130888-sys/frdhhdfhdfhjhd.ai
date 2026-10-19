@@ -4,6 +4,7 @@ const db = require('./db');
 const gdriveService = require('./gdriveService');
 const telegramAuth = require('./telegramAuth');
 const { loginRateLimiter } = require('./security');
+const secretVault = require('./secretVault');
 
 const CONFIG_PATH = path.join(__dirname, 'bot_config.json');
 
@@ -28,7 +29,11 @@ function getConfig() {
 
 function saveConfig(updates) {
   const current = getConfig();
-  Object.assign(current, updates);
+  const safeUpdates = Object.assign({}, updates);
+  if (safeUpdates.bot_token && !secretVault.isMasked(safeUpdates.bot_token)) {
+    safeUpdates.bot_token = secretVault.encryptSecret(safeUpdates.bot_token);
+  }
+  Object.assign(current, safeUpdates);
   try {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(current, null, 2), 'utf8');
   } catch (e) {
@@ -37,7 +42,8 @@ function saveConfig(updates) {
 }
 
 function getBotToken() {
-  return process.env.TELEGRAM_BOT_TOKEN || getConfig().bot_token;
+  const raw = process.env.TELEGRAM_BOT_TOKEN || getConfig().bot_token || '';
+  return secretVault.decryptSecret(raw);
 }
 
 function getBotUsername() {

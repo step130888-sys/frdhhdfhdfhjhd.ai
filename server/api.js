@@ -12,6 +12,7 @@ const vkService = require('./vkService');
 const gdriveService = require('./gdriveService');
 const telegramAuth = require('./telegramAuth');
 const { loginRateLimiter } = require('./security');
+const secretVault = require('./secretVault');
 
 // Multer storage configuration
 const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
@@ -1684,11 +1685,12 @@ router.post('/admin/users/:id/delete', requireAuth, requireLevel(4), async (req,
 
 router.get('/admin/telegram-config', requireAuth, requireLevel(4), async (req, res) => {
   const cfg = telegramService.getConfig ? telegramService.getConfig() : {};
+  const rawToken = telegramService.getBotToken ? telegramService.getBotToken() : (cfg.bot_token || '');
   res.json({
-    token: cfg.bot_token || '',
+    token: rawToken ? secretVault.maskSecret(rawToken) : '',
     group_chat_id: cfg.leadership_group_chat_id || '',
     bot_username: cfg.bot_username || 'ping_sstu_bot',
-    is_active: Boolean(cfg.bot_token)
+    is_active: Boolean(rawToken)
   });
 });
 
@@ -1698,7 +1700,9 @@ router.post('/admin/telegram-config', requireAuth, requireLevel(4), async (req, 
   const botUsername = (req.body.bot_username || '').trim();
 
   const updates = {};
-  if (token) updates.bot_token = token;
+  if (token && !secretVault.isMasked(token)) {
+    updates.bot_token = token;
+  }
   if (groupChatId) updates.leadership_group_chat_id = groupChatId;
   if (botUsername) updates.bot_username = botUsername;
 
@@ -1711,6 +1715,42 @@ router.post('/admin/telegram-config', requireAuth, requireLevel(4), async (req, 
   }
 
   res.json({ success: true, message: 'Настройки Telegram бота успешно сохранены!' });
+});
+
+router.get('/admin/vk-config', requireAuth, requireLevel(4), async (req, res) => {
+  const cfg = vkService.getConfig ? vkService.getConfig() : {};
+  const rawToken = vkService.getGroupToken ? vkService.getGroupToken() : (cfg.vk_group_token || '');
+  const rawGroupId = vkService.getGroupId ? vkService.getGroupId() : (cfg.vk_group_id || '');
+  res.json({
+    token: rawToken ? secretVault.maskSecret(rawToken) : '',
+    group_id: rawGroupId,
+    is_enabled: cfg.is_enabled !== false,
+    is_active: Boolean(rawToken)
+  });
+});
+
+router.post('/admin/vk-config', requireAuth, requireLevel(4), async (req, res) => {
+  const token = (req.body.token || '').trim();
+  const groupId = (req.body.group_id || '').trim();
+  const isEnabled = req.body.is_enabled !== false;
+
+  const updates = { is_enabled: isEnabled };
+  if (token && !secretVault.isMasked(token)) {
+    updates.vk_group_token = token;
+  }
+  if (groupId) {
+    updates.vk_group_id = groupId;
+  }
+
+  try {
+    if (vkService.saveConfig) {
+      vkService.saveConfig(updates);
+    }
+  } catch (e) {
+    return res.status(500).json({ error: 'Ошибка сохранения настроек VK: ' + e.message });
+  }
+
+  res.json({ success: true, message: 'Настройки VK бота успешно сохранены!' });
 });
 
 router.post('/admin/telegram-test', requireAuth, requireLevel(4), async (req, res) => {

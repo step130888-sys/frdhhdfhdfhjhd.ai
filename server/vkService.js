@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const db = require('./db');
 const { loginRateLimiter } = require('./security');
+const secretVault = require('./secretVault');
 
 const CONFIG_PATH = path.join(__dirname, 'vk_config.json');
 
@@ -24,7 +25,11 @@ function getConfig() {
 
 function saveConfig(updates) {
   const current = getConfig();
-  Object.assign(current, updates);
+  const safeUpdates = Object.assign({}, updates);
+  if (safeUpdates.vk_group_token && !secretVault.isMasked(safeUpdates.vk_group_token)) {
+    safeUpdates.vk_group_token = secretVault.encryptSecret(safeUpdates.vk_group_token);
+  }
+  Object.assign(current, safeUpdates);
   try {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(current, null, 2), 'utf8');
   } catch (e) {
@@ -33,12 +38,14 @@ function saveConfig(updates) {
 }
 
 function getGroupToken() {
-  return process.env.VK_GROUP_TOKEN || getConfig().vk_group_token || '';
+  const raw = process.env.VK_GROUP_TOKEN || getConfig().vk_group_token || '';
+  return secretVault.decryptSecret(raw);
 }
 
 function getGroupId() {
   const raw = process.env.VK_GROUP_ID || getConfig().vk_group_id || '';
-  return String(raw).replace(/[^\d]/g, '');
+  const decrypted = secretVault.decryptSecret(raw);
+  return String(decrypted).replace(/[^\d]/g, '');
 }
 
 const VK_BINDINGS_PATH = path.join(__dirname, 'vk_bindings.json');
