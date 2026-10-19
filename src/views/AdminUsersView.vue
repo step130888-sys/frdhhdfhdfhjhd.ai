@@ -717,9 +717,15 @@
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                     Новый пароль:
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400 lowercase font-normal">(оставьте пустым, если не меняется)</span>
+                    <span v-if="!(selectedUser.access_level >= 5 && user?.id !== selectedUser.id)" class="text-[10px] text-slate-500 dark:text-slate-400 lowercase font-normal">(оставьте пустым, если не меняется)</span>
                   </label>
-                  <div class="relative">
+                  <div v-if="selectedUser.access_level >= 5 && user?.id !== selectedUser.id" class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-medium flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-amber-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span>🔒 Пароль пользователя 5 уровня (Хранитель) защищен. Изменить его может только сам владелец аккаунта.</span>
+                  </div>
+                  <div v-else class="relative">
                     <input
                       v-model="editForm.password"
                       type="text"
@@ -741,7 +747,8 @@
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Цех (Направление):</label>
                   <select
                     v-model="editForm.role"
-                    class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0A0A0D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#121218]"
+                    :disabled="selectedUser.access_level >= 5 && user?.id !== selectedUser.id"
+                    class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0A0A0D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#121218] disabled:opacity-40"
                   >
                     <option value="Фото">Фото</option>
                     <option value="Дизайн">Дизайн</option>
@@ -758,7 +765,7 @@
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Уровень доступа (1..5):</label>
                   <select
                     v-model.number="editForm.access_level"
-                    :disabled="selectedUser.username === 'admin'"
+                    :disabled="selectedUser.access_level >= 5 || selectedUser.username === 'admin'"
                     class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0A0A0D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#121218] disabled:opacity-40"
                   >
                     <option :value="1">1 уровень — Участник направления</option>
@@ -819,7 +826,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 
-const { showNotification } = useAuthStore();
+const { showNotification, user } = useAuthStore();
 
 const pendingUsers = ref([]);
 const approvedUsers = ref([]);

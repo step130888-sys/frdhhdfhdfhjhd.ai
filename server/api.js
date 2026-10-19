@@ -420,9 +420,18 @@ router.post('/users/:id/update', requireAuth, async (req, res) => {
     return res.status(403).json({ error: 'Недостаточно прав для редактирования профиля.' });
   }
 
-  // Protection for root admin (Хранитель)
-  if (targetUser.username === db.ROOT_ADMIN_USERNAME && !isSelf && !isGuardian) {
-    return res.status(403).json({ error: `Системный профиль '${db.ROOT_ADMIN_USERNAME}' (Хранитель) защищен от изменений.` });
+  // Strict protection for Level 5 (Хранитель): NOBODY can edit or change password of level 5 except himself
+  if ((targetUser.access_level >= 5 || targetUser.username === db.ROOT_ADMIN_USERNAME) && !isSelf) {
+    return res.status(403).json({
+      error: 'Доступ запрещен. Профиль и пароль пользователя 5 уровня (Хранитель) может изменять только он сам.'
+    });
+  }
+
+  // An administrator cannot change the password of another user with equal or higher access level
+  if (req.body.password && targetUser.access_level >= req.user.access_level && !isSelf) {
+    return res.status(403).json({
+      error: 'Вы не можете изменять пароль пользователя с равным или более высоким уровнем доступа.'
+    });
   }
 
   const name = req.body.name ? req.body.name.trim() : null;
@@ -1252,8 +1261,14 @@ router.post('/tasks/:id/submit', requireAuth, upload.single('file_upload'), asyn
   let fileName = null;
 
   if (req.file) {
-    fileLink = '/uploads/' + req.file.filename;
     fileName = req.file.originalname;
+    const gdriveRes = await gdriveService.uploadAndCleanupLocal(
+      req.file.path,
+      req.file.originalname,
+      req.file.mimetype
+    );
+    fileLink = gdriveRes.fileLink;
+    fileName = gdriveRes.fileName;
   }
 
   if (!fileLink && !task.file_link) {
@@ -1533,8 +1548,14 @@ router.post('/materials', requireAuth, requireLevel(3, 'Загружать ма�
   }
 
   if (req.file) {
-    fileLink = '/uploads/' + req.file.filename;
     fileName = req.file.originalname;
+    const gdriveRes = await gdriveService.uploadAndCleanupLocal(
+      req.file.path,
+      req.file.originalname,
+      req.file.mimetype
+    );
+    fileLink = gdriveRes.fileLink;
+    fileName = gdriveRes.fileName;
   }
 
   if (!fileLink) {
@@ -1640,8 +1661,8 @@ router.post('/admin/users/:id/delete', requireAuth, requireLevel(4), async (req,
     return res.status(404).json({ error: 'Пользователь не найден.' });
   }
 
-  if (targetUser.username === db.ROOT_ADMIN_USERNAME) {
-    return res.status(403).json({ error: "ПРОФИЛЬ 'stepyn' ЯВЛЯЕТСЯ СИСТЕМНЫМ И ЗАЩИЩЕН ОТ УДАЛЕНИЯ НАВСЕГДА!" });
+  if (targetUser.access_level >= 5 || targetUser.username === db.ROOT_ADMIN_USERNAME) {
+    return res.status(403).json({ error: "Пользователь 5 уровня (Хранитель) защищен от удаления!" });
   }
 
   if (targetUser.id === req.user.id) {
@@ -2048,6 +2069,41 @@ router.delete('/guardian-notes/:id', requireAuth, requireLevel(5), async (req, r
 
   await db.run('DELETE FROM guardian_notes WHERE id = ?', [noteId]);
   res.json({ success: true, message: 'Заметка удалена из архива.' });
+});
+
+// --------------------------------------------------------------------------
+// 12. GOOGLE DRIVE INTEGRATION STATUS & CONFIG
+// --------------------------------------------------------------------------
+
+router.get('/gdrive/config', requireAuth, requireLevel(3), (req, res) => {
+  const config = gdriveService.getGdriveConfig();
+  const saInfo = gdriveService.getServiceAccountInfo();
+  res.json({
+    config,
+    service_account: saInfo
+  });
+});
+
+router.post('/gdrive/config', requireAuth, requireLevel(4), (req, res) => {
+  const { folder_id, folder_url, webhook_url } = req.body;
+  const updates = {};
+  if (folder_id !== undefined) updates.folder_id = folder_id.trim();
+  if (folder_url !== undefined) updates.folder_url = folder_url.trim();
+  if (webhook_url !== undefined) updates.webhook_url = webhook_url.trim();
+
+  gdriveService.saveGdriveConfig(updates);
+  res.json({
+    success: true,
+    config: gdriveService.getGdriveConfig(),
+    service_account: gdriveService.getServiceAccountInfo(),
+    message: 'Настройки Google Диска успешно сохранены.'
+  });
+});
+
+router.get('/gdrive/script-template', requireAuth, requireLevel(3), (req, res) => {
+  res.json({
+    template: gdriveService.getAppsScriptTemplate()
+  });
 });
 
 module.exports = router;
