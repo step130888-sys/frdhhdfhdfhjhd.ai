@@ -219,13 +219,39 @@
           class="absolute top-0 left-0 pointer-events-none will-change-transform z-0 flex flex-col items-center"
           :style="mobileIndicatorStyle"
         >
-          <!-- Top Neon LED Slit: Vivid Orange in light theme, Soft Glowing Pink (#fcb4d5) in dark theme, NO white bar! -->
-          <div class="w-9 h-[3px] rounded-full bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500 dark:from-pink-500 dark:via-[#fcb4d5] dark:to-pink-400 shadow-[0_0_10px_#f97316,0_0_18px_#ea580c,0_0_26px_rgba(249,115,22,0.85)] dark:shadow-[0_0_10px_#fcb4d5,0_0_18px_#f472b6,0_0_26px_rgba(252,180,213,0.9)]"></div>
-
-          <!-- Downward Conical Spotlight Beam Flare: Orange in light, Pink in dark -->
+          <!-- Top Neon LED Slit: Soft rounded bar with deep neon glow -->
           <div
-            class="w-20 h-14 pointer-events-none -mt-[1px] bg-[radial-gradient(ellipse_65%_55%_at_50%_0%,rgba(249,115,22,0.50)_0%,rgba(249,115,22,0.18)_45%,rgba(249,115,22,0.04)_75%,transparent_100%)] dark:bg-[radial-gradient(ellipse_65%_55%_at_50%_0%,rgba(252,180,213,0.55)_0%,rgba(252,180,213,0.20)_45%,rgba(252,180,213,0.04)_75%,transparent_100%)]"
-            style="filter: blur(0.5px);"
+            class="w-8 h-[3px] rounded-full transition-all duration-300 pointer-events-none"
+            :style="{
+              background: isDark
+                ? 'linear-gradient(90deg, #f472b6 0%, #fcb4d5 50%, #f472b6 100%)'
+                : 'linear-gradient(90deg, #ea580c 0%, #fb923c 50%, #ea580c 100%)',
+              boxShadow: isDark
+                ? '0 0 8px #fcb4d5, 0 0 16px rgba(252, 180, 213, 0.75)'
+                : '0 0 8px #f97316, 0 0 16px rgba(249, 115, 22, 0.75)'
+            }"
+          ></div>
+
+          <!-- Soft Core Diffusion Beam -->
+          <div
+            class="w-12 h-8 rounded-full -mt-1 pointer-events-none transition-all duration-300"
+            :style="{
+              background: isDark
+                ? 'radial-gradient(ellipse at center top, rgba(252, 180, 213, 0.45) 0%, rgba(252, 180, 213, 0.12) 50%, transparent 75%)'
+                : 'radial-gradient(ellipse at center top, rgba(249, 115, 22, 0.45) 0%, rgba(249, 115, 22, 0.12) 50%, transparent 75%)',
+              filter: 'blur(4px)'
+            }"
+          ></div>
+
+          <!-- Ultra-Soft Ambient Halo Bloom -->
+          <div
+            class="w-20 h-12 rounded-full -mt-7 pointer-events-none transition-all duration-300"
+            :style="{
+              background: isDark
+                ? 'radial-gradient(ellipse at center top, rgba(252, 180, 213, 0.28) 0%, rgba(252, 180, 213, 0.06) 45%, transparent 70%)'
+                : 'radial-gradient(ellipse at center top, rgba(249, 115, 22, 0.28) 0%, rgba(249, 115, 22, 0.06) 45%, transparent 70%)',
+              filter: 'blur(10px)'
+            }"
           ></div>
         </div>
 
