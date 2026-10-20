@@ -15,6 +15,14 @@ service_account*.json
 *.db-shm
 *.db-wal
 
+# Uploaded files (preserve official logos and structure)
+public/uploads/*
+!public/uploads/liquid_glass_logo.png
+!public/uploads/oco_logo.png
+!public/uploads/avatars/
+public/uploads/avatars/*
+!public/uploads/avatars/.gitkeep
+
 # Local deployment & diagnostic scripts with sensitive IPs/creds
 scripts/deploy_singbox.cjs
 scripts/parse_subscription.cjs
