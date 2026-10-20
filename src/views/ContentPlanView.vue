@@ -1,11 +1,11 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
     
-    <!-- Top Bar: Header and View Mode Switcher encased in Liquid Glass frame -->
-    <div class="cyber-glass rounded-3xl p-5 sm:p-7 mb-8 border border-white/80 dark:border-white/10 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <!-- Top Bar: Open, Breathable Page Header with Animated View Mode Switcher -->
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 md:mb-12">
       <div>
-        <div class="flex items-center space-x-3 mb-1">
-          <div class="w-9 h-9 rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 border border-orange-500/20 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5] shadow-xs">
+        <div class="flex items-center space-x-3 mb-1.5">
+          <div class="w-10 h-10 rounded-2xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 border border-orange-500/20 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5] shadow-xs">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
               <line x1="16" x2="16" y1="2" y2="6"/>
@@ -14,16 +14,16 @@
               <path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>
             </svg>
           </div>
-          <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Контент-план медиацентра
           </h1>
         </div>
-        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          Координация задач и мульти-проектов 5 цехов («Фото», «Дизайн», «Видео», «Моушен», «СММ») в режиме реального времени.
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+          Координация задач и мульти-проектов 5 цехов («Фото», «Дизайн», «Видео», «Моушен», «СММ») в реальном времени
         </p>
       </div>
 
-      <!-- Static Right Mode Switcher Panel (Apple Animated Liquid Glass Pill Dock) -->
+      <!-- Mode Switcher Dock -->
       <div class="shrink-0 sm:self-center">
         <AnimatedPills
           v-model="viewMode"
@@ -46,15 +46,15 @@
           </template>
         </AnimatedPills>
       </div>
-    </div>
+    </header>
 
     <!-- CALENDAR VIEW MODE: Multi-tasks with 1 to 5 flexible departments -->
-    <div v-if="viewMode === 'calendar'" key="calendar" class="space-y-6">
+    <div v-if="viewMode === 'calendar'" key="calendar" class="space-y-6 md:space-y-8">
       
-      <!-- Sub-Header Info & Actions -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl cyber-glass shadow-xs transition-colors">
+      <!-- Sub-Header Info & Actions (Pillar 01: Unboxed) -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-1">
         <div class="flex items-center space-x-2.5 text-xs">
-          <div class="w-6 h-6 rounded-lg bg-orange-50 dark:bg-rose-500/15 border border-orange-200 dark:border-rose-400/30 flex items-center justify-center text-orange-600 dark:text-rose-300 flex-shrink-0">
+          <div class="w-6 h-6 rounded-lg bg-orange-50 dark:bg-[#fcb4d5]/15 border border-orange-200 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5] flex-shrink-0">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
               <path d="M9 18h6"/>
@@ -62,7 +62,7 @@
             </svg>
           </div>
           <div>
-            <span class="text-orange-600 dark:text-rose-300 font-bold">Мульти-задачи в календаре: </span>
+            <span class="text-orange-600 dark:text-[#fcb4d5] font-bold">Мульти-задачи в календаре: </span>
             <span class="text-slate-600 dark:text-slate-400">Руководство (3-4 ур.) может создавать мульти-задачи с любым числом цехов (от 1 до 5) и редактировать их.</span>
           </div>
         </div>
@@ -70,7 +70,7 @@
         <div class="flex items-center space-x-3 shrink-0 self-start sm:self-auto">
           <button
             @click="fetchCalendarEvents"
-            class="text-xs text-orange-600 dark:text-rose-300 hover:text-orange-800 dark:hover:text-rose-200 font-mono flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-orange-50 dark:bg-rose-500/15 border border-orange-200 dark:border-rose-500/20 hover:border-orange-300 dark:hover:border-rose-400/40 transition-colors"
+            class="text-xs text-orange-600 dark:text-[#fcb4d5] hover:text-orange-800 dark:hover:text-white font-mono flex items-center space-x-1.5 px-3.5 py-2.5 min-h-[44px] rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/10 border border-orange-200 dark:border-[#fcb4d5]/20 hover:border-orange-300 dark:hover:border-[#fcb4d5]/40 transition-colors cursor-pointer"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
@@ -78,19 +78,19 @@
               <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
               <path d="M8 16H3v5"/>
             </svg>
-            <span>Обновить</span>
+            <span>Синхронизировать задачи</span>
           </button>
 
           <!-- Button in Calendar mode: Create Multi-task (Level 3-4 only) -->
           <button
             v-if="isLeader"
             @click="openCreateMultiTask"
-            class="btn-neon px-4 py-2 rounded-xl text-xs font-black text-white shadow-md flex items-center space-x-2"
+            class="btn-neon px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-black text-white shadow-md flex items-center space-x-2 active:scale-95 cursor-pointer"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
             </svg>
-            <span>Создать мульти-задачу</span>
+            <span>Создать мульти-проект (+1)</span>
           </button>
         </div>
       </div>
@@ -104,8 +104,8 @@
         @create-on-date="onCreateOnDate"
       />
 
-      <!-- Multi-tasks Section Header & Filter Toolbar (Encased in Liquid Glass) -->
-      <div class="p-4 sm:p-5 rounded-2xl cyber-glass border border-white/80 dark:border-white/10 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <!-- Multi-tasks Section Header & Filter Toolbar (Pillar 01: Unboxed) -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
         <div class="flex items-center space-x-2.5">
           <div class="w-2.5 h-2.5 rounded-full bg-orange-500 dark:bg-[#fcb4d5] animate-pulse"></div>
           <h2 class="text-sm sm:text-base font-black uppercase tracking-wider text-slate-800 dark:text-white">
@@ -126,7 +126,7 @@
           <!-- Toggle: Filter by selected date -->
           <label
             v-if="calendarSelectedDate"
-            class="flex items-center space-x-2 cursor-pointer px-3 py-1.5 rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 border border-orange-500/20 dark:border-[#fcb4d5]/30 text-orange-700 dark:text-[#fcb4d5] font-bold"
+            class="flex items-center space-x-2 cursor-pointer px-3.5 py-2 min-h-[44px] rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 border border-orange-500/20 dark:border-[#fcb4d5]/30 text-orange-700 dark:text-[#fcb4d5] font-bold"
           >
             <input
               type="checkbox"
@@ -237,27 +237,27 @@
               <button
                 v-if="isLeader && ev.id < 900000"
                 @click.stop="openEditMultiTask(ev)"
-                class="px-3 py-1.5 rounded-xl bg-orange-50 dark:bg-rose-500/20 hover:bg-orange-100 dark:hover:bg-rose-500/30 text-orange-700 dark:text-rose-200 border border-orange-200 dark:border-rose-400/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
+                class="px-3.5 py-2 min-h-[44px] rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/15 hover:bg-orange-100 dark:hover:bg-[#fcb4d5]/25 text-orange-700 dark:text-[#fcb4d5] border border-orange-200 dark:border-[#fcb4d5]/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
                 title="Редактировать мульти-задачу и подразделения"
               >
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
                   <path d="m15 5 4 4"/>
                 </svg>
-                <span>Редактировать</span>
+                <span>Редактировать проект</span>
               </button>
 
               <!-- Delete Multi-Task button (Level 3-4 only) -->
               <button
                 v-if="isLeader && ev.id < 900000"
                 @click.stop="deleteMultiTask(ev)"
-                class="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
+                class="px-3.5 py-2 min-h-[44px] rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
                 title="Удалить мульти-задачу и все её цеховые подзадачи"
               >
                 <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
                 </svg>
-                <span>Удалить</span>
+                <span>Удалить проект</span>
               </button>
             </div>
           </div>
@@ -371,12 +371,12 @@
           <button
             v-if="canCreateTasks"
             @click="showCreateModal = true"
-            class="btn-neon px-4 py-2 rounded-xl text-xs font-black text-white shadow-md flex items-center space-x-2 self-start sm:self-auto"
+            class="btn-neon px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-black text-white shadow-md flex items-center space-x-2 self-start sm:self-auto active:scale-95 cursor-pointer"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            <span>Создать задачу</span>
+            <span>Создать задачу (+1)</span>
           </button>
         </div>
 
@@ -403,7 +403,7 @@
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
               </svg>
-              <span>{{ isSelectionMode ? 'Завершить выбор' : 'Выбрать задачи' }}</span>
+              <span>{{ isSelectionMode ? 'Завершить выбор' : 'Выбрать несколько задач' }}</span>
             </button>
 
             <template v-if="isSelectionMode">
@@ -412,7 +412,7 @@
                 @click="toggleSelectAll"
                 class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 font-bold transition-colors cursor-pointer"
               >
-                {{ selectedTaskIds.size === tasks.length ? 'Снять выбор' : 'Выбрать все' }}
+                {{ selectedTaskIds.size === tasks.length ? 'Снять выделение' : `Выбрать все (${tasks.length})` }}
               </button>
             </template>
           </div>
@@ -535,6 +535,11 @@ import MultiTaskCalendar from '../components/MultiTaskCalendar.vue';
 import AnimatedPills from '../components/AnimatedPills.vue';
 
 const { user, isLeader, canCreateTasks, showNotification } = useAuthStore();
+
+const resetFilters = () => {
+  selectedDirection.value = '';
+  selectedStatus.value = '';
+};
 
 const viewMode = ref('calendar'); // 'calendar' or 'list'
 

@@ -1,30 +1,30 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
-    <!-- Header (Encased in Liquid Glass) -->
-    <div class="cyber-glass rounded-3xl p-5 sm:p-7 mb-8 border border-white/80 dark:border-white/10 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <!-- Top Header: Open, Breathable Typography -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 md:mb-14">
       <div>
-        <div class="flex items-center space-x-3 mb-1">
-          <div class="w-9 h-9 rounded-xl bg-red-500/10 dark:bg-red-500/20 border border-red-400/30 flex items-center justify-center text-red-600 dark:text-red-300 shadow-sm dark:shadow-lg dark:shadow-red-950/50">
+        <div class="flex items-center space-x-3 mb-1.5">
+          <div class="w-10 h-10 rounded-2xl bg-red-500/10 dark:bg-red-500/20 border border-red-400/30 flex items-center justify-center text-red-600 dark:text-red-300 shadow-xs">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
-          <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Панель Администрации и Хранителя (Уровни 4–5)
           </h1>
         </div>
-        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          Модерация заявок на регистрацию, управление уровнями доступа (1..5), правами создания задач и шлюзами ботов.
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+          Модерация заявок на регистрацию, управление уровнями доступа (1..5), правами создания задач и шлюзами ботов
         </p>
       </div>
 
       <router-link
         to="/content-plan"
-        class="px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-[#14141c] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/10 self-start md:self-auto flex items-center space-x-1.5 transition-colors shadow-xs"
+        class="min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-[#14141c] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/10 self-start md:self-auto flex items-center space-x-2 transition-colors shadow-xs cursor-pointer"
       >
         <span>← В контент-план</span>
       </router-link>
-    </div>
+    </header>
 
     <!-- TELEGRAM BOT CONFIGURATION CARD -->
     <div class="mb-10 cyber-glass rounded-3xl p-6 border border-slate-200 dark:border-white/10 shadow-xs relative overflow-hidden bg-white dark:bg-[#0D0E12]">
@@ -63,7 +63,7 @@
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
-            <span>{{ testingTg ? 'Отправка...' : 'Тест пуша в группу' }}</span>
+            <span>{{ testingTg ? 'Отправка...' : 'Тестовый пуш в группу' }}</span>
           </button>
         </div>
       </div>
@@ -113,7 +113,7 @@
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
               </svg>
-              <span>{{ savingTg ? '...' : 'Сохранить' }}</span>
+              <span>{{ savingTg ? 'Сохранение...' : 'Сохранить токен' }}</span>
             </button>
           </div>
         </div>
@@ -175,21 +175,21 @@
             <div class="flex items-center space-x-2">
               <button
                 @click="approveUser(u)"
-                class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-xl transition-all shadow-sm flex items-center justify-center space-x-1.5 active:scale-95"
+                class="flex-1 min-h-[44px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 px-3 rounded-xl transition-all shadow-sm flex items-center justify-center space-x-1.5 active:scale-95 cursor-pointer"
               >
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                <span>Одобрить</span>
+                <span>Одобрить заявку (+1)</span>
               </button>
               <button
                 @click="rejectUser(u.id)"
-                class="px-3 bg-red-50 dark:bg-red-600/20 hover:bg-red-100 dark:hover:bg-red-600/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/30 font-bold text-xs py-2 rounded-xl transition-all flex items-center justify-center space-x-1.5 active:scale-95"
+                class="min-h-[44px] px-3.5 bg-red-50 dark:bg-red-600/20 hover:bg-red-100 dark:hover:bg-red-600/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/30 font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center space-x-1.5 active:scale-95 cursor-pointer"
               >
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
-                <span>Отклонить</span>
+                <span>Отклонить заявку</span>
               </button>
             </div>
           </div>

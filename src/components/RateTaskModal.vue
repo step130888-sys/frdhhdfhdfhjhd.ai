@@ -1,7 +1,7 @@
 <template>
   <transition name="modal">
-    <div v-if="isOpen" class="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div class="cyber-glass rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-slate-200 dark:border-white/10 transition-colors bg-white dark:bg-[#0c0c10]">
+    <div v-if="isOpen" class="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4">
+      <div class="cyber-glass rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-7 md:p-8 shadow-2xl border border-slate-200 dark:border-white/10 transition-colors bg-white dark:bg-[#0c0c10]">
       <!-- Header -->
       <div class="flex items-center space-x-3 mb-2">
         <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shadow-xs">
@@ -60,16 +60,16 @@
           <button
             type="button"
             @click="$emit('close')"
-            class="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl"
+            class="px-4 py-2.5 min-h-[44px] text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl transition-colors cursor-pointer"
           >
             Отмена
           </button>
           <button
             type="submit"
             :disabled="loading"
-            class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-md transition-all disabled:opacity-40 flex items-center space-x-1.5 active:scale-95 cursor-pointer"
+            class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black shadow-md transition-all disabled:opacity-40 flex items-center space-x-1.5 active:scale-95 cursor-pointer"
           >
-            <span>{{ loading ? 'Сохранение...' : 'Принять работу' }}</span>
+            <span>{{ loading ? 'Сохранение...' : 'Принять и выставить оценку' }}</span>
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           </button>
         </div>

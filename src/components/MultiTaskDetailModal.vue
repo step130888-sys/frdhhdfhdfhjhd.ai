@@ -39,24 +39,24 @@
           <button
             v-if="isLeader && event.id < 900000"
             @click="$emit('edit', event)"
-            class="px-4 py-2 rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 hover:bg-orange-500/20 dark:hover:bg-[#fcb4d5]/25 text-orange-600 dark:text-[#fcb4d5] border border-orange-500/20 dark:border-[#fcb4d5]/30 text-xs font-bold transition-all flex items-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer"
+            class="px-4 py-2.5 min-h-[44px] rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 hover:bg-orange-500/20 dark:hover:bg-[#fcb4d5]/25 text-orange-600 dark:text-[#fcb4d5] border border-orange-500/20 dark:border-[#fcb4d5]/30 text-xs font-bold transition-all flex items-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
             </svg>
-            <span>Редактировать</span>
+            <span>Редактировать проект</span>
           </button>
 
           <button
             v-if="isLeader && event.id < 900000"
             @click="$emit('delete', event)"
-            class="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-xs font-bold transition-all flex items-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer"
+            class="px-3.5 py-2.5 min-h-[44px] rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-xs font-bold transition-all flex items-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer"
             title="Удалить мульти-задачу"
           >
             <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
             </svg>
-            <span>Удалить</span>
+            <span>Удалить проект</span>
           </button>
           
           <button

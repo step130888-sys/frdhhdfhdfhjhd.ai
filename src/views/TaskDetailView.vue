@@ -1,8 +1,26 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 md:px-6 py-8">
-    <div v-if="loading" class="text-center py-24 text-slate-400 text-xs">
-      <div class="animate-spin w-8 h-8 border-2 border-orange-500 dark:border-[#fcb4d5] border-t-transparent rounded-full mx-auto mb-3"></div>
-      Загрузка карточки задачи...
+    <div v-if="loading" class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-pulse">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="cyber-glass rounded-3xl p-6 md:p-8 border border-slate-200/80 dark:border-white/10 space-y-4">
+          <div class="h-6 bg-slate-200 dark:bg-white/10 rounded-xl w-1/4"></div>
+          <div class="h-8 bg-slate-200 dark:bg-white/10 rounded-xl w-3/4"></div>
+          <div class="h-24 bg-slate-100 dark:bg-white/5 rounded-2xl"></div>
+          <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-white/10">
+            <div class="h-12 bg-slate-100 dark:bg-white/5 rounded-xl"></div>
+            <div class="h-12 bg-slate-100 dark:bg-white/5 rounded-xl"></div>
+          </div>
+        </div>
+      </div>
+      <div class="lg:col-span-1">
+        <div class="cyber-glass rounded-3xl h-[560px] border border-slate-200/80 dark:border-white/10 p-6">
+          <div class="h-6 bg-slate-200 dark:bg-white/10 rounded-xl w-1/2 mb-6"></div>
+          <div class="space-y-3">
+            <div class="h-16 bg-slate-100 dark:bg-white/5 rounded-2xl w-3/4"></div>
+            <div class="h-16 bg-slate-100 dark:bg-white/5 rounded-2xl w-2/3 ml-auto"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div v-else-if="!task" class="text-center py-24 text-slate-400">
@@ -141,31 +159,31 @@
             <button
               v-if="task.status === 'open'"
               @click="takeTask"
-              class="btn-neon px-5 py-2.5 rounded-xl text-xs font-black text-white shadow-lg flex items-center space-x-2"
+              class="btn-neon px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black text-white shadow-lg flex items-center space-x-2 active:scale-95 cursor-pointer"
             >
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="5 3 19 12 5 21 5 3"/>
               </svg>
-              <span>Взять задачу в работу</span>
+              <span>Взять задачу в работу (+1)</span>
             </button>
 
             <!-- 2. Submit Work (if assignee and in_progress/rework) -->
             <button
               v-if="canSubmitWork"
               @click="showSubmitModal = true"
-              class="btn-cyan px-5 py-2.5 rounded-xl text-xs font-black text-white shadow-lg flex items-center space-x-2"
+              class="btn-cyan px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black text-white shadow-lg flex items-center space-x-2 active:scale-95 cursor-pointer"
             >
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              <span>Сдать выполненную работу</span>
+              <span>Сдать работу на проверку</span>
             </button>
 
             <!-- 3. Leadership: Accept & Rate (Level 3-4) -->
             <button
               v-if="isLeader && task.status !== 'done'"
               @click="showRateModal = true"
-              class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-xs active:scale-95"
+              class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-xs active:scale-95 cursor-pointer"
             >
               <svg class="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -177,25 +195,25 @@
             <button
               v-if="canRework"
               @click="showReworkModal = true"
-              class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-xs active:scale-95"
+              class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-xs active:scale-95 cursor-pointer"
             >
               <svg class="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
               </svg>
-              <span>Отправить на доработку</span>
+              <span>Вернуть задачу на доработку</span>
             </button>
 
             <!-- 5. Delete Task (Level 3-5 or Level 2 head of department) -->
             <button
               v-if="canDeleteTask"
               @click="deleteTask"
-              class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-xs active:scale-95 cursor-pointer ml-auto"
+              class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-xs active:scale-95 cursor-pointer ml-auto"
               title="Удалить задачу навсегда"
             >
               <svg class="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
               </svg>
-              <span>Удалить задачу</span>
+              <span>Удалить задачу безвозвратно</span>
             </button>
           </div>
         </div>

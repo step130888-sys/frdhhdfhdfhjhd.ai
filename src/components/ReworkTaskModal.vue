@@ -1,7 +1,7 @@
 <template>
   <transition name="modal">
-    <div v-if="isOpen" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div class="cyber-glass rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#101016]">
+    <div v-if="isOpen" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4">
+      <div class="cyber-glass rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-7 md:p-8 shadow-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#101016]">
       <!-- Header -->
       <div class="flex items-center space-x-3 mb-2">
         <div class="w-10 h-10 rounded-xl bg-rose-600/15 border border-rose-500/30 flex items-center justify-center text-rose-500 shadow-md">
@@ -35,20 +35,20 @@
           <button
             type="button"
             @click="$emit('close')"
-            class="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl transition-colors"
+            class="px-4 py-2.5 min-h-[44px] text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl transition-colors cursor-pointer"
           >
             Отмена
           </button>
           <button
             type="submit"
             :disabled="!reworkNotes.trim() || loading"
-            class="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-rose-600/30 transition-all disabled:opacity-40 flex items-center space-x-1.5 active:scale-95"
+            class="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black shadow-lg shadow-rose-600/30 transition-all disabled:opacity-40 flex items-center space-x-1.5 active:scale-95 cursor-pointer"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="1 4 1 10 7 10"/>
               <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
             </svg>
-            <span>{{ loading ? 'Отправка...' : 'Отправить на доработку' }}</span>
+            <span>{{ loading ? 'Отправка...' : 'Вернуть задачу на доработку' }}</span>
           </button>
         </div>
       </form>

@@ -1,8 +1,8 @@
 <template>
   <transition name="modal">
-    <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="close">
+    <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm" @click.self="close">
       <div
-        class="cyber-glass bg-white dark:bg-[#0E0F17] rounded-3xl w-full max-w-lg p-6 border border-slate-200 dark:border-white/10 shadow-2xl relative overflow-hidden"
+        class="cyber-glass bg-white dark:bg-[#0E0F17] rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 sm:p-7 md:p-8 border border-slate-200 dark:border-white/10 shadow-2xl relative"
       >
       <div class="flex items-center justify-between mb-5">
         <div class="flex items-center space-x-3">
@@ -65,16 +65,16 @@
           <button
             type="button"
             @click="close"
-            class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+            class="px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
           >
             Отмена
           </button>
           <button
             type="submit"
             :disabled="submitting || !title.trim() || !description.trim()"
-            class="btn-neon px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-md flex items-center space-x-2 disabled:opacity-40 cursor-pointer active:scale-95"
+            class="btn-neon px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-white shadow-md flex items-center space-x-2 disabled:opacity-40 cursor-pointer active:scale-95"
           >
-            <span>{{ submitting ? 'Отправка...' : 'Отправить на рассмотрение' }}</span>
+            <span>{{ submitting ? 'Отправка...' : 'Отправить идею на рассмотрение (+1)' }}</span>
           </button>
         </div>
       </form>

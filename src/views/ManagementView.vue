@@ -1,27 +1,27 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
-    <!-- Header (Encased in Liquid Glass) -->
-    <div class="cyber-glass rounded-3xl p-5 sm:p-7 mb-8 border border-white/80 dark:border-white/10 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <!-- Top Header: Open, Breathable Typography -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 md:mb-14">
       <div>
-        <div class="flex items-center space-x-3 mb-1">
-          <div class="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shadow-sm dark:shadow-lg dark:shadow-amber-950/50">
+        <div class="flex items-center space-x-3 mb-1.5">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shadow-xs">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
           </div>
-          <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Панель руководства медиацентра
           </h1>
         </div>
-        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          Сводная аналитика команды, аттестация работ (1..10), оперативное управление учетными записями и инспекция задач.
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+          Сводная аналитика команды, аттестация работ (1..10), оперативное управление учетными записями и инспекция задач
         </p>
       </div>
 
       <div class="flex items-center space-x-3">
         <router-link
           to="/content-plan"
-          class="px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-[#14141c] hover:bg-orange-50/30 dark:hover:bg-[#1a1a24] text-slate-700 dark:text-slate-300 hover:text-orange-600 dark:hover:text-[#fcb4d5] border border-slate-200 dark:border-white/10 transition-all flex items-center space-x-2 shadow-xs"
+          class="min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-[#14141c] hover:bg-orange-50/30 dark:hover:bg-[#1a1a24] text-slate-700 dark:text-slate-300 hover:text-orange-600 dark:hover:text-[#fcb4d5] border border-slate-200 dark:border-white/10 transition-all flex items-center space-x-2 shadow-xs cursor-pointer"
         >
           <svg class="w-4 h-4 text-orange-500 dark:text-[#fcb4d5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
@@ -29,10 +29,10 @@
             <line x1="8" x2="8" y1="2" y2="6"/>
             <line x1="3" x2="21" y1="10" y2="10"/>
           </svg>
-          <span>Контент-план</span>
+          <span>Перейти в контент-план</span>
         </router-link>
       </div>
-    </div>
+    </header>
 
     <!-- Review Queue Section -->
     <div class="mb-10">
@@ -212,8 +212,8 @@
         </div>
       </div>
 
-      <!-- Search, Filter & Sorting Controls (Requirement 6) -->
-      <div class="mb-4 p-3.5 rounded-2xl cyber-glass border border-slate-200/80 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+      <!-- Search, Filter & Sorting Controls (Pillar 01: Unboxed) -->
+      <div class="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <!-- Search Input -->
         <div class="relative flex-1">
           <svg class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

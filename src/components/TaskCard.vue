@@ -47,7 +47,7 @@
             v-if="canDelete"
             type="button"
             @click.stop="$emit('delete', task)"
-            class="p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-all cursor-pointer opacity-70 hover:opacity-100 active:scale-90"
+            class="p-1.5 min-w-[32px] min-h-[32px] rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-all cursor-pointer opacity-70 hover:opacity-100 active:scale-90 flex items-center justify-center"
             title="Удалить задачу"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -90,11 +90,11 @@
             @click.stop
             class="flex items-center space-x-2 truncate group/assignee"
           >
-            <div class="w-6 h-6 rounded-full overflow-hidden bg-orange-100 dark:bg-rose-500/20 border border-orange-200 dark:border-rose-400/30 flex-shrink-0 flex items-center justify-center text-[10px] font-bold group-hover/assignee:border-orange-400 dark:group-hover/assignee:border-rose-400 transition-colors">
+            <div class="w-6 h-6 rounded-full overflow-hidden bg-orange-100 dark:bg-[#fcb4d5]/20 border border-orange-200 dark:border-[#fcb4d5]/30 flex-shrink-0 flex items-center justify-center text-[10px] font-bold group-hover/assignee:border-orange-400 dark:group-hover/assignee:border-[#fcb4d5] transition-colors">
               <img v-if="task.assigned_to.avatar_url" :src="task.assigned_to.avatar_url" class="w-full h-full object-cover">
-              <span v-else class="text-orange-700 dark:text-rose-300">{{ task.assigned_to.name.charAt(0) }}</span>
+              <span v-else class="text-orange-700 dark:text-[#fcb4d5]">{{ task.assigned_to.name.charAt(0) }}</span>
             </div>
-            <span class="text-slate-700 dark:text-slate-300 font-medium truncate text-[11px] group-hover/assignee:text-orange-600 dark:group-hover/assignee:text-rose-300 transition-colors">{{ task.assigned_to.name }}</span>
+            <span class="text-slate-700 dark:text-slate-300 font-medium truncate text-[11px] group-hover/assignee:text-orange-600 dark:group-hover/assignee:text-[#fcb4d5] transition-colors">{{ task.assigned_to.name }}</span>
           </router-link>
         </div>
         <div v-else class="text-slate-400 dark:text-slate-500 text-[11px] font-medium italic flex items-center space-x-1">
@@ -106,7 +106,7 @@
       <!-- Deadline & Comments Count -->
       <div class="flex items-center space-x-2.5 flex-shrink-0">
         <!-- Result url indicator -->
-        <span v-if="task.result_url" class="text-orange-600 dark:text-rose-400" title="Материалы прикреплены">
+        <span v-if="task.result_url" class="text-orange-600 dark:text-[#fcb4d5]" title="Материалы прикреплены">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
           </svg>

@@ -145,16 +145,16 @@
           <button
             type="button"
             @click="$emit('close')"
-            class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+            class="px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
           >
             Отмена
           </button>
           <button
             type="submit"
             :disabled="loading || form.departments.length === 0"
-            class="btn-neon px-5 py-2.5 rounded-xl text-xs font-black shadow-xl flex items-center space-x-2 disabled:opacity-50"
+            class="btn-neon px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black shadow-xl flex items-center space-x-2 disabled:opacity-50 cursor-pointer active:scale-95"
           >
-            <span>{{ loading ? 'Сохранение...' : (isEditing ? 'Сохранить изменения' : 'Создать мульти-задачу') }}</span>
+            <span>{{ loading ? 'Сохранение...' : (isEditing ? 'Сохранить проект' : 'Создать мульти-проект (+1)') }}</span>
           </button>
         </div>
       </form>

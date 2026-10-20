@@ -1,7 +1,7 @@
 <template>
   <transition name="modal">
-    <div v-if="isOpen" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div class="cyber-glass rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-white/60 dark:border-white/10 backdrop-blur-3xl">
+    <div v-if="isOpen" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4">
+      <div class="cyber-glass rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5 sm:p-7 md:p-8 shadow-2xl border border-white/60 dark:border-white/10 backdrop-blur-3xl">
       <!-- Header -->
       <div class="flex items-center space-x-3 mb-2">
         <div class="w-9 h-9 rounded-xl bg-orange-500/10 dark:bg-kedrRose/15 border border-orange-500/20 dark:border-kedrRose/30 flex items-center justify-center text-orange-600 dark:text-kedrRose">
@@ -99,16 +99,16 @@
           <button
             type="button"
             @click="$emit('close')"
-            class="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl transition-colors"
+            class="px-4 py-2.5 min-h-[44px] text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl transition-colors cursor-pointer"
           >
             Отмена
           </button>
           <button
             type="submit"
             :disabled="loading"
-            class="btn-neon px-5 py-2.5 rounded-xl text-xs font-black text-white dark:text-[#121217] shadow-lg disabled:opacity-40 flex items-center space-x-1.5"
+            class="btn-neon px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black text-white dark:text-[#121217] shadow-lg disabled:opacity-40 flex items-center space-x-1.5 cursor-pointer active:scale-95"
           >
-            <span>{{ loading ? 'Создание...' : 'Опубликовать задачу' }}</span>
+            <span>{{ loading ? 'Создание...' : 'Опубликовать задачу (+1)' }}</span>
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>

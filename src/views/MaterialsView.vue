@@ -1,21 +1,21 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
     
-    <!-- Top Header & Upload Button encased in Liquid Glass frame -->
-    <div class="cyber-glass rounded-3xl p-5 sm:p-7 mb-8 border border-white/80 dark:border-white/10 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <!-- Top Header & Upload Button: Open, Breathable Typography -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 md:mb-12">
       <div>
-        <div class="flex items-center space-x-3 mb-1">
-          <div class="w-9 h-9 rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/15 border border-orange-200 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5] shadow-xs">
+        <div class="flex items-center space-x-3 mb-1.5">
+          <div class="w-10 h-10 rounded-2xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 border border-orange-500/20 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5] shadow-xs">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
             </svg>
           </div>
-          <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            База рабочих материалов
+          <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            База рабочих материалов <span class="text-lg font-mono font-normal text-slate-400">({{ materials.length }})</span>
           </h1>
         </div>
-        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          Официальные брендбуки, шаблоны, шрифты, заставки и исходники для всех 5 цехов медиацентра.
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+          Официальные брендбуки, шаблоны, шрифты, заставки и исходники для всех 5 цехов медиацентра
         </p>
       </div>
 
@@ -23,14 +23,14 @@
       <button
         v-if="isLeader"
         @click="showUploadModal = true"
-        class="btn-neon px-5 py-2.5 rounded-2xl text-xs font-bold shadow-md flex items-center justify-center space-x-2 flex-shrink-0"
+        class="min-h-[44px] btn-neon px-5 py-2.5 rounded-2xl text-xs font-bold shadow-md flex items-center justify-center space-x-2 flex-shrink-0 cursor-pointer active:scale-95"
       >
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        <span>Загрузить материал</span>
+        <span>Загрузить файл в медиатеку (+1)</span>
       </button>
-    </div>
+    </header>
 
     <!-- VK BOT INTEGRATION CARD FOR PARTICIPANTS (Requirement 10) -->
     <div class="mb-8 cyber-glass rounded-3xl p-5 md:p-6 border border-slate-200 dark:border-white/10 shadow-xs relative overflow-hidden">
@@ -94,7 +94,7 @@
               class="btn-cyan text-xs px-3.5 py-2 rounded-xl font-bold transition-all disabled:opacity-40 flex items-center space-x-1 cursor-pointer"
             >
               <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              <span>{{ savingVk ? '...' : 'Привязать' }}</span>
+              <span>{{ savingVk ? 'Сохранение...' : 'Привязать VK аккаунт' }}</span>
             </button>
             <button
               v-if="editingVk"
@@ -179,7 +179,7 @@
             <svg class="w-3.5 h-3.5 text-orange-600 dark:text-[#fcb4d5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            <span>Скачать / Открыть</span>
+            <span>Скачать оригинал</span>
             <span>↗</span>
           </a>
 
@@ -199,8 +199,8 @@
     </transition>
 
     <!-- Upload Modal (Leadership only) -->
-    <div v-if="showUploadModal" class="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div class="cyber-glass rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-white/60 dark:border-white/10 backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
+    <div v-if="showUploadModal" class="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4">
+      <div class="cyber-glass rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-7 md:p-8 shadow-2xl border border-white/60 dark:border-white/10 backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
         <div class="flex items-center space-x-3 mb-2">
           <div class="w-8 h-8 rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/15 border border-orange-200 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5]">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -282,16 +282,16 @@
             <button
               type="button"
               @click="showUploadModal = false"
-              class="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
+              class="px-4 py-2.5 min-h-[44px] text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl transition-colors cursor-pointer"
             >
               Отмена
             </button>
             <button
               type="submit"
               :disabled="uploading"
-              class="btn-neon px-5 py-2.5 rounded-xl text-xs font-black disabled:opacity-40"
+              class="btn-neon px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black disabled:opacity-40 cursor-pointer active:scale-95"
             >
-              {{ uploading ? 'Загрузка...' : 'Загрузить' }}
+              {{ uploading ? 'Загрузка...' : 'Загрузить в базу (+1)' }}
             </button>
           </div>
         </form>

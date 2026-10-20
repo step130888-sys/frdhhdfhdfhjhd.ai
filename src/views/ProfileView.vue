@@ -1,15 +1,25 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 md:px-6 py-8">
-    <div v-if="loading" class="text-center py-24 text-slate-400 text-xs">
-      <div class="animate-spin w-8 h-8 border-2 border-orange-500 dark:border-[#fcb4d5] border-t-transparent rounded-full mx-auto mb-3"></div>
-      Загрузка профиля...
+    <div v-if="loading" class="space-y-8 animate-pulse">
+      <div class="cyber-glass rounded-3xl p-6 md:p-8 border border-slate-200/80 dark:border-white/10">
+        <div class="flex items-center space-x-5">
+          <div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-slate-200 dark:bg-white/10"></div>
+          <div class="space-y-2 flex-1 max-w-sm">
+            <div class="h-6 bg-slate-200 dark:bg-white/10 rounded-xl w-3/4"></div>
+            <div class="h-4 bg-slate-200 dark:bg-white/10 rounded-xl w-1/2"></div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-200/80 dark:border-white/10">
+          <div v-for="i in 4" :key="i" class="h-20 rounded-2xl bg-slate-100 dark:bg-white/5"></div>
+        </div>
+      </div>
     </div>
 
     <div v-else-if="!profileUser" class="text-center py-24 text-slate-400">
       Пользователь не найден
     </div>
 
-    <div v-else class="space-y-8">
+    <div v-else class="space-y-10 md:space-y-14">
       
       <!-- Profile Header Card (Pure Apple Liquid Glass) -->
       <div class="cyber-glass rounded-3xl p-6 md:p-8 border border-slate-200/80 dark:border-white/10 shadow-sm relative overflow-hidden">
@@ -78,12 +88,12 @@
             <button
               v-if="canForceAssign"
               @click="showAssignModal = true"
-              class="btn-neon px-5 py-3 rounded-2xl text-xs font-black shadow-xl flex items-center space-x-2"
+              class="btn-neon px-5 py-3 min-h-[44px] rounded-2xl text-xs font-black shadow-xl flex items-center space-x-2 active:scale-95 cursor-pointer"
             >
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
               </svg>
-              <span>Принудительно выдать задачу</span>
+              <span>Назначить задачу участнику (+1)</span>
             </button>
           </div>
 
@@ -114,18 +124,27 @@
 
       </div>
 
-      <!-- Telegram & VK Bindings Card -->
-      <div v-if="isMe || isSuperAdmin" class="cyber-glass rounded-3xl p-6 border border-slate-200/80 dark:border-white/10">
-        <h3 class="text-xs font-black uppercase tracking-wider text-orange-600 dark:text-[#fcb4d5] mb-4 flex items-center space-x-2">
-          <svg class="w-4 h-4 text-orange-500 dark:text-[#fcb4d5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="18" height="12" x="3" y="8" rx="2"/><path d="M12 2v6"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/>
-          </svg>
-          <span>Привязка ботов Telegram и ВКонтакте</span>
-        </h3>
+      <!-- Telegram & VK Bindings Section (Pillar 01: Unboxed) -->
+      <div v-if="isMe || isSuperAdmin" class="space-y-4">
+        <div>
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-lg bg-orange-50 dark:bg-[#fcb4d5]/15 border border-orange-200 dark:border-[#fcb4d5]/30 flex items-center justify-center text-orange-600 dark:text-[#fcb4d5]">
+              <svg class="w-4 h-4 text-orange-500 dark:text-[#fcb4d5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="12" x="3" y="8" rx="2"/><path d="M12 2v6"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/>
+              </svg>
+            </div>
+            <h2 class="text-base font-extrabold text-slate-900 dark:text-white">
+              Привязка ботов Telegram и ВКонтакте
+            </h2>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Подключение уведомлений о новых задачах, дедлайнах и результатах проверки
+          </p>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <!-- Telegram Card (Available strictly for level >= 3) -->
-          <div v-if="profileUser?.access_level < 3" class="p-5 rounded-2xl bg-slate-100/80 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex flex-col justify-between">
+          <div v-if="profileUser?.access_level < 3" class="p-5 rounded-3xl bg-slate-100/80 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex flex-col justify-between">
             <div>
               <div class="flex items-center space-x-2 text-slate-500 dark:text-slate-400 mb-2.5">
                 <div class="w-6 h-6 rounded-lg bg-slate-200 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-slate-300">
@@ -145,7 +164,7 @@
             </div>
           </div>
 
-          <div v-else class="p-5 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10 flex flex-col justify-between">
+          <div v-else class="p-5 rounded-3xl bg-white/70 dark:bg-[#14141c] border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center space-x-2">
@@ -162,14 +181,14 @@
 
                 <span
                   v-if="profileUser?.telegram_id"
-                  class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center space-x-1"
+                  class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center space-x-1"
                 >
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                   <span>Привязан: {{ profileUser.telegram_id }}</span>
                 </span>
                 <span
                   v-else
-                  class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                  class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
                 >
                   Не привязан
                 </span>
@@ -179,7 +198,7 @@
               <button
                 type="button"
                 @click="oneClickBindTelegram"
-                class="w-full mb-3 py-2.5 px-3.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#229ED9] to-[#0088cc] hover:from-[#1b8ec5] hover:to-[#0077b3] shadow-xs shadow-[#229ED9]/30 flex items-center justify-center space-x-2 transition-all transform active:scale-95 cursor-pointer"
+                class="w-full mb-3 py-2.5 min-h-[44px] px-3.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#229ED9] to-[#0088cc] hover:from-[#1b8ec5] hover:to-[#0077b3] shadow-xs shadow-[#229ED9]/30 flex items-center justify-center space-x-2 transition-all transform active:scale-95 cursor-pointer"
               >
                 <svg class="w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 24 24">
                   <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.95l11.57-4.458c.538-.196 1.006.128.832.943z"/>
@@ -195,19 +214,19 @@
                   v-model="telegramId"
                   type="text"
                   placeholder="@username или ID"
-                  class="w-full text-xs px-3.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] font-mono"
+                  class="w-full text-xs px-3.5 py-2.5 min-h-[44px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] font-mono"
                 />
                 <button
                   @click="bindTelegram"
-                  class="btn-neon px-4 py-2 rounded-xl text-xs font-black flex-shrink-0"
+                  class="btn-neon px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-black flex-shrink-0 cursor-pointer active:scale-95"
                 >
-                  Сохранить
+                  Сохранить Telegram
                 </button>
                 <button
                   v-if="profileUser?.telegram_id"
                   @click="unbindTelegram"
                   title="Отвязать Telegram"
-                  class="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-xs flex-shrink-0 transition-colors"
+                  class="p-2.5 min-h-[44px] min-w-[44px] rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-xs flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer"
                 >
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
@@ -216,7 +235,7 @@
           </div>
 
           <!-- VK Card (Full Informative Redesign) -->
-          <div class="p-5 rounded-2xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10 flex flex-col justify-between">
+          <div class="p-5 rounded-3xl bg-white/70 dark:bg-[#14141c] border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between">
             <div>
               <!-- Header with Status -->
               <div class="flex items-center justify-between mb-3">
@@ -236,26 +255,26 @@
                   <a
                     :href="`https://vk.com/id${profileUser.vk_id}`"
                     target="_blank"
-                    class="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center space-x-1 hover:underline shadow-2xs"
+                    class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center space-x-1 hover:underline shadow-2xs"
                     title="Открыть страницу ВКонтакте"
                   >
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     <span>id{{ profileUser.vk_id }} ↗</span>
                   </a>
                 </div>
-                <div v-else class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                <div v-else class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                   Не привязан
                 </div>
               </div>
 
               <!-- Step-by-step guidance box -->
-              <div class="mb-3 p-3 rounded-xl bg-white/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-300 space-y-1.5">
+              <div class="mb-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-300 space-y-1.5">
                 <div class="text-[11px] font-bold text-slate-800 dark:text-white flex items-center space-x-1">
                   <span>📋 Инструкция по подключению:</span>
                 </div>
                 <ol class="text-[11px] space-y-1 text-slate-600 dark:text-slate-400 list-decimal list-inside leading-relaxed">
                   <li>Нажмите кнопку <strong>«Написать боту ВКонтакте»</strong> ниже и отправьте любое сообщение (например, «Привет»), чтобы бот получил право отправлять вам задачи и напоминания.</li>
-                  <li>Скопируйте ссылку на свой профиль VK (или ID/ник) в поле ввода и нажмите <strong>«Привязать»</strong>.</li>
+                  <li>Скопируйте ссылку на свой профиль VK (или ID/ник) в поле ввода и нажмите <strong>«Привязать профиль VK»</strong>.</li>
                 </ol>
               </div>
 
@@ -263,7 +282,7 @@
               <a
                 href="https://vk.ru/sovet_sstu"
                 target="_blank"
-                class="w-full mb-3 py-2 px-3 rounded-xl text-xs font-bold text-white bg-[#0077FF] hover:bg-[#0066dd] shadow-xs shadow-[#0077FF]/30 flex items-center justify-center space-x-2 transition-all active:scale-95"
+                class="w-full mb-3 py-2.5 min-h-[44px] px-3.5 rounded-xl text-xs font-bold text-white bg-[#0077FF] hover:bg-[#0066dd] shadow-xs shadow-[#0077FF]/30 flex items-center justify-center space-x-2 transition-all active:scale-95"
               >
                 <svg class="w-4 h-4 fill-current flex-shrink-0" viewBox="0 0 24 24">
                   <path d="M15.684 0H8.316C2.992 0 0 2.992 0 8.316v7.368C0 21.008 2.992 24 8.316 24h7.368C21.008 24 24 21.008 24 15.684V8.316C24 2.992 21.008 0 15.684 0zm3.692 17.123h-1.744c-.66 0-.862-.525-2.05-1.713-1.034-1.01-1.492-1.144-1.747-1.144-.356 0-.458.102-.458.593v1.543c0 .424-.135.68-1.254.68-1.847 0-3.898-1.118-5.34-3.197-2.17-3.07-2.763-5.39-2.763-5.864 0-.254.102-.491.593-.491h1.746c.44 0 .61.203.78.678.847 2.475 2.271 4.644 2.864 4.644.22 0 .322-.102.322-.661V10.41c-.068-1.186-.695-1.288-.695-1.712 0-.203.17-.407.44-.407h2.746c.373 0 .508.187.508.627v3.39c0 .373.17.508.271.508.22 0 .407-.135.814-.542 1.288-1.44 2.203-3.66 2.203-3.66.119-.254.34-.491.78-.491h1.746c.525 0 .644.271.525.644-.22 1.017-2.356 4.034-2.458 4.186-.237.356-.322.508 0 .932.237.339 1.017 1.017 1.542 1.627 1.017 1.153 1.814 2.119 2.017 2.78.203.66-.102.949-.576.949z"/>
@@ -279,19 +298,19 @@
                   v-model="vkId"
                   type="text"
                   placeholder="https://vk.com/id... или никнейм"
-                  class="w-full text-xs px-3.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] text-slate-900 dark:text-white focus:outline-none focus:border-[#0077FF] font-mono"
+                  class="w-full text-xs px-3.5 py-2.5 min-h-[44px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] text-slate-900 dark:text-white focus:outline-none focus:border-[#0077FF] font-mono"
                 />
                 <button
                   @click="bindVk"
-                  class="px-4 py-2 rounded-xl text-xs font-black text-white bg-[#0077FF] hover:bg-[#0066dd] flex-shrink-0 transition-colors cursor-pointer"
+                  class="px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-black text-white bg-[#0077FF] hover:bg-[#0066dd] flex-shrink-0 transition-colors cursor-pointer active:scale-95"
                 >
-                  {{ profileUser?.vk_id ? 'Обновить' : 'Привязать' }}
+                  {{ profileUser?.vk_id ? 'Обновить профиль VK' : 'Привязать профиль VK' }}
                 </button>
                 <button
                   v-if="profileUser?.vk_id"
                   @click="unbindVk"
                   title="Отвязать ВКонтакте"
-                  class="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-xs flex-shrink-0 transition-colors cursor-pointer"
+                  class="p-2.5 min-h-[44px] min-w-[44px] rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-xs flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer"
                 >
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
@@ -328,7 +347,7 @@
               ]"
               :key="st.value"
               @click="taskFilter = st.value"
-              class="px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all"
+              class="px-3 py-1.5 min-h-[36px] rounded-xl text-[11px] font-bold border transition-all cursor-pointer"
               :class="taskFilter === st.value
                 ? 'bg-gradient-to-r from-orange-500 to-amber-500 dark:from-[#fcb4d5] dark:to-[#f9a8d4] text-white dark:text-black shadow-xs'
                 : 'bg-white dark:bg-[#14141c] text-slate-700 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-orange-500 dark:hover:border-[#fcb4d5] hover:text-slate-900 dark:hover:text-slate-200'"
@@ -338,8 +357,27 @@
           </div>
         </div>
 
-        <div v-if="filteredTasks.length === 0" class="cyber-glass rounded-2xl p-8 text-center text-slate-400 text-xs bg-white dark:bg-[#0c0c10] border border-slate-200 dark:border-white/10">
-          Задач с выбранным статусом не найдено.
+        <div v-if="filteredTasks.length === 0" class="rounded-3xl p-10 text-center bg-white/40 dark:bg-[#0c0c10]/40 border border-slate-200 dark:border-white/10 flex flex-col items-center justify-center">
+          <div class="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-[#fcb4d5]/10 border border-orange-200 dark:border-[#fcb4d5]/20 flex items-center justify-center text-orange-500 dark:text-[#fcb4d5] mb-3">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+            </svg>
+          </div>
+          <h3 class="text-sm font-bold text-slate-800 dark:text-white mb-1">
+            Задач с выбранным статусом не найдено
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-4">
+            Попробуйте сбросить фильтр или взять новую свободную задачу из общего контент-плана
+          </p>
+          <button
+            v-if="taskFilter"
+            type="button"
+            @click="taskFilter = ''"
+            class="px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-orange-500/10 dark:bg-[#fcb4d5]/15 text-orange-600 dark:text-[#fcb4d5] border border-orange-500/20 dark:border-[#fcb4d5]/30 hover:bg-orange-500/20 transition-all cursor-pointer"
+          >
+            Показать все задачи участника
+          </button>
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

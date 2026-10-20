@@ -101,9 +101,9 @@
         <button
           type="submit"
           :disabled="loading"
-          class="w-full btn-neon py-3.5 rounded-xl text-xs font-black text-white shadow-xl flex items-center justify-center space-x-2 disabled:opacity-40 active:scale-95 transition-all"
+          class="w-full btn-neon py-3.5 min-h-[44px] rounded-xl text-xs font-black text-white shadow-xl flex items-center justify-center space-x-2 disabled:opacity-40 active:scale-95 transition-all cursor-pointer"
         >
-          <span>{{ loading ? 'Отправка заявки...' : 'Отправить заявку' }}</span>
+          <span>{{ loading ? 'Отправка...' : 'Отправить заявку на модерацию' }}</span>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
           </svg>
@@ -112,7 +112,7 @@
 
       <div class="mt-6 pt-5 border-t border-black/10 dark:border-white/10 text-center text-xs text-slate-500 dark:text-slate-400">
         Уже есть аккаунт?
-        <router-link to="/login" class="text-orange-600 dark:text-rose-300 hover:text-orange-700 dark:hover:text-rose-200 font-bold ml-1">
+        <router-link to="/login" class="text-orange-600 dark:text-[#fcb4d5] hover:text-orange-700 dark:hover:text-white font-bold ml-1">
           Войти
         </router-link>
       </div>
