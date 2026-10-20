@@ -7,7 +7,7 @@
     <canvas
       ref="asciiCanvas"
       class="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-700 z-0 will-change-transform transform-gpu"
-      :class="isAuthPage ? 'opacity-90 dark:opacity-95' : 'opacity-35 dark:opacity-45'"
+      :class="isAuthPage ? 'opacity-95 dark:opacity-95' : 'opacity-65 dark:opacity-45'"
       style="contain: strict; transform: translateZ(0);"
     ></canvas>
 
@@ -110,11 +110,11 @@ const GLYPHS_HIGH = ['+', '=', '~', '/', '\\', '§', '8', '3', '7', 'a', 'm', 'w
 const GLYPHS_MID  = [':', ';', '|', '!', 'i', 'r', 'c', 's', 'o', '°'];
 const GLYPHS_LOW  = ['·', '.', '~', '^', ':', ','];
 
-// Light theme glyph sets (airy, architectural, clean)
-const GLYPHS_LIGHT_PEAK = ['+', '×', '•', '·', 'o', 'x', '1', '0', '~'];
-const GLYPHS_LIGHT_HIGH = ['·', ':', '+', '~', '-', '=', '·'];
-const GLYPHS_LIGHT_MID  = ['·', ':', '~', '.', '·'];
-const GLYPHS_LIGHT_LOW  = ['·', '.'];
+// Light theme glyph sets (rich cyber symbols, numbers, and sharp runes)
+const GLYPHS_LIGHT_PEAK = ['✦', '1', '0', 'X', 'Z', 'K', 'E', 'D', 'R', '8', '3', '#', '+', '×'];
+const GLYPHS_LIGHT_HIGH = ['1', '0', 'x', '+', '=', '~', '8', '7', 'a', 'm', 'w', 'v', '§'];
+const GLYPHS_LIGHT_MID  = [':', ';', '|', '!', 'i', 'r', 'c', 's', 'o', '°', '1', '0', '+', '~'];
+const GLYPHS_LIGHT_LOW  = ['·', ':', '~', '^', '.', ','];
 
 const getToastClasses = (type) => {
   switch (type) {
@@ -202,7 +202,7 @@ onMounted(() => {
         }
 
         ctx.clearRect(0, 0, width, height);
-        ctx.font = '500 11px "JetBrains Mono", "SF Mono", "Fira Code", monospace';
+        ctx.font = isDark ? '500 11px "JetBrains Mono", "SF Mono", "Fira Code", monospace' : '600 12px "JetBrains Mono", "SF Mono", "Fira Code", monospace';
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
 
@@ -321,13 +321,13 @@ onMounted(() => {
         } else {
           const STYLES_LIGHT = [
             'transparent',
-            'rgba(148, 163, 184, 0.20)',
-            'rgba(148, 163, 184, 0.36)',
-            'rgba(100, 116, 139, 0.50)',
-            'rgba(71, 85, 105, 0.65)',
-            'rgba(99, 102, 241, 0.50)',
-            'rgba(217, 119, 6, 0.55)',
-            'rgba(30, 41, 59, 0.76)'
+            'rgba(100, 116, 139, 0.50)', // Level 1 - crisp slate dots & commas
+            'rgba(71, 85, 105, 0.75)',   // Level 2 - clear wave contours
+            'rgba(30, 41, 59, 0.88)',    // Level 3 - deep dark slate symbols & numbers
+            'rgba(217, 119, 6, 0.95)',   // Level 4 - rich golden amber
+            'rgba(234, 88, 12, 0.98)',   // Level 5 - vibrant brand sunset orange
+            'rgba(79, 70, 229, 0.96)',   // Level 6 - electric royal indigo / cobalt
+            'rgba(15, 23, 42, 1.0)'      // Level 7 - peak sharp midnight obsidian glyphs
           ];
 
           for (let b = 1; b < BUCKET_COUNT; b++) {

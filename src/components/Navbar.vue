@@ -204,92 +204,149 @@
       </div>
     </header>
 
-    <!-- Mobile Bottom Navigation Bar (Apple Liquid Glass Floating Dock) -->
+    <!-- Mobile Bottom Navigation Bar: Floating Obsidian Capsule Dock with Neon Spotlight -->
     <nav
       v-if="isLoggedIn"
-      class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/85 dark:bg-[#060608]/90 backdrop-blur-2xl border-t border-black/5 dark:border-white/10 px-3 py-2 shadow-[0_-8px_25px_rgba(0,0,0,0.06)] dark:shadow-[0_-10px_35px_rgba(0,0,0,0.85)] transition-colors"
+      class="md:hidden fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] left-3 right-3 max-w-md mx-auto z-40 select-none pointer-events-none"
+      aria-label="Мобильная навигация"
     >
-      <div class="flex items-center justify-around max-w-md mx-auto">
-        
+      <div
+        ref="mobileNavDockRef"
+        class="relative w-full h-[62px] rounded-full bg-[#0c0d14]/94 dark:bg-[#07080f]/96 backdrop-blur-2xl border border-white/10 dark:border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.55),0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.1)] overflow-hidden pointer-events-auto flex items-center justify-around px-1"
+      >
+        <!-- Sliding Neon Spotlight Indicator -->
+        <div
+          class="absolute top-0 left-0 pointer-events-none will-change-transform z-0 flex flex-col items-center"
+          :style="mobileIndicatorStyle"
+        >
+          <!-- Top Neon LED Slit (flush with top border) -->
+          <div class="relative w-9 h-[3px] rounded-full bg-gradient-to-r from-[#ff3823] via-[#ff6519] to-[#ff3823] shadow-[0_0_8px_#ff3b19,0_0_16px_#ff4d00,0_0_24px_rgba(255,61,25,0.85),0_1.5px_6px_rgba(255,101,25,0.95)]">
+            <!-- Bright Center Core Filament -->
+            <div class="absolute inset-x-2 top-0 h-[1.5px] rounded-full bg-white/80"></div>
+          </div>
+
+          <!-- Downward Conical Spotlight Beam Flare -->
+          <div
+            class="w-20 h-14 pointer-events-none -mt-[1px]"
+            style="background: radial-gradient(ellipse 65% 55% at 50% 0%, rgba(255, 61, 25, 0.48) 0%, rgba(255, 77, 25, 0.20) 45%, rgba(255, 77, 25, 0.05) 75%, transparent 100%); filter: blur(0.5px);"
+          ></div>
+        </div>
+
         <!-- Content Plan -->
         <router-link
           to="/content-plan"
-          class="flex flex-col items-center justify-center min-w-[50px] min-h-[44px] rounded-xl transition-all"
-          :class="$route.path === '/content-plan' ? 'text-orange-600 dark:text-rose-400 font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+          class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 group active:scale-95"
+          :class="$route.path === '/content-plan' ? 'text-[#ff5522]' : 'text-zinc-400 hover:text-zinc-200'"
+          title="Контент-план"
+          aria-label="Контент-план"
         >
-          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="w-6 h-6 transition-transform duration-200"
+            :class="$route.path === '/content-plan' ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,85,34,0.9)]' : 'group-hover:scale-105'"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
-          <span class="text-[10px] tracking-tight">План</span>
         </router-link>
 
         <!-- Materials -->
         <router-link
           to="/materials"
-          class="flex flex-col items-center justify-center min-w-[50px] min-h-[44px] rounded-xl transition-all"
-          :class="$route.path === '/materials' ? 'text-orange-600 dark:text-rose-400 font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+          class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 group active:scale-95"
+          :class="$route.path === '/materials' ? 'text-[#ff5522]' : 'text-zinc-400 hover:text-zinc-200'"
+          title="Материалы"
+          aria-label="Материалы"
         >
-          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="w-6 h-6 transition-transform duration-200"
+            :class="$route.path === '/materials' ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,85,34,0.9)]' : 'group-hover:scale-105'"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
           </svg>
-          <span class="text-[10px] tracking-tight">Файлы</span>
         </router-link>
 
         <!-- Leadership (Level 3-4) -->
         <router-link
           v-if="isLeader"
           to="/management"
-          class="flex flex-col items-center justify-center min-w-[50px] min-h-[44px] rounded-xl transition-all"
-          :class="$route.path === '/management' ? 'text-orange-600 dark:text-rose-400 font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+          class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 group active:scale-95"
+          :class="$route.path === '/management' ? 'text-[#ff5522]' : 'text-zinc-400 hover:text-zinc-200'"
+          title="Руководство"
+          aria-label="Руководство"
         >
-          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="w-6 h-6 transition-transform duration-200"
+            :class="$route.path === '/management' ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,85,34,0.9)]' : 'group-hover:scale-105'"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
           </svg>
-          <span class="text-[10px] tracking-tight">Штаб</span>
         </router-link>
 
         <!-- Superadmin (Level 4) -->
         <router-link
           v-if="isSuperAdmin"
           to="/admin/users"
-          class="flex flex-col items-center justify-center min-w-[50px] min-h-[44px] rounded-xl transition-all"
-          :class="$route.path === '/admin/users' ? 'text-orange-600 dark:text-rose-400 font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+          class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 group active:scale-95"
+          :class="$route.path.startsWith('/admin') ? 'text-[#ff5522]' : 'text-zinc-400 hover:text-zinc-200'"
+          :data-active="$route.path.startsWith('/admin')"
+          title="Модерация"
+          aria-label="Модерация"
         >
-          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="w-6 h-6 transition-transform duration-200"
+            :class="$route.path.startsWith('/admin') ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,85,34,0.9)]' : 'group-hover:scale-105'"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
           </svg>
-          <span class="text-[10px] tracking-tight">Админ</span>
         </router-link>
 
         <!-- Profile -->
         <router-link
           v-if="user"
-          :to="`/profile/${user.id}`"
-          class="flex flex-col items-center justify-center min-w-[50px] min-h-[44px] rounded-xl transition-all"
-          :class="$route.path.startsWith('/profile') ? 'text-orange-600 dark:text-rose-400 font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
+          :to="'/profile/' + user.id"
+          class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 group active:scale-95"
+          :class="$route.path.startsWith('/profile') ? 'text-[#ff5522]' : 'text-zinc-400 hover:text-zinc-200'"
+          :data-active="$route.path.startsWith('/profile')"
+          title="Мой профиль"
+          aria-label="Мой профиль"
         >
-          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="w-6 h-6 transition-transform duration-200"
+            :class="$route.path.startsWith('/profile') ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,85,34,0.9)]' : 'group-hover:scale-105'"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
           </svg>
-          <span class="text-[10px] tracking-tight">Профиль</span>
         </router-link>
 
         <!-- Mobile Theme Toggle -->
         <button
           @click="toggleTheme"
-          class="flex flex-col items-center justify-center min-w-[50px] min-h-[44px] rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer"
-          :title="isDark ? 'Светлая тема' : 'Тёмная тема'"
+          class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] text-zinc-400 hover:text-zinc-200 transition-all duration-200 group active:scale-95 cursor-pointer"
+          :title="isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'"
+          aria-label="Переключение темы"
         >
-          <svg v-if="isDark" class="w-5 h-5 mb-0.5 text-rose-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg v-if="isDark" class="w-6 h-6 text-amber-300 transition-transform duration-200 group-hover:rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="4"/>
             <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
           </svg>
-          <svg v-else class="w-5 h-5 mb-0.5 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg v-else class="w-6 h-6 text-orange-400 transition-transform duration-200 group-hover:-rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
           </svg>
-          <span class="text-[10px] tracking-tight">{{ isDark ? 'День' : 'Ночь' }}</span>
         </button>
-
       </div>
     </nav>
   </div>
@@ -315,6 +372,7 @@ const {
 
 const { isDark, toggleTheme } = useThemeStore();
 
+// --- Desktop Dock Indicator ---
 const navDockRef = ref(null);
 const navIndicatorStyle = ref({
   transform: 'translate3d(0, 0, 0)',
@@ -339,9 +397,9 @@ const updateNavIndicator = (animated = true) => {
     const height = activeLink.offsetHeight;
 
     navIndicatorStyle.value = {
-      transform: `translate3d(${left}px, ${top}px, 0)`,
-      width: `${width}px`,
-      height: `${height}px`,
+      transform: 'translate3d(' + left + 'px, ' + top + 'px, 0)',
+      width: width + 'px',
+      height: height + 'px',
       opacity: 1,
       transition: (animated && !isNavInitial)
         ? 'transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), width 0.36s cubic-bezier(0.22, 1, 0.36, 1), height 0.36s ease, opacity 0.22s ease'
@@ -354,25 +412,81 @@ const updateNavIndicator = (animated = true) => {
   });
 };
 
-watch(() => route.path, () => updateNavIndicator(true));
+// --- Mobile Dock Spotlight Indicator ---
+const mobileNavDockRef = ref(null);
+const mobileIndicatorStyle = ref({
+  transform: 'translate3d(0, 0, 0)',
+  width: '0px',
+  opacity: 0,
+  transition: 'none'
+});
+let isMobileNavInitial = true;
+
+const updateMobileIndicator = (animated = true) => {
+  nextTick(() => {
+    if (!mobileNavDockRef.value) return;
+    const activeLink = mobileNavDockRef.value.querySelector('[data-active="true"]') ||
+                       mobileNavDockRef.value.querySelector('.router-link-active') ||
+                       mobileNavDockRef.value.querySelector('.router-link-exact-active');
+    if (!activeLink) {
+      mobileIndicatorStyle.value = { ...mobileIndicatorStyle.value, opacity: 0 };
+      return;
+    }
+    const left = activeLink.offsetLeft;
+    const width = activeLink.offsetWidth;
+
+    mobileIndicatorStyle.value = {
+      transform: 'translate3d(' + left + 'px, 0, 0)',
+      width: width + 'px',
+      opacity: 1,
+      transition: (animated && !isMobileNavInitial)
+        ? 'transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease'
+        : 'none'
+    };
+
+    if (isMobileNavInitial) {
+      setTimeout(() => { isMobileNavInitial = false; }, 50);
+    }
+  });
+};
+
+watch([() => route.path, () => isLoggedIn.value, () => user.value], () => {
+  updateNavIndicator(true);
+  updateMobileIndicator(true);
+});
 
 let resizeObserver = null;
-const handleResize = () => updateNavIndicator(false);
+let mobileResizeObserver = null;
+const handleResize = () => {
+  updateNavIndicator(false);
+  updateMobileIndicator(false);
+};
 
 onMounted(() => {
   updateNavIndicator(false);
-  if (typeof ResizeObserver !== 'undefined' && navDockRef.value) {
-    resizeObserver = new ResizeObserver(() => updateNavIndicator(false));
-    resizeObserver.observe(navDockRef.value);
+  updateMobileIndicator(false);
+  if (typeof ResizeObserver !== 'undefined') {
+    if (navDockRef.value) {
+      resizeObserver = new ResizeObserver(() => updateNavIndicator(false));
+      resizeObserver.observe(navDockRef.value);
+    }
+    if (mobileNavDockRef.value) {
+      mobileResizeObserver = new ResizeObserver(() => updateMobileIndicator(false));
+      mobileResizeObserver.observe(mobileNavDockRef.value);
+    }
   }
   window.addEventListener('resize', handleResize);
   if (document.fonts?.ready) {
-    document.fonts.ready.then(() => updateNavIndicator(false));
+    document.fonts.ready.then(() => {
+      updateNavIndicator(false);
+      updateMobileIndicator(false);
+    });
   }
 });
 
 onBeforeUnmount(() => {
   if (resizeObserver) resizeObserver.disconnect();
+  if (mobileResizeObserver) mobileResizeObserver.disconnect();
   window.removeEventListener('resize', handleResize);
 });
 </script>

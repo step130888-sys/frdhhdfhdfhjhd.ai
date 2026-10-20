@@ -100,10 +100,16 @@ router.post('/auth/login', async (req, res) => {
     });
   }
 
-  res.cookie('user_id', String(user.id), {
+  const remember = req.body.remember_me !== false && req.body.remember_me !== 'false';
+  const cookieOptions = {
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  });
+    sameSite: 'lax',
+    path: '/'
+  };
+  if (remember) {
+    cookieOptions.maxAge = 90 * 24 * 60 * 60 * 1000;
+  }
+  res.cookie('user_id', String(user.id), cookieOptions);
 
   onlineTracker.touchUser(user);
 
