@@ -212,23 +212,20 @@
     >
       <div
         ref="mobileNavDockRef"
-        class="relative w-full h-[62px] rounded-full bg-[#0c0d14]/94 dark:bg-[#07080f]/96 backdrop-blur-2xl border border-white/10 dark:border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.55),0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.1)] overflow-hidden pointer-events-auto flex items-center justify-around px-1"
+        class="relative w-full h-[62px] rounded-full bg-[#0c0d14]/94 dark:bg-[#07080f]/96 backdrop-blur-2xl border border-black/30 dark:border-white/[0.05] shadow-[0_16px_40px_rgba(0,0,0,0.55),0_2px_8px_rgba(0,0,0,0.3)] overflow-hidden pointer-events-auto flex items-center justify-around px-1"
       >
         <!-- Sliding Neon Spotlight Indicator -->
         <div
           class="absolute top-0 left-0 pointer-events-none will-change-transform z-0 flex flex-col items-center"
           :style="mobileIndicatorStyle"
         >
-          <!-- Top Neon LED Slit (flush with top border) -->
-          <div class="relative w-9 h-[3px] rounded-full bg-gradient-to-r from-[#ff3823] via-[#ff6519] to-[#ff3823] shadow-[0_0_8px_#ff3b19,0_0_16px_#ff4d00,0_0_24px_rgba(255,61,25,0.85),0_1.5px_6px_rgba(255,101,25,0.95)]">
-            <!-- Bright Center Core Filament -->
-            <div class="absolute inset-x-2 top-0 h-[1.5px] rounded-full bg-white/80"></div>
-          </div>
+          <!-- Top Neon LED Slit: Vivid Orange in light theme, Soft Glowing Pink (#fcb4d5) in dark theme, NO white bar! -->
+          <div class="w-9 h-[3px] rounded-full bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500 dark:from-pink-500 dark:via-[#fcb4d5] dark:to-pink-400 shadow-[0_0_10px_#f97316,0_0_18px_#ea580c,0_0_26px_rgba(249,115,22,0.85)] dark:shadow-[0_0_10px_#fcb4d5,0_0_18px_#f472b6,0_0_26px_rgba(252,180,213,0.9)]"></div>
 
-          <!-- Downward Conical Spotlight Beam Flare -->
+          <!-- Downward Conical Spotlight Beam Flare: Orange in light, Pink in dark -->
           <div
-            class="w-20 h-14 pointer-events-none -mt-[1px]"
-            style="background: radial-gradient(ellipse 65% 55% at 50% 0%, rgba(255, 61, 25, 0.48) 0%, rgba(255, 77, 25, 0.20) 45%, rgba(255, 77, 25, 0.05) 75%, transparent 100%); filter: blur(0.5px);"
+            class="w-20 h-14 pointer-events-none -mt-[1px] bg-[radial-gradient(ellipse_65%_55%_at_50%_0%,rgba(249,115,22,0.50)_0%,rgba(249,115,22,0.18)_45%,rgba(249,115,22,0.04)_75%,transparent_100%)] dark:bg-[radial-gradient(ellipse_65%_55%_at_50%_0%,rgba(252,180,213,0.55)_0%,rgba(252,180,213,0.20)_45%,rgba(252,180,213,0.04)_75%,transparent_100%)]"
+            style="filter: blur(0.5px);"
           ></div>
         </div>
 
@@ -236,13 +233,13 @@
         <router-link
           to="/content-plan"
           class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 group active:scale-95"
-          :class="$route.path === '/content-plan' ? 'text-[#ff5522]' : 'text-zinc-400 hover:text-zinc-200'"
+          :class="$route.path === '/content-plan' ? 'text-orange-500 dark:text-[#fcb4d5]' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-200 dark:hover:text-zinc-300'"
           title="Контент-план"
           aria-label="Контент-план"
         >
           <svg
             class="w-6 h-6 transition-transform duration-200"
-            :class="$route.path === '/content-plan' ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,85,34,0.9)]' : 'group-hover:scale-105'"
+            :class="$route.path === '/content-plan' ? 'scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.9)] dark:drop-shadow-[0_0_8px_rgba(252,180,213,0.9)]' : 'group-hover:scale-105'"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -255,13 +252,13 @@
         <router-link
           to="/materials"
           class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 group active:scale-95"
-          :class="$route.path === '/materials' ? 'text-[#ff5522]' : 'text-zinc-400 hover:text-zinc-200'"
+          :class="$route.path === '/materials' ? 'text-orange-500 dark:text-[#fcb4d5]' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-200 dark:hover:text-zinc-300'"
           title="Материалы"
           aria-label="Материалы"
         >
           <svg
             class="w-6 h-6 transition-transform duration-200"
-            :class="$route.path === '/materials' ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,85,34,0.9)]' : 'group-hover:scale-105'"
+            :class="$route.path === '/materials' ? 'scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.9)] dark:drop-shadow-[0_0_8px_rgba(252,180,213,0.9)]' : 'group-hover:scale-105'"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -275,13 +272,13 @@
           v-if="isLeader"
           to="/management"
           class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 group active:scale-95"
-          :class="$route.path === '/management' ? 'text-[#ff5522]' : 'text-zinc-400 hover:text-zinc-200'"
+          :class="$route.path === '/management' ? 'text-orange-500 dark:text-[#fcb4d5]' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-200 dark:hover:text-zinc-300'"
           title="Руководство"
           aria-label="Руководство"
         >
           <svg
             class="w-6 h-6 transition-transform duration-200"
-            :class="$route.path === '/management' ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,85,34,0.9)]' : 'group-hover:scale-105'"
+            :class="$route.path === '/management' ? 'scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.9)] dark:drop-shadow-[0_0_8px_rgba(252,180,213,0.9)]' : 'group-hover:scale-105'"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -295,14 +292,14 @@
           v-if="isSuperAdmin"
           to="/admin/users"
           class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 group active:scale-95"
-          :class="$route.path.startsWith('/admin') ? 'text-[#ff5522]' : 'text-zinc-400 hover:text-zinc-200'"
+          :class="$route.path.startsWith('/admin') ? 'text-orange-500 dark:text-[#fcb4d5]' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-200 dark:hover:text-zinc-300'"
           :data-active="$route.path.startsWith('/admin')"
           title="Модерация"
           aria-label="Модерация"
         >
           <svg
             class="w-6 h-6 transition-transform duration-200"
-            :class="$route.path.startsWith('/admin') ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,85,34,0.9)]' : 'group-hover:scale-105'"
+            :class="$route.path.startsWith('/admin') ? 'scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.9)] dark:drop-shadow-[0_0_8px_rgba(252,180,213,0.9)]' : 'group-hover:scale-105'"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -316,14 +313,14 @@
           v-if="user"
           :to="'/profile/' + user.id"
           class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 group active:scale-95"
-          :class="$route.path.startsWith('/profile') ? 'text-[#ff5522]' : 'text-zinc-400 hover:text-zinc-200'"
+          :class="$route.path.startsWith('/profile') ? 'text-orange-500 dark:text-[#fcb4d5]' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-200 dark:hover:text-zinc-300'"
           :data-active="$route.path.startsWith('/profile')"
           title="Мой профиль"
           aria-label="Мой профиль"
         >
           <svg
             class="w-6 h-6 transition-transform duration-200"
-            :class="$route.path.startsWith('/profile') ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,85,34,0.9)]' : 'group-hover:scale-105'"
+            :class="$route.path.startsWith('/profile') ? 'scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.9)] dark:drop-shadow-[0_0_8px_rgba(252,180,213,0.9)]' : 'group-hover:scale-105'"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -335,15 +332,15 @@
         <!-- Mobile Theme Toggle -->
         <button
           @click="toggleTheme"
-          class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] text-zinc-400 hover:text-zinc-200 transition-all duration-200 group active:scale-95 cursor-pointer"
+          class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] text-zinc-400 dark:text-zinc-500 hover:text-zinc-200 dark:hover:text-zinc-300 transition-all duration-200 group active:scale-95 cursor-pointer"
           :title="isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'"
           aria-label="Переключение темы"
         >
-          <svg v-if="isDark" class="w-6 h-6 text-amber-300 transition-transform duration-200 group-hover:rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg v-if="isDark" class="w-6 h-6 text-[#fcb4d5] transition-transform duration-200 group-hover:rotate-45 drop-shadow-[0_0_6px_rgba(252,180,213,0.6)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="4"/>
             <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
           </svg>
-          <svg v-else class="w-6 h-6 text-orange-400 transition-transform duration-200 group-hover:-rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg v-else class="w-6 h-6 text-orange-500 transition-transform duration-200 group-hover:-rotate-12 drop-shadow-[0_0_6px_rgba(249,115,22,0.6)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
           </svg>
         </button>
