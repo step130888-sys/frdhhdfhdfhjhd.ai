@@ -22,3 +22,4 @@ scripts/check_remote_vpn.cjs
 scripts/test_remote_bot.cjs
 scripts/test_bot_live.cjs
 scripts/set_server_proxy.cjs
+scripts/update_vk_token_remote.cjs
