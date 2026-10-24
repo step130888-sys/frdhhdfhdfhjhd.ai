@@ -2,8 +2,8 @@
   <div>
     <!-- Top Navbar -->
     <header class="bg-white/70 dark:bg-[#07080B]/75 backdrop-blur-3xl border-b border-black/[0.05] dark:border-white/[0.08] sticky top-0 z-40 transition-colors shadow-2xs relative">
-      <!-- Secret Keeper Tab: docked in the far left edge of top bar -->
-      <div v-if="user && user.access_level >= 5" class="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-50">
+      <!-- Secret Keeper Tabs: docked in the far left edge of top bar (Гос-Долг USA + Логи Хранителя) -->
+      <div v-if="user && user.access_level >= 5" class="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-50 flex items-center gap-1.5">
         <router-link
           to="/secret-debt-usa"
           title="Секретный архив Хранителей: Гос-Долг USA"
@@ -11,8 +11,19 @@
           :class="$route.path === '/secret-debt-usa' ? 'ring-2 ring-pink-500' : ''"
         >
           <span class="text-xs">🇺🇸</span>
-          <span class="tracking-tight hidden xl:inline">Гос-Долг USA</span>
+          <span class="tracking-tight hidden 2xl:inline">Гос-Долг USA</span>
           <span class="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse"></span>
+        </router-link>
+
+        <router-link
+          to="/guardian-logs"
+          title="Журнал аудита изменений и защита от DDoS (Хранитель)"
+          class="px-2 py-1 rounded-xl border border-amber-400/50 dark:border-amber-400/50 bg-amber-100/90 dark:bg-[#1a1306]/95 hover:bg-amber-200 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 text-[10px] font-black flex items-center space-x-1 transition-[transform,background-color,border-color] duration-150 shadow-sm active:scale-[0.97] group backdrop-blur-md"
+          :class="$route.path === '/guardian-logs' ? 'ring-2 ring-amber-400' : ''"
+        >
+          <span class="text-xs">🛡️</span>
+          <span class="tracking-tight hidden xl:inline">Логи</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
         </router-link>
       </div>
 
@@ -60,13 +71,26 @@
           
           <router-link
             to="/materials"
-            class="relative z-10 px-4.5 py-2 sm:px-5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors duration-300 ease-out whitespace-nowrap flex items-center justify-center gap-2 min-w-[110px] active:scale-[0.97]"
+            class="relative z-10 px-4 py-2 sm:px-4.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors duration-300 ease-out whitespace-nowrap flex items-center justify-center gap-2 min-w-[105px] active:scale-[0.97]"
             :class="$route.path === '/materials' ? 'text-orange-600 dark:text-[#fcb4d5]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/[0.04]'"
           >
             <svg class="w-4 h-4 shrink-0" :class="$route.path === '/materials' ? 'text-orange-500 dark:text-[#fcb4d5]' : 'text-slate-400 dark:text-slate-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
             </svg>
             <span class="leading-none text-center">Материалы</span>
+          </router-link>
+
+          <!-- Team Chat for Levels 2, 3, 4, 5 -->
+          <router-link
+            v-if="hasTeamChat"
+            to="/team-chat"
+            class="relative z-10 px-4 py-2 sm:px-4.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors duration-300 ease-out whitespace-nowrap flex items-center justify-center gap-2 min-w-[105px] active:scale-[0.97]"
+            :class="$route.path === '/team-chat' ? 'text-orange-600 dark:text-[#fcb4d5]' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/[0.04]'"
+          >
+            <svg class="w-4 h-4 shrink-0" :class="$route.path === '/team-chat' ? 'text-orange-500 dark:text-[#fcb4d5]' : 'text-slate-400 dark:text-slate-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
+            </svg>
+            <span class="leading-none text-center">Чат</span>
           </router-link>
 
           <!-- My Profile for All Participants -->
@@ -174,7 +198,7 @@
                 </div>
                 <div class="text-[10px] font-medium leading-none mt-0.5"
                   :class="user.access_level >= 5 ? 'text-pink-700 dark:text-pink-300 font-bold' : 'text-slate-500 dark:text-slate-400'">
-                  {{ user.access_level >= 5 ? '👑 Хранитель • 5 ур.' : `${user.role} • ${user.access_level} ур.` }}
+                  {{ user.access_level >= 5 ? '👑 Хранитель • 5 ур.' : user.access_level === 1 ? `Стажёр (${user.role}) • 1 ур.` : `${user.role} • ${user.access_level} ур.` }}
                 </div>
               </div>
             </router-link>
@@ -293,6 +317,26 @@
           </svg>
         </router-link>
 
+        <!-- Team Chat (Levels 2-5) -->
+        <router-link
+          v-if="hasTeamChat"
+          to="/team-chat"
+          class="relative z-10 flex items-center justify-center flex-1 h-full min-h-[44px] transition-all duration-200 group active:scale-95"
+          :class="$route.path === '/team-chat' ? 'text-orange-500 dark:text-[#fcb4d5]' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-200 dark:hover:text-zinc-300'"
+          title="Общий чат команды"
+          aria-label="Общий чат команды"
+        >
+          <svg
+            class="w-6 h-6 transition-transform duration-200"
+            :class="$route.path === '/team-chat' ? 'scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.9)] dark:drop-shadow-[0_0_8px_rgba(252,180,213,0.9)]' : 'group-hover:scale-105'"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
+          </svg>
+        </router-link>
+
         <!-- Leadership (Level 3-4) -->
         <router-link
           v-if="isLeader"
@@ -386,6 +430,7 @@ const route = useRoute();
 const {
   user,
   isLoggedIn,
+  hasTeamChat,
   isLeader,
   isSuperAdmin,
   onlineCount,

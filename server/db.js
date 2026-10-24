@@ -198,7 +198,62 @@ async function initDb() {
   await run('CREATE INDEX IF NOT EXISTS idx_ideas_status ON ideas(status)');
   await run('CREATE INDEX IF NOT EXISTS idx_idea_comments_idea_id ON idea_comments(idea_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_guardian_notes_user_id ON guardian_notes(user_id)');
+  await run(`
+    CREATE TABLE IF NOT EXISTS team_chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      message TEXT,
+      photo_url VARCHAR(500),
+      image_url VARCHAR(500),
+      image_name VARCHAR(255),
+      reply_to_id INTEGER,
+      created_at DATETIME NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users (id)
+    )
+  `);
+
+  try {
+    await run('ALTER TABLE team_chat_messages ADD COLUMN photo_url VARCHAR(500)');
+  } catch (e) {}
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      username VARCHAR(100),
+      user_name VARCHAR(120),
+      user_level INTEGER,
+      action VARCHAR(80) NOT NULL,
+      category VARCHAR(50) NOT NULL DEFAULT 'system',
+      target VARCHAR(200),
+      details TEXT NOT NULL,
+      ip VARCHAR(64),
+      created_at DATETIME NOT NULL
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS connection_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ip VARCHAR(64) NOT NULL,
+      method VARCHAR(16) NOT NULL,
+      path VARCHAR(300) NOT NULL,
+      status_code INTEGER NOT NULL DEFAULT 200,
+      user_id INTEGER,
+      username VARCHAR(100),
+      user_agent VARCHAR(300),
+      event_type VARCHAR(50) NOT NULL DEFAULT 'request',
+      details TEXT,
+      created_at DATETIME NOT NULL
+    )
+  `);
+
   await run('CREATE INDEX IF NOT EXISTS idx_guardian_notes_pinned_created ON guardian_notes(is_pinned DESC, id DESC)');
+  await run('CREATE INDEX IF NOT EXISTS idx_team_chat_id ON team_chat_messages(id DESC)');
+  await run('CREATE INDEX IF NOT EXISTS idx_audit_logs_id ON audit_logs(id DESC)');
+  await run('CREATE INDEX IF NOT EXISTS idx_audit_logs_cat ON audit_logs(category, id DESC)');
+  await run('CREATE INDEX IF NOT EXISTS idx_connection_logs_id ON connection_logs(id DESC)');
+  await run('CREATE INDEX IF NOT EXISTS idx_connection_logs_ip ON connection_logs(ip, id DESC)');
 
   await ensureRootAdmin();
   // Demo accounts and sample tasks disabled per user cleanup request

@@ -13,13 +13,15 @@ export const useAuthStore = () => {
   const isLoggedIn = computed(() => Boolean(state.user && state.user.id));
   const isApproved = computed(() => Boolean(state.user && state.user.is_approved));
   const accessLevel = computed(() => (state.user ? state.user.access_level : 0));
+  const hasTeamChat = computed(() => accessLevel.value >= 2);
   const isLeader = computed(() => accessLevel.value >= 3);
   const isWorkshopHead = computed(() => accessLevel.value === 2);
   const isSuperAdmin = computed(() => accessLevel.value >= 4);
   const isGuardian = computed(() => accessLevel.value >= 5);
+  const isRootGuardian = computed(() => Boolean(state.user && state.user.username === 'admin'));
   const canCreateTasks = computed(() => {
     if (!state.user) return false;
-    return isLeader.value || isWorkshopHead.value || Boolean(state.user.can_create_tasks);
+    return isLeader.value || Boolean(state.user.can_create_tasks);
   });
 
   const showNotification = (message, type = 'success') => {
@@ -121,10 +123,12 @@ export const useAuthStore = () => {
     isLoggedIn,
     isApproved,
     accessLevel,
+    hasTeamChat,
     isLeader,
     isWorkshopHead,
     isSuperAdmin,
     isGuardian,
+    isRootGuardian,
     canCreateTasks,
     onlineUsers: computed(() => state.onlineUsers),
     onlineCount: computed(() => state.onlineCount),

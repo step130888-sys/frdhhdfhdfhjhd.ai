@@ -11,7 +11,7 @@ const telegramService = require('./telegramService');
 const vkService = require('./vkService');
 const gdriveService = require('./gdriveService');
 const telegramAuth = require('./telegramAuth');
-const { loginRateLimiter } = require('./security');
+const { loginRateLimiter, getClientIp, trafficMonitor, logConnectionEvent } = require('./security');
 const secretVault = require('./secretVault');
 
 // Multer storage configuration
@@ -57,6 +57,35 @@ function wrapUser(u) {
   };
 }
 
+async function logAudit(req, { action, category = 'system', target = '', details = '', overrideUser = null }) {
+  try {
+    const actor = overrideUser || req?.user || null;
+    const ip = getClientIp(req);
+    const nowIso = new Date().toISOString();
+    await db.run(
+      `INSERT INTO audit_logs (user_id, username, user_name, user_level, action, category, target, details, ip, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        actor?.id || null,
+        actor?.username || null,
+        actor?.name || 'Система',
+        actor?.access_level || 0,
+        String(action || 'Действие').slice(0, 80),
+        String(category || 'system').slice(0, 50),
+        String(target || '').slice(0, 200),
+        String(details || '').slice(0, 2000),
+        String(ip || '127.0.0.1').slice(0, 64),
+        nowIso
+      ]
+    );
+    if (Math.random() < 0.03) {
+      await db.run(`DELETE FROM audit_logs WHERE id NOT IN (SELECT id FROM audit_logs ORDER BY id DESC LIMIT 3000)`);
+    }
+  } catch (e) {
+    console.error('[AuditLog] Error:', e.message);
+  }
+}
+
 // --------------------------------------------------------------------------
 // 1. AUTHENTICATION & SESSION ROUTES
 // --------------------------------------------------------------------------
@@ -84,6 +113,14 @@ router.post('/auth/login', async (req, res) => {
   if (!user || !db.verifyPassword(password, user.password_hash)) {
     const failureResult = loginRateLimiter.recordFailure(req, username);
     const status = failureResult.locked ? 429 : 401;
+    await logAudit(req, {
+      action: failureResult.locked ? 'Блокировка входа (Brute-force)' : 'Неудачный вход',
+      category: 'auth',
+      target: `@${username}`,
+      details: failureResult.locked
+        ? `Аккаунт @${username} временно заблокирован на 15 мин после 3 неверных попыток ввода пароля`
+        : `Неверный логин или пароль при попытке входа под @${username}`
+    });
     return res.status(status).json({
       error: failureResult.message,
       locked: failureResult.locked,
@@ -92,7 +129,7 @@ router.post('/auth/login', async (req, res) => {
   }
 
   // Login successful: reset failed attempts counter
-  loginRateLimiter.recordSuccess(req, username);
+  loginRateLimiter.recordSuccess(req, username, user.id);
 
   if (!user.is_approved) {
     return res.status(403).json({
@@ -112,6 +149,13 @@ router.post('/auth/login', async (req, res) => {
   res.cookie('user_id', String(user.id), cookieOptions);
 
   onlineTracker.touchUser(user);
+  await logAudit(req, {
+    action: 'Вход в систему',
+    category: 'auth',
+    target: `@${user.username}`,
+    details: `Пользователь ${user.name} (@${user.username}, ${user.access_level} ур.) вошел в систему`,
+    overrideUser: user
+  });
 
   res.json({
     success: true,
@@ -144,6 +188,14 @@ router.post('/auth/register', async (req, res) => {
   );
 
   const newUser = await db.get('SELECT * FROM users WHERE id = ?', [result.lastID]);
+  await logAudit(req, {
+    action: 'Заявка на регистрацию',
+    category: 'auth',
+    target: `@${username}`,
+    details: `Создана заявка на регистрацию: ${name} (@${username}), цех: ${role} (1 ур. — Стажёр)`,
+    overrideUser: newUser
+  });
+
   try {
     await telegramService.notifyNewUserRegistered(newUser);
   } catch (e) {
@@ -156,7 +208,15 @@ router.post('/auth/register', async (req, res) => {
   });
 });
 
-router.post('/auth/logout', (req, res) => {
+router.post('/auth/logout', async (req, res) => {
+  if (req.user) {
+    await logAudit(req, {
+      action: 'Выход из системы',
+      category: 'auth',
+      target: `@${req.user.username}`,
+      details: `Пользователь ${req.user.name} (@${req.user.username}) вышел из системы`
+    });
+  }
   res.clearCookie('user_id');
   res.json({ success: true });
 });
@@ -422,20 +482,35 @@ router.post('/users/:id/update', requireAuth, async (req, res) => {
   const isLeaderOrAdmin = (req.user.access_level >= 3);
   const isAdmin = (req.user.access_level >= 4);
   const isGuardian = (req.user.access_level >= 5);
+  const isRootGuardian = (req.user.username === db.ROOT_ADMIN_USERNAME);
 
   if (!isSelf && !isLeaderOrAdmin) {
     return res.status(403).json({ error: 'Недостаточно прав для редактирования профиля.' });
   }
 
-  // Strict protection for Level 5 (Хранитель): NOBODY can edit or change password of level 5 except himself
-  if ((targetUser.access_level >= 5 || targetUser.username === db.ROOT_ADMIN_USERNAME) && !isSelf) {
+  // Strict protection for Root Guardian ('admin'): nobody can edit 'admin' except himself
+  if (targetUser.username === db.ROOT_ADMIN_USERNAME && !isSelf) {
     return res.status(403).json({
-      error: 'Доступ запрещен. Профиль и пароль пользователя 5 уровня (Хранитель) может изменять только он сам.'
+      error: 'Доступ запрещен. Системный профиль Root-Хранителя (admin) может изменять только он сам.'
     });
   }
 
-  // An administrator cannot change the password of another user with equal or higher access level
-  if (req.body.password && targetUser.access_level >= req.user.access_level && !isSelf) {
+  // Other Level 5 (Хранитель) users can ONLY be edited by themselves OR by Root Guardian ('admin')
+  if (targetUser.access_level >= 5 && !isSelf && !isRootGuardian) {
+    return res.status(403).json({
+      error: 'Доступ запрещен. Изменять профиль, пароль или статус другого Хранителя может только Root-Хранитель (admin).'
+    });
+  }
+
+  // Non-root administrators cannot edit a user with higher access level
+  if (targetUser.access_level > req.user.access_level && !isSelf && !isRootGuardian) {
+    return res.status(403).json({
+      error: 'Вы не можете редактировать профиль пользователя с более высоким уровнем доступа.'
+    });
+  }
+
+  // Non-root administrators cannot change the password of another user with equal or higher access level
+  if (req.body.password && targetUser.access_level >= req.user.access_level && !isSelf && !isRootGuardian) {
     return res.status(403).json({
       error: 'Вы не можете изменять пароль пользователя с равным или более высоким уровнем доступа.'
     });
@@ -480,6 +555,11 @@ router.post('/users/:id/update', requireAuth, async (req, res) => {
     }
   }
 
+  // If Root Guardian demoted another Guardian from level 5 and role was still 'Хранитель', adjust role automatically
+  if (targetUser.access_level >= 5 && newLevel < 5 && newRole === 'Хранитель') {
+    newRole = newLevel >= 3 ? 'Руководство' : 'Фото';
+  }
+
   if (isLeaderOrAdmin && canCreateTasks !== null) {
     newCanCreate = canCreateTasks;
   }
@@ -490,17 +570,46 @@ router.post('/users/:id/update', requireAuth, async (req, res) => {
   );
   invalidateUserCache(profileId);
 
+  const changesList = [];
+  if (newName !== targetUser.name) changesList.push(`ФИО: «${targetUser.name}» → «${newName}»`);
+  if (newUsername !== targetUser.username) changesList.push(`Логин: @${targetUser.username} → @${newUsername}`);
+  if (newRole !== targetUser.role) changesList.push(`Цех: ${targetUser.role} → ${newRole}`);
+  if (newLevel !== targetUser.access_level) {
+    if (targetUser.access_level >= 5 && newLevel < 5) {
+      changesList.push(`Снят статус Хранителя (уровень: ${targetUser.access_level} → ${newLevel})`);
+    } else {
+      changesList.push(`Уровень доступа: ${targetUser.access_level} → ${newLevel}`);
+    }
+  }
+  if (password) changesList.push('Изменён пароль');
+  if (Boolean(newCanCreate) !== Boolean(targetUser.can_create_tasks)) {
+    changesList.push(`Создание задач: ${newCanCreate ? 'Вкл' : 'Выкл'}`);
+  }
+
+  await logAudit(req, {
+    action: password ? 'Смена пароля / Редактирование профиля' : 'Редактирование профиля',
+    category: 'users',
+    target: `${newName} (@${newUsername})`,
+    details: changesList.length > 0 ? changesList.join('; ') : `Обновлены данные профиля @${newUsername}`
+  });
+
   const updated = await db.get('SELECT * FROM users WHERE id = ?', [profileId]);
   res.json({ success: true, user: wrapUser(updated), message: `Данные профиля «${newName}» успешно сохранены!` });
 });
 
 router.post('/users/:id/avatar', requireAuth, upload.single('avatar_file'), async (req, res) => {
   const profileId = parseInt(req.params.id, 10);
+  const targetUser = await db.get('SELECT * FROM users WHERE id = ?', [profileId]);
   const isSelf = (req.user.id === profileId);
   const isAdmin = (req.user.access_level >= 4);
+  const isRootGuardian = (req.user.username === db.ROOT_ADMIN_USERNAME);
 
   if (!isSelf && !isAdmin) {
     return res.status(403).json({ error: 'Недостаточно прав. Менять фото чужого профиля может только Администратор 4-го уровня.' });
+  }
+
+  if (targetUser && targetUser.access_level >= 5 && !isSelf && !isRootGuardian) {
+    return res.status(403).json({ error: 'Менять аватар другого Хранителя может только Root-Хранитель (admin).' });
   }
 
   if (!req.file) {
@@ -510,6 +619,13 @@ router.post('/users/:id/avatar', requireAuth, upload.single('avatar_file'), asyn
   const avatarUrl = '/uploads/' + req.file.filename;
   await db.run('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, profileId]);
   invalidateUserCache(profileId);
+
+  await logAudit(req, {
+    action: 'Смена аватара',
+    category: 'users',
+    target: targetUser ? `${targetUser.name} (@${targetUser.username})` : `ID ${profileId}`,
+    details: `Обновлено фото профиля`
+  });
 
   res.json({ success: true, avatar_url: avatarUrl });
 });
@@ -546,6 +662,13 @@ router.post('/users/:id/bind-telegram', requireAuth, async (req, res) => {
     telegramService.removeTelegramBinding(profileId);
   }
 
+  await logAudit(req, {
+    action: telegramId ? 'Привязка Telegram' : 'Отвязка Telegram',
+    category: 'users',
+    target: `${targetUser.name} (@${targetUser.username})`,
+    details: telegramId ? `Привязан Telegram: ${telegramId}` : 'Telegram отвязан от профиля'
+  });
+
   res.json({ success: true, telegram_id: telegramId });
 });
 
@@ -578,6 +701,13 @@ router.post('/users/:id/bind-vk', requireAuth, async (req, res) => {
     vkService.removeVkBinding(profileId);
   }
 
+  await logAudit(req, {
+    action: vkId ? 'Привязка ВКонтакте' : 'Отвязка ВКонтакте',
+    category: 'users',
+    target: updatedUser ? `${updatedUser.name} (@${updatedUser.username})` : `ID ${profileId}`,
+    details: vkId ? `Привязан профиль VK: id${vkId}` : 'Профиль VK отвязан'
+  });
+
   res.json({ success: true, vk_id: vkId });
 });
 
@@ -593,11 +723,11 @@ router.post('/users/:id/assign-task', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Пользователь не найден.' });
   }
 
-  if (req.user.access_level < 2 && !req.user.can_create_tasks) {
-    return res.status(403).json({ error: 'Недостаточно прав. Принудительно выдавать задачи могут руководители, главы цехов или уполномоченные участники.' });
+  if (req.user.access_level < 3 && !req.user.can_create_tasks) {
+    return res.status(403).json({ error: 'Недостаточно прав. Принудительно выдавать задачи могут руководители (3–5 ур.) или уполномоченные участники.' });
   }
 
-  if (req.user.access_level <= 2 && targetUser.role !== req.user.role) {
+  if (req.user.access_level < 3 && targetUser.role !== req.user.role) {
     return res.status(403).json({ error: `Вы можете выдавать задачи только участникам своего направления (${req.user.role}).` });
   }
 
@@ -634,6 +764,13 @@ router.post('/users/:id/assign-task', requireAuth, async (req, res) => {
   try {
     await telegramService.notifyTaskForceAssigned(task, targetUser, req.user, comment);
   } catch (e) {}
+
+  await logAudit(req, {
+    action: 'Принудительная выдача задачи',
+    category: 'tasks',
+    target: `Задача #${task.id} «${task.title}»`,
+    details: `Назначена сотруднику ${targetUser.name} (@${targetUser.username})${comment ? `. Указание: ${comment}` : ''}`
+  });
 
   res.json({
     success: true,
@@ -790,6 +927,13 @@ router.post('/tasks/multi', requireAuth, requireLevel(3, 'Создавать м�
     });
   }
 
+  await logAudit(req, {
+    action: 'Создание мульти-задачи',
+    category: 'tasks',
+    target: `Мульти-задача #${parentId} «${title}»`,
+    details: `Дата: ${eventDate}. Отделы: ${departments.join(', ')}`
+  });
+
   res.json({
     success: true,
     event_id: parentId,
@@ -863,6 +1007,14 @@ router.post('/tasks/multi/:id/update', requireAuth, requireLevel(3, 'Редак�
   }
 
   const updatedSubtasks = await db.all('SELECT * FROM tasks WHERE parent_id = ?', [multiId]);
+
+  await logAudit(req, {
+    action: 'Редактирование мульти-задачи',
+    category: 'tasks',
+    target: `Мульти-задача #${multiId} «${title}»`,
+    details: `Дата: ${eventDate}, дедлайн: ${deadline}`
+  });
+
   res.json({
     success: true,
     message: `Мульти-задача «${title}» успешно обновлена!`,
@@ -904,6 +1056,13 @@ router.delete('/tasks/multi/:id', requireAuth, requireLevel(3, 'Удалять �
   // Delete parent task
   await db.run('DELETE FROM tasks WHERE id = ?', [multiId]);
 
+  await logAudit(req, {
+    action: 'Удаление мульти-задачи',
+    category: 'tasks',
+    target: `Мульти-задача #${multiId} «${parentTask.title}»`,
+    details: `Удалена мульти-задача и ${subtasks.length} подзадач`
+  });
+
   res.json({
     success: true,
     message: `Мульти-задача «${parentTask.title}» и связанные с ней цеховые подзадачи (${subtasks.length}) успешно удалены.`
@@ -924,13 +1083,13 @@ router.delete('/tasks/:id', requireAuth, async (req, res) => {
 
   // Permission check:
   // Level 3-5: can delete any task
-  // Level 2: can delete tasks in their department
+  // Authorized member (can_create_tasks): can delete tasks in their own department
   const isLeaderOrAdmin = req.user.access_level >= 3;
-  const isHeadOfWorkshop = req.user.access_level === 2 && req.user.role === task.direction;
+  const isAuthorizedMember = Boolean(req.user.can_create_tasks) && req.user.role === task.direction;
 
-  if (!isLeaderOrAdmin && !isHeadOfWorkshop) {
+  if (!isLeaderOrAdmin && !isAuthorizedMember) {
     return res.status(403).json({
-      error: 'Удалять задачи могут только руководители (3-5 ур.) или глава соответствующего цеха.'
+      error: 'Удалять задачи могут только руководители (3–5 ур.) или участники с правом управления задачами в своем цехе.'
     });
   }
 
@@ -960,6 +1119,13 @@ router.delete('/tasks/:id', requireAuth, async (req, res) => {
     invalidateUserCache(task.assigned_to_id);
   }
 
+  await logAudit(req, {
+    action: 'Удаление задачи',
+    category: 'tasks',
+    target: `Задача #${taskId} «${task.title}»`,
+    details: `Цех: ${task.direction}, статус: ${task.status}`
+  });
+
   res.json({
     success: true,
     message: `Задача #${taskId} «${task.title}» успешно удалена.`
@@ -986,7 +1152,7 @@ router.post('/tasks/bulk-delete', requireAuth, async (req, res) => {
     const task = await db.get('SELECT * FROM tasks WHERE id = ?', [tid]);
     if (!task) continue;
 
-    const canDelete = isLeaderOrAdmin || (req.user.access_level === 2 && req.user.role === task.direction);
+    const canDelete = isLeaderOrAdmin || (Boolean(req.user.can_create_tasks) && req.user.role === task.direction);
     if (!canDelete) continue;
 
     // Delete comments
@@ -1018,6 +1184,13 @@ router.post('/tasks/bulk-delete', requireAuth, async (req, res) => {
     `, [uid, uid, uid]);
     invalidateUserCache(uid);
   }
+
+  await logAudit(req, {
+    action: 'Массовое удаление задач',
+    category: 'tasks',
+    target: `${deletedCount} задач`,
+    details: `Удалены задачи ID: ${taskIds.join(', ')}`
+  });
 
   res.json({
     success: true,
@@ -1111,11 +1284,10 @@ router.get('/tasks', requireAuth, async (req, res) => {
 
 router.post('/tasks', requireAuth, async (req, res) => {
   const isLeader = (req.user.access_level >= 3);
-  const isDirectLead = (req.user.access_level === 2);
   const canCreate = Boolean(req.user.can_create_tasks);
 
-  if (!isLeader && !isDirectLead && !canCreate) {
-    return res.status(403).json({ error: 'Недостаточно прав. Создавать задачи могут главы цехов (ур. 2), руководство (ур. 3-4) или участники с правом создания задач.' });
+  if (!isLeader && !canCreate) {
+    return res.status(403).json({ error: 'Недостаточно прав. Создавать задачи могут руководители (ур. 3–5) или участники с правом создания задач.' });
   }
 
   const title = (req.body.title || '').trim();
@@ -1159,6 +1331,13 @@ router.post('/tasks', requireAuth, async (req, res) => {
       } catch (e) {}
     }
   }
+
+  await logAudit(req, {
+    action: 'Создание задачи',
+    category: 'tasks',
+    target: `Задача #${newTask.id} «${title}»`,
+    details: `Цех: ${direction}${deadline ? `, дедлайн: ${deadline}` : ''}`
+  });
 
   res.json({ success: true, task: newTask });
 });
@@ -1246,6 +1425,13 @@ router.post('/tasks/:id/take', requireAuth, async (req, res) => {
     [taskId, req.user.id, `🚀 Участник ${req.user.name} (${req.user.role}) взял задачу в работу.`, nowIso]
   );
 
+  await logAudit(req, {
+    action: 'Взятие задачи в работу',
+    category: 'tasks',
+    target: `Задача #${taskId} «${task.title}»`,
+    details: `Участник ${req.user.name} (${req.user.role}) взял задачу`
+  });
+
   res.json({ success: true, message: 'Задача успешно взята в работу!' });
 });
 
@@ -1306,6 +1492,13 @@ router.post('/tasks/:id/submit', requireAuth, upload.single('file_upload'), asyn
     await vkService.notifyTaskSubmitted(updatedTask, req.user);
   } catch (e) {}
 
+  await logAudit(req, {
+    action: 'Сдача задачи на проверку',
+    category: 'tasks',
+    target: `Задача #${taskId} «${task.title}»`,
+    details: fileLink ? `Ссылка: ${fileLink}` : 'Отправлено на проверку'
+  });
+
   res.json({ success: true, message: 'Работа успешно отправлена на проверку руководству!' });
 });
 
@@ -1349,10 +1542,17 @@ router.post('/tasks/:id/rate', requireAuth, requireLevel(3, 'Оценивать 
     } catch (e) {}
   }
 
+  await logAudit(req, {
+    action: 'Оценка задачи',
+    category: 'tasks',
+    target: `Задача #${taskId} «${task.title}»`,
+    details: `Оценка: ${score}/10${assignee ? ` для ${assignee.name}` : ''}`
+  });
+
   res.json({ success: true, message: `Задача #${taskId} успешно принята с оценкой ${score}/10!` });
 });
 
-router.post('/tasks/:id/rework', requireAuth, requireLevel(2, 'Возвращать задачи на доработку могут главы цехов и руководство (2-4 уровень).'), async (req, res) => {
+router.post('/tasks/:id/rework', requireAuth, requireLevel(3, 'Возвращать задачи на доработку может только руководство (3–5 уровень).'), async (req, res) => {
   const taskId = parseInt(req.params.id, 10);
   const reworkNotes = (req.body.rework_notes || '').trim();
 
@@ -1363,10 +1563,6 @@ router.post('/tasks/:id/rework', requireAuth, requireLevel(2, 'Возвраща�
   const task = await db.get('SELECT * FROM tasks WHERE id = ?', [taskId]);
   if (!task) {
     return res.status(404).json({ error: 'Задача не найдена.' });
-  }
-
-  if (req.user.access_level === 2 && req.user.role !== task.direction) {
-    return res.status(403).json({ error: `Вы можете отправлять на доработку только задачи своего цеха (${req.user.role}).` });
   }
 
   await db.run(
@@ -1392,6 +1588,13 @@ router.post('/tasks/:id/rework', requireAuth, requireLevel(2, 'Возвраща�
       await vkService.notifyTaskRework(updatedTask, assignee, req.user, reworkNotes);
     } catch (e) {}
   }
+
+  await logAudit(req, {
+    action: 'Возврат задачи на доработку',
+    category: 'tasks',
+    target: `Задача #${taskId} «${task.title}»`,
+    details: `Замечания: ${reworkNotes}`
+  });
 
   res.json({ success: true, message: 'Задача возвращена на доработку исполнителю.' });
 });
@@ -1577,12 +1780,29 @@ router.post('/materials', requireAuth, requireLevel(3, 'Загружать ма�
   );
 
   const created = await db.get('SELECT * FROM work_materials WHERE id = ?', [result.lastID]);
+
+  await logAudit(req, {
+    action: 'Добавление материала',
+    category: 'materials',
+    target: `Материал #${result.lastID} «${title}»`,
+    details: `Цех: ${direction}, категория: ${category}`
+  });
+
   res.json({ success: true, material: created });
 });
 
 router.delete('/materials/:id', requireAuth, requireLevel(3, 'Удалять материалы могут только руководители (3 и 4 уровень).'), async (req, res) => {
   const id = parseInt(req.params.id, 10);
+  const existing = await db.get('SELECT * FROM work_materials WHERE id = ?', [id]);
   await db.run('DELETE FROM work_materials WHERE id = ?', [id]);
+
+  await logAudit(req, {
+    action: 'Удаление материала',
+    category: 'materials',
+    target: existing ? `Материал #${id} «${existing.title}»` : `Материал #${id}`,
+    details: existing ? `Цех: ${existing.direction}` : 'Материал удален'
+  });
+
   res.json({ success: true });
 });
 
@@ -1610,15 +1830,23 @@ router.post('/admin/users/:id/approve', requireAuth, requireLevel(4), async (req
   }
 
   const maxLevel = req.user.access_level >= 5 ? 5 : 4;
+  const finalLevel = Math.max(1, Math.min(maxLevel, accessLevel));
   await db.run(
     'UPDATE users SET is_approved = 1, access_level = ? WHERE id = ?',
-    [Math.max(1, Math.min(maxLevel, accessLevel)), profileId]
+    [finalLevel, profileId]
   );
   invalidateUserCache(profileId);
 
   try {
-    await telegramService.notifyUserApproved(targetUser, accessLevel);
+    await telegramService.notifyUserApproved(targetUser, finalLevel);
   } catch (e) {}
+
+  await logAudit(req, {
+    action: 'Одобрение заявки',
+    category: 'users',
+    target: `${targetUser.name} (@${targetUser.username})`,
+    details: `Профиль одобрен с уровнем доступа ${finalLevel} (${targetUser.role})`
+  });
 
   res.json({ success: true, message: `Заявка пользователя «${targetUser.name}» успешно одобрена!` });
 });
@@ -1638,6 +1866,13 @@ router.post('/admin/users/:id/reject', requireAuth, requireLevel(4), async (req,
   await db.run('DELETE FROM users WHERE id = ?', [profileId]);
   invalidateUserCache(profileId);
 
+  await logAudit(req, {
+    action: 'Отклонение заявки',
+    category: 'users',
+    target: `${targetUser.name} (@${targetUser.username})`,
+    details: `Заявка на регистрацию отклонена, профиль удален`
+  });
+
   res.json({ success: true, message: 'Заявка на регистрацию отклонена, профиль удален.' });
 });
 
@@ -1652,6 +1887,13 @@ router.post('/admin/users/:id/toggle-create-tasks', requireAuth, requireLevel(4)
   const newStatus = targetUser.can_create_tasks ? 0 : 1;
   await db.run('UPDATE users SET can_create_tasks = ? WHERE id = ?', [newStatus, profileId]);
   invalidateUserCache(profileId);
+
+  await logAudit(req, {
+    action: newStatus ? 'Выдача права создания задач' : 'Отзыв права создания задач',
+    category: 'users',
+    target: `${targetUser.name} (@${targetUser.username})`,
+    details: `Право создания задач: ${newStatus ? 'включено' : 'отключено'}`
+  });
 
   res.json({
     success: true,
@@ -1668,8 +1910,13 @@ router.post('/admin/users/:id/delete', requireAuth, requireLevel(4), async (req,
     return res.status(404).json({ error: 'Пользователь не найден.' });
   }
 
-  if (targetUser.access_level >= 5 || targetUser.username === db.ROOT_ADMIN_USERNAME) {
-    return res.status(403).json({ error: "Пользователь 5 уровня (Хранитель) защищен от удаления!" });
+  const isCallerRoot = req.user.username === db.ROOT_ADMIN_USERNAME;
+  if (targetUser.username === db.ROOT_ADMIN_USERNAME) {
+    return res.status(403).json({ error: 'Системный Root-Хранитель защищен от удаления!' });
+  }
+
+  if (targetUser.access_level >= 5 && !isCallerRoot) {
+    return res.status(403).json({ error: 'Пользователь 5 уровня (Хранитель) защищен от удаления! Управлять другими Хранителями может только Root-Хранитель.' });
   }
 
   if (targetUser.id === req.user.id) {
@@ -1681,6 +1928,13 @@ router.post('/admin/users/:id/delete', requireAuth, requireLevel(4), async (req,
   await db.run('UPDATE tasks SET assigned_to_id = NULL WHERE assigned_to_id = ?', [profileId]);
   await db.run('DELETE FROM users WHERE id = ?', [profileId]);
   invalidateUserCache(profileId);
+
+  await logAudit(req, {
+    action: 'Удаление профиля',
+    category: 'users',
+    target: `${targetUser.name} (@${targetUser.username})`,
+    details: `Удален профиль (цех: ${targetUser.role}, уровень: ${targetUser.access_level})`
+  });
 
   res.json({ success: true, message: `Профиль «${targetUser.name}» удален. Активные задачи возвращены в статус «open».` });
 });
@@ -2149,6 +2403,323 @@ router.post('/gdrive/config', requireAuth, requireLevel(4), (req, res) => {
 router.get('/gdrive/script-template', requireAuth, requireLevel(3), (req, res) => {
   res.json({
     template: gdriveService.getAppsScriptTemplate()
+  });
+});
+
+// --------------------------------------------------------------------------
+// 13. TEAM GENERAL CHAT (/api/team-chat — Levels 2, 3, 4, 5)
+// --------------------------------------------------------------------------
+
+router.get('/team-chat', requireAuth, requireLevel(2, 'Общий чат команды доступен участникам со 2 уровня доступа.'), async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit, 10) || 250, 500);
+  const afterId = parseInt(req.query.after_id, 10) || 0;
+
+  let rows;
+  if (afterId > 0) {
+    rows = await db.all(`
+      SELECT m.*,
+             u.name AS user_name, u.username AS user_username, u.role AS user_role,
+             u.access_level AS user_level, u.avatar_url AS user_avatar,
+             r.message AS reply_message, r.photo_url AS reply_photo_url,
+             ru.name AS reply_user_name
+      FROM team_chat_messages m
+      LEFT JOIN users u ON m.user_id = u.id
+      LEFT JOIN team_chat_messages r ON m.reply_to_id = r.id
+      LEFT JOIN users ru ON r.user_id = ru.id
+      WHERE m.id > ?
+      ORDER BY m.id ASC
+      LIMIT ?
+    `, [afterId, limit]);
+  } else {
+    const descRows = await db.all(`
+      SELECT m.*,
+             u.name AS user_name, u.username AS user_username, u.role AS user_role,
+             u.access_level AS user_level, u.avatar_url AS user_avatar,
+             r.message AS reply_message, r.photo_url AS reply_photo_url,
+             ru.name AS reply_user_name
+      FROM team_chat_messages m
+      LEFT JOIN users u ON m.user_id = u.id
+      LEFT JOIN team_chat_messages r ON m.reply_to_id = r.id
+      LEFT JOIN users ru ON r.user_id = ru.id
+      ORDER BY m.id DESC
+      LIMIT ?
+    `, [limit]);
+    rows = descRows.reverse();
+  }
+
+  // Also fetch active chat members (level >= 2)
+  const chatMembers = await db.all(
+    'SELECT id, name, username, role, access_level, avatar_url, last_seen_at FROM users WHERE is_approved = 1 AND access_level >= 2 ORDER BY access_level DESC, name ASC'
+  );
+  const membersList = chatMembers.map(u => ({
+    id: u.id,
+    name: u.name,
+    username: u.username,
+    role: u.role,
+    access_level: u.access_level,
+    avatar_url: u.avatar_url,
+    is_online: onlineTracker.isUserOnline(u.id),
+    last_seen_formatted: onlineTracker.formatLastSeen(u.last_seen_at)
+  }));
+
+  const messages = rows.map(m => ({
+    id: m.id,
+    user_id: m.user_id,
+    user_name: m.user_name || 'Участник',
+    user_username: m.user_username || '',
+    user_role: m.user_role || '',
+    user_level: m.user_level || 2,
+    user_avatar: m.user_avatar || null,
+    message: m.message || '',
+    photo_url: m.photo_url || null,
+    reply_to_id: m.reply_to_id || null,
+    reply_preview: m.reply_to_id ? {
+      id: m.reply_to_id,
+      user_name: m.reply_user_name || 'Участник',
+      message: m.reply_message || (m.reply_photo_url ? '📷 Фотография' : '')
+    } : null,
+    created_at: m.created_at,
+    is_me: m.user_id === req.user.id,
+    is_online: onlineTracker.isUserOnline(m.user_id)
+  }));
+
+  res.json({
+    success: true,
+    messages,
+    members: membersList,
+    online_count: membersList.filter(m => m.is_online).length
+  });
+});
+
+router.post('/team-chat', requireAuth, requireLevel(2, 'Общий чат команды доступен участникам со 2 уровня доступа.'), upload.single('photo'), async (req, res) => {
+  const message = (req.body.message || '').trim();
+  const replyToId = req.body.reply_to_id ? parseInt(req.body.reply_to_id, 10) : null;
+  let photoUrl = null;
+
+  if (req.file) {
+    const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.bmp'];
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    if (!allowedExts.includes(ext) && !(req.file.mimetype || '').startsWith('image/')) {
+      try { fs.unlinkSync(req.file.path); } catch (e) {}
+      return res.status(400).json({ error: 'Разрешена загрузка только изображений (JPG, PNG, WEBP, GIF).' });
+    }
+    photoUrl = `/uploads/${req.file.filename}`;
+  }
+
+  if (!message && !photoUrl) {
+    return res.status(400).json({ error: 'Введите текст сообщения или прикрепите фотографию.' });
+  }
+
+  const nowIso = new Date().toISOString();
+  const insertRes = await db.run(
+    `INSERT INTO team_chat_messages (user_id, message, photo_url, reply_to_id, created_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [req.user.id, message, photoUrl, replyToId || null, nowIso]
+  );
+
+  const created = await db.get(`
+    SELECT m.*,
+           u.name AS user_name, u.username AS user_username, u.role AS user_role,
+           u.access_level AS user_level, u.avatar_url AS user_avatar,
+           r.message AS reply_message, r.photo_url AS reply_photo_url,
+           ru.name AS reply_user_name
+    FROM team_chat_messages m
+    LEFT JOIN users u ON m.user_id = u.id
+    LEFT JOIN team_chat_messages r ON m.reply_to_id = r.id
+    LEFT JOIN users ru ON r.user_id = ru.id
+    WHERE m.id = ?
+  `, [insertRes.lastID]);
+
+  const formattedMessage = {
+    id: created.id,
+    user_id: created.user_id,
+    user_name: created.user_name || req.user.name,
+    user_username: created.user_username || req.user.username,
+    user_role: created.user_role || req.user.role,
+    user_level: created.user_level || req.user.access_level,
+    user_avatar: created.user_avatar || req.user.avatar_url,
+    message: created.message || '',
+    photo_url: created.photo_url || null,
+    reply_to_id: created.reply_to_id || null,
+    reply_preview: created.reply_to_id ? {
+      id: created.reply_to_id,
+      user_name: created.reply_user_name || 'Участник',
+      message: created.reply_message || (created.reply_photo_url ? '📷 Фотография' : '')
+    } : null,
+    created_at: created.created_at,
+    is_me: true,
+    is_online: true
+  };
+
+  res.json({
+    success: true,
+    message: formattedMessage
+  });
+});
+
+router.delete('/team-chat/:id', requireAuth, requireLevel(2), async (req, res) => {
+  const msgId = parseInt(req.params.id, 10);
+  const msg = await db.get('SELECT * FROM team_chat_messages WHERE id = ?', [msgId]);
+  if (!msg) {
+    return res.status(404).json({ error: 'Сообщение не найдено.' });
+  }
+
+  const canDelete = (msg.user_id === req.user.id) || (req.user.access_level >= 3);
+  if (!canDelete) {
+    return res.status(403).json({ error: 'Удалить чужое сообщение может только руководство (3–5 уровень).' });
+  }
+
+  await db.run('DELETE FROM team_chat_messages WHERE id = ?', [msgId]);
+
+  if (req.user.id !== msg.user_id) {
+    await logAudit(req, {
+      action: 'Удаление сообщения в чате',
+      category: 'chat',
+      target: `Сообщение #${msgId}`,
+      details: `Удалено сообщение: «${(msg.message || '[Фото]').slice(0, 100)}»`
+    });
+  }
+
+  res.json({ success: true });
+});
+
+// --------------------------------------------------------------------------
+// 14. GUARDIAN LOGS & ANTI-DDOS SECURITY MONITOR (/api/guardian/* — Level 5)
+// --------------------------------------------------------------------------
+
+router.get('/guardian/logs', requireAuth, requireLevel(5, 'Журнал безопасности и аудита доступен только Хранителям (5 уровень).'), async (req, res) => {
+  const category = (req.query.category || '').trim();
+  const search = (req.query.search || '').trim().toLowerCase();
+  const limit = Math.min(parseInt(req.query.limit, 10) || 250, 600);
+
+  let auditSql = `
+    SELECT a.*, u.avatar_url AS user_avatar, u.role AS user_role
+    FROM audit_logs a
+    LEFT JOIN users u ON a.user_id = u.id
+  `;
+  const auditWhere = [];
+  const auditParams = [];
+
+  if (category && category !== 'all') {
+    auditWhere.push('a.category = ?');
+    auditParams.push(category);
+  }
+  if (search) {
+    auditWhere.push('(LOWER(a.action) LIKE ? OR LOWER(a.target) LIKE ? OR LOWER(a.details) LIKE ? OR LOWER(a.user_name) LIKE ? OR LOWER(a.ip) LIKE ?)');
+    const q = `%${search}%`;
+    auditParams.push(q, q, q, q, q);
+  }
+  if (auditWhere.length > 0) {
+    auditSql += ' WHERE ' + auditWhere.join(' AND ');
+  }
+  auditSql += ' ORDER BY a.id DESC LIMIT ?';
+  auditParams.push(limit);
+
+  const auditLogs = await db.all(auditSql, auditParams);
+
+  const connectionLogs = await db.all(`
+    SELECT c.*, u.avatar_url AS user_avatar
+    FROM connection_logs c
+    LEFT JOIN users u ON c.user_id = u.id
+    ORDER BY c.id DESC
+    LIMIT 250
+  `);
+
+  const trafficSnapshot = trafficMonitor.getSnapshot();
+
+  res.json({
+    success: true,
+    audit_logs: auditLogs,
+    connection_logs: connectionLogs,
+    traffic: trafficSnapshot
+  });
+});
+
+router.post('/guardian/security/ban-ip', requireAuth, requireLevel(5), async (req, res) => {
+  const ip = (req.body.ip || '').trim();
+  const minutes = Math.max(1, Math.min(10080, parseInt(req.body.minutes, 10) || 60));
+  const reason = (req.body.reason || 'Ручная блокировка Хранителем').trim();
+
+  if (!ip) {
+    return res.status(400).json({ error: 'Укажите IP-адрес для блокировки.' });
+  }
+
+  const callerIp = getClientIp(req);
+  if (ip === callerIp || ip === '127.0.0.1' || ip === '::1') {
+    return res.status(400).json({ error: 'Нельзя заблокировать собственный IP-адрес или локальный интерфейс сервера.' });
+  }
+
+  trafficMonitor.banIp(ip, reason, minutes, req.user.name);
+
+  await logConnectionEvent({
+    ip,
+    userId: req.user.id,
+    username: req.user.username,
+    eventType: 'ip_banned',
+    method: 'BAN',
+    path: '/api/guardian/security/ban-ip',
+    statusCode: 403,
+    userAgent: req.headers['user-agent'] || '',
+    details: `IP ${ip} заблокирован Хранителем ${req.user.name} на ${minutes} мин. Причина: ${reason}`
+  });
+
+  await logAudit(req, {
+    action: 'Блокировка IP-адреса',
+    category: 'security',
+    target: `IP ${ip}`,
+    details: `Срок: ${minutes} мин. Причина: ${reason}`
+  });
+
+  res.json({
+    success: true,
+    message: `IP-адрес ${ip} заблокирован на ${minutes} мин.`
+  });
+});
+
+router.post('/guardian/security/unban-ip', requireAuth, requireLevel(5), async (req, res) => {
+  const ip = (req.body.ip || '').trim();
+  if (!ip) {
+    return res.status(400).json({ error: 'Укажите IP-адрес для разблокировки.' });
+  }
+
+  trafficMonitor.unbanIp(ip);
+
+  await logConnectionEvent({
+    ip,
+    userId: req.user.id,
+    username: req.user.username,
+    eventType: 'ip_unbanned',
+    method: 'UNBAN',
+    path: '/api/guardian/security/unban-ip',
+    statusCode: 200,
+    userAgent: req.headers['user-agent'] || '',
+    details: `IP ${ip} разблокирован Хранителем ${req.user.name}`
+  });
+
+  await logAudit(req, {
+    action: 'Разблокировка IP-адреса',
+    category: 'security',
+    target: `IP ${ip}`,
+    details: `Блокировка снята Хранителем ${req.user.name}`
+  });
+
+  res.json({
+    success: true,
+    message: `Блокировка с IP-адреса ${ip} снята.`
+  });
+});
+
+router.post('/guardian/logs/clear-connections', requireAuth, requireLevel(5), async (req, res) => {
+  await db.run(`DELETE FROM connection_logs WHERE event_type IN ('api_mutation', 'login_success')`);
+  await logAudit(req, {
+    action: 'Очистка логов подключений',
+    category: 'security',
+    target: 'connection_logs',
+    details: 'Очищены рядовые записи подключений (события угроз сохранены)'
+  });
+  res.json({
+    success: true,
+    message: 'Рядовые записи подключений очищены (предупреждения безопасности сохранены).'
   });
 });
 

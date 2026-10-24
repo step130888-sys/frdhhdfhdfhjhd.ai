@@ -59,8 +59,8 @@
                   <span v-if="profileUser.access_level >= 5">👑 5 ур. • Хранитель</span>
                   <span v-else-if="profileUser.access_level === 4">⚡ 4 ур. • Администратор</span>
                   <span v-else-if="profileUser.access_level === 3">⭐ 3 ур. • Руководство</span>
-                  <span v-else-if="profileUser.access_level === 2">🛠 2 ур. • Глава цеха</span>
-                  <span v-else>1 ур. • Участник</span>
+                  <span v-else-if="profileUser.access_level === 2">💬 2 ур. • Участник команды</span>
+                  <span v-else>🌱 1 ур. • Стажёр</span>
                 </span>
               </div>
 
@@ -83,8 +83,15 @@
             </div>
           </div>
 
-          <!-- Quick Actions: Force Assign -->
+          <!-- Quick Actions: Force Assign & Root/Admin Profile Edit -->
           <div class="flex flex-wrap items-center gap-3">
+            <button
+              v-if="canManageProfile"
+              @click="openEditProfileModal"
+              class="px-4 py-3 min-h-[44px] rounded-2xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-300 border border-amber-500/30 shadow-md flex items-center space-x-2 active:scale-95 cursor-pointer transition"
+            >
+              <span>⚙️ Редактировать профиль</span>
+            </button>
             <button
               v-if="canForceAssign"
               @click="showAssignModal = true"
@@ -550,6 +557,119 @@
       @deleted="onIdeaDeleted"
     />
 
+    <!-- Profile Edit Modal (Root Guardian / Admin) -->
+    <div
+      v-if="showEditModal && profileUser"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+      @click.self="showEditModal = false"
+    >
+      <div class="cyber-glass max-w-lg w-full rounded-3xl border border-slate-200 dark:border-amber-500/30 p-6 bg-white dark:bg-[#0c0d14] shadow-2xl space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
+          <div>
+            <h3 class="text-base font-black text-slate-900 dark:text-white">Редактирование профиля</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              {{ user?.username === 'admin' ? '👑 Режим Root-Хранителя (исключительные права)' : 'Управление учетной записью' }}
+            </p>
+          </div>
+          <button @click="showEditModal = false" class="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+        </div>
+
+        <form @submit.prevent="saveProfileChanges" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">ФИО / Имя:</label>
+            <input
+              v-model="editForm.name"
+              type="text"
+              required
+              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#12131c] text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Логин:</label>
+            <input
+              v-model="editForm.username"
+              type="text"
+              required
+              :disabled="profileUser.username === 'admin'"
+              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#12131c] text-slate-900 dark:text-white font-mono disabled:opacity-40"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+              Новый пароль (оставьте пустым, если без изменений):
+            </label>
+            <input
+              v-model="editForm.password"
+              type="text"
+              placeholder="Введите новый пароль..."
+              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#12131c] text-slate-900 dark:text-white font-mono focus:outline-none focus:border-amber-500"
+            />
+          </div>
+
+          <div v-if="isSuperAdmin">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Цех / Роль:</label>
+            <select
+              v-model="editForm.role"
+              :disabled="profileUser.access_level >= 5 && user?.id !== profileUser.id && user?.username !== 'admin'"
+              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#12131c] text-slate-900 dark:text-white"
+            >
+              <option value="Фото">Фото</option>
+              <option value="Дизайн">Дизайн</option>
+              <option value="Видео">Видео</option>
+              <option value="Моушен">Моушен</option>
+              <option value="СММ">СММ</option>
+              <option value="Руководство">Руководство</option>
+              <option value="Хранитель">Хранитель</option>
+            </select>
+          </div>
+
+          <div v-if="isSuperAdmin">
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Уровень доступа:</label>
+              <button
+                v-if="user?.username === 'admin' && profileUser.access_level >= 5 && profileUser.username !== 'admin'"
+                type="button"
+                @click="editForm.access_level = 2; if (editForm.role === 'Хранитель') editForm.role = 'Дизайн'"
+                class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500/30 transition"
+              >
+                ⬇ Снять статус Хранителя
+              </button>
+            </div>
+            <select
+              v-model.number="editForm.access_level"
+              :disabled="profileUser.username === 'admin' || (profileUser.access_level >= 5 && user?.username !== 'admin')"
+              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#12131c] text-slate-900 dark:text-white disabled:opacity-40"
+            >
+              <option :value="1">1 ур. — Стажёр (контент-план, материалы, профиль)</option>
+              <option :value="2">2 ур. — Участник команды (+ общий чат)</option>
+              <option :value="3">3 ур. — Руководство медиацентра</option>
+              <option :value="4">4 ур. — Главный администратор</option>
+              <option :value="5">5 ур. — Хранитель</option>
+            </select>
+          </div>
+
+          <div class="pt-3 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              @click="showEditModal = false"
+              class="px-4 py-2 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-400"
+            >
+              Отмена
+            </button>
+            <button
+              type="submit"
+              :disabled="savingProfile"
+              class="btn-neon px-5 py-2 rounded-xl text-xs font-black text-white"
+            >
+              {{ savingProfile ? 'Сохранение...' : 'Сохранить изменения' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -562,7 +682,7 @@ import IdeaChatModal from '../components/IdeaChatModal.vue';
 import NewIdeaModal from '../components/NewIdeaModal.vue';
 
 const route = useRoute();
-const { user, isLeader, isWorkshopHead, isSuperAdmin, showNotification } = useAuthStore();
+const { user, isLeader, isSuperAdmin, showNotification } = useAuthStore();
 
 const profileId = computed(() => parseInt(route.params.id, 10));
 const profileUser = ref(null);
@@ -576,6 +696,15 @@ const taskFilter = ref('');
 const telegramId = ref('');
 const vkId = ref('');
 const showAssignModal = ref(false);
+const showEditModal = ref(false);
+const savingProfile = ref(false);
+const editForm = ref({
+  name: '',
+  username: '',
+  password: '',
+  role: '',
+  access_level: 1
+});
 
 // Ideas & Mini-Chat state
 const userIdeas = ref([]);
@@ -593,14 +722,58 @@ const filteredTasks = computed(() => {
 });
 
 const isMe = computed(() => user.value && user.value.id === profileId.value);
-const canEditAvatar = computed(() => isMe.value || isSuperAdmin.value);
+const isRootAdmin = computed(() => Boolean(user.value && user.value.username === 'admin'));
+const canEditAvatar = computed(() => {
+  if (!user.value || !profileUser.value) return false;
+  if (isRootAdmin.value || isMe.value) return true;
+  if (profileUser.value.access_level >= 5) return false;
+  return isSuperAdmin.value;
+});
+const canManageProfile = computed(() => {
+  if (!user.value || !profileUser.value) return false;
+  if (isRootAdmin.value || isMe.value) return true;
+  if (profileUser.value.access_level >= 5) return false;
+  return isSuperAdmin.value;
+});
 const canForceAssign = computed(() => {
   if (!user.value || !profileUser.value) return false;
   if (isLeader.value) return true;
-  if (isWorkshopHead.value && user.value.role === profileUser.value.role) return true;
   if (user.value.can_create_tasks && user.value.role === profileUser.value.role) return true;
   return false;
 });
+
+const openEditProfileModal = () => {
+  if (!profileUser.value) return;
+  editForm.value = {
+    name: profileUser.value.name || '',
+    username: profileUser.value.username || '',
+    password: '',
+    role: profileUser.value.role || 'Дизайн',
+    access_level: profileUser.value.access_level || 1
+  };
+  showEditModal.value = true;
+};
+
+const saveProfileChanges = async () => {
+  if (!profileUser.value) return;
+  savingProfile.value = true;
+  try {
+    const res = await fetch(`/api/users/${profileUser.value.id}/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editForm.value)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Ошибка сохранения профиля');
+    showNotification(data.message || 'Профиль успешно обновлен!');
+    showEditModal.value = false;
+    await fetchProfile();
+  } catch (err) {
+    showNotification(err.message, 'error');
+  } finally {
+    savingProfile.value = false;
+  }
+};
 
 const fetchUserIdeas = async () => {
   if (!profileId.value) return;

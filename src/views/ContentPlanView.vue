@@ -671,13 +671,13 @@ const closeMultiTaskModal = () => {
 // Management & Deletion Permissions
 const canManageTasks = computed(() => {
   if (!user.value) return false;
-  return isLeader.value || (user.value.access_level === 2);
+  return isLeader.value || Boolean(user.value.can_create_tasks);
 });
 
 const canDeleteSingleTask = (task) => {
   if (!user.value || !task) return false;
   if (isLeader.value) return true; // Level 3-5
-  if (user.value.access_level === 2 && user.value.role === task.direction) return true;
+  if (user.value.can_create_tasks && user.value.role === task.direction) return true;
   return false;
 };
 

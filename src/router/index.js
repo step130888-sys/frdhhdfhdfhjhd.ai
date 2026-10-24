@@ -60,6 +60,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/team-chat',
+    name: 'team-chat',
+    component: () => import('../views/TeamChatView.vue'),
+    meta: { requiresAuth: true, minLevel: 2 }
+  },
+  {
     path: '/admin/users',
     name: 'admin-users',
     component: AdminUsersView,
@@ -69,6 +75,12 @@ const routes = [
     path: '/secret-debt-usa',
     name: 'secret-debt-usa',
     component: () => import('../views/USADebtView.vue'),
+    meta: { requiresAuth: true, minLevel: 5 }
+  },
+  {
+    path: '/guardian-logs',
+    name: 'guardian-logs',
+    component: () => import('../views/GuardianLogsView.vue'),
     meta: { requiresAuth: true, minLevel: 5 }
   },
   {

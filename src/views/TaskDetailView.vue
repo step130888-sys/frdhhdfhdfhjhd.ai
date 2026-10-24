@@ -288,15 +288,13 @@ const canSubmitWork = computed(() => {
 const canRework = computed(() => {
   if (!task.value || !user.value) return false;
   if (task.value.status === 'open' || task.value.status === 'rework') return false;
-  if (isLeader.value) return true;
-  if (isWorkshopHead.value && user.value.role === task.value.direction) return true;
-  return false;
+  return isLeader.value;
 });
 
 const canDeleteTask = computed(() => {
   if (!task.value || !user.value) return false;
   if (user.value.access_level >= 3) return true;
-  if (user.value.access_level === 2 && user.value.role === task.value.direction) return true;
+  if (user.value.can_create_tasks && user.value.role === task.value.direction) return true;
   return false;
 });
 

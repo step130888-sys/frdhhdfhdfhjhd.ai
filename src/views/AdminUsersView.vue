@@ -164,8 +164,8 @@
                 v-model="u._targetLevel"
                 class="text-xs px-2.5 py-1 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#101016] text-slate-900 dark:text-white"
               >
-                <option :value="1">1 (Участник направления)</option>
-                <option :value="2">2 (Глава цеха)</option>
+                <option :value="1">1 (Стажёр)</option>
+                <option :value="2">2 (Участник команды)</option>
                 <option :value="3">3 (Руководство)</option>
                 <option :value="4">4 (Главный администратор)</option>
                 <option :value="5">5 (Хранитель)</option>
@@ -268,8 +268,8 @@
             class="text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#08080C] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#0E0E14]"
           >
             <option value="Все">Все уровни</option>
-            <option :value="1">1 ур. (Участник)</option>
-            <option :value="2">2 ур. (Глава цеха)</option>
+            <option :value="1">1 ур. (Стажёр)</option>
+            <option :value="2">2 ур. (Участник команды)</option>
             <option :value="3">3 ур. (Руководство)</option>
             <option :value="4">4 ур. (Администратор)</option>
             <option :value="5">5 ур. (Хранитель)</option>
@@ -717,13 +717,13 @@
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                     Новый пароль:
-                    <span v-if="!(selectedUser.access_level >= 5 && user?.id !== selectedUser.id)" class="text-[10px] text-slate-500 dark:text-slate-400 lowercase font-normal">(оставьте пустым, если не меняется)</span>
+                    <span v-if="!(selectedUser.access_level >= 5 && user?.id !== selectedUser.id && user?.username !== 'admin')" class="text-[10px] text-slate-500 dark:text-slate-400 lowercase font-normal">(оставьте пустым, если не меняется)</span>
                   </label>
-                  <div v-if="selectedUser.access_level >= 5 && user?.id !== selectedUser.id" class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-medium flex items-center space-x-2">
+                  <div v-if="selectedUser.access_level >= 5 && user?.id !== selectedUser.id && user?.username !== 'admin'" class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-medium flex items-center space-x-2">
                     <svg class="w-4 h-4 text-amber-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
-                    <span>🔒 Пароль пользователя 5 уровня (Хранитель) защищен. Изменить его может только сам владелец аккаунта.</span>
+                    <span>🔒 Пароль пользователя 5 уровня (Хранитель) защищен. Изменить его может только сам владелец или Root-Хранитель.</span>
                   </div>
                   <div v-else class="relative">
                     <input
@@ -747,7 +747,7 @@
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Цех (Направление):</label>
                   <select
                     v-model="editForm.role"
-                    :disabled="selectedUser.access_level >= 5 && user?.id !== selectedUser.id"
+                    :disabled="selectedUser.access_level >= 5 && user?.id !== selectedUser.id && user?.username !== 'admin'"
                     class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0A0A0D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#121218] disabled:opacity-40"
                   >
                     <option value="Фото">Фото</option>
@@ -762,14 +762,24 @@
 
                 <!-- Access Level -->
                 <div>
-                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Уровень доступа (1..5):</label>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Уровень доступа (1..5):</label>
+                    <button
+                      v-if="user?.username === 'admin' && selectedUser.access_level >= 5 && selectedUser.username !== 'admin'"
+                      type="button"
+                      @click="editForm.access_level = 2; if (editForm.role === 'Хранитель') editForm.role = 'Дизайн'"
+                      class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500/30 transition"
+                    >
+                      ⬇ Снять статус Хранителя
+                    </button>
+                  </div>
                   <select
                     v-model.number="editForm.access_level"
-                    :disabled="selectedUser.access_level >= 5 || selectedUser.username === 'admin'"
+                    :disabled="selectedUser.username === 'admin' || (selectedUser.access_level >= 5 && user?.username !== 'admin')"
                     class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0A0A0D] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#121218] disabled:opacity-40"
                   >
-                    <option :value="1">1 уровень — Участник направления</option>
-                    <option :value="2">2 уровень — Глава цеха</option>
+                    <option :value="1">1 уровень — Стажёр (контент-план, материалы, профиль)</option>
+                    <option :value="2">2 уровень — Участник команды (+ общий чат)</option>
                     <option :value="3">3 уровень — Руководство медиацентра</option>
                     <option :value="4">4 уровень — Главный администратор</option>
                     <option :value="5">5 уровень — Хранитель (Pink Crown)</option>
@@ -785,7 +795,7 @@
                     class="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-slate-50 dark:bg-[#101016] text-orange-500 dark:text-kedrRose focus:ring-orange-500 dark:focus:ring-kedrRose focus:ring-offset-0"
                   />
                   <label for="adminCanCreateCheck" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
-                    Разрешить создавать задачи для 1-го уровня
+                    Разрешить создавать задачи (для 1–2 уровня)
                   </label>
                 </div>
 
