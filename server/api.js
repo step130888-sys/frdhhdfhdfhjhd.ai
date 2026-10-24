@@ -45,6 +45,7 @@ function wrapUser(u) {
     role: u.role,
     access_level: u.access_level,
     is_approved: Boolean(u.is_approved),
+    is_hidden: Boolean(u.is_hidden),
     can_create_tasks: Boolean(u.can_create_tasks),
     completed_tasks: u.completed_tasks || 0,
     average_score: Number((u.average_score || 0).toFixed(1)),
@@ -407,7 +408,7 @@ router.get('/users', requireAuth, async (req, res) => {
       WHERE status IN ('in_progress', 'rework')
       GROUP BY assigned_to_id
     ) tc ON u.id = tc.assigned_to_id
-    WHERE u.is_approved = 1
+    WHERE u.is_approved = 1 AND (u.is_hidden IS NULL OR u.is_hidden = 0)
     ORDER BY u.role ASC, u.name ASC
   `;
   const users = await db.all(sql);
@@ -422,6 +423,11 @@ router.get('/users/:id', requireAuth, async (req, res) => {
   const profileUser = await db.get('SELECT * FROM users WHERE id = ?', [profileId]);
 
   if (!profileUser) {
+    return res.status(404).json({ error: 'Пользователь не найден.' });
+  }
+
+  // Hidden profiles are accessible only in moderation panel / by admins (level >= 4) or the user themselves
+  if (profileUser.is_hidden && req.user.access_level < 4 && req.user.id !== profileUser.id) {
     return res.status(404).json({ error: 'Пользователь не найден.' });
   }
 
@@ -564,9 +570,14 @@ router.post('/users/:id/update', requireAuth, async (req, res) => {
     newCanCreate = canCreateTasks;
   }
 
+  let newIsHidden = targetUser.is_hidden || 0;
+  if (isAdmin && typeof req.body.is_hidden !== 'undefined') {
+    newIsHidden = req.body.is_hidden ? 1 : 0;
+  }
+
   await db.run(
-    `UPDATE users SET name = ?, username = ?, role = ?, password_hash = ?, access_level = ?, can_create_tasks = ? WHERE id = ?`,
-    [newName, newUsername, newRole, newHash, newLevel, newCanCreate, profileId]
+    `UPDATE users SET name = ?, username = ?, role = ?, password_hash = ?, access_level = ?, can_create_tasks = ?, is_hidden = ? WHERE id = ?`,
+    [newName, newUsername, newRole, newHash, newLevel, newCanCreate, newIsHidden, profileId]
   );
   invalidateUserCache(profileId);
 
@@ -584,6 +595,9 @@ router.post('/users/:id/update', requireAuth, async (req, res) => {
   if (password) changesList.push('Изменён пароль');
   if (Boolean(newCanCreate) !== Boolean(targetUser.can_create_tasks)) {
     changesList.push(`Создание задач: ${newCanCreate ? 'Вкл' : 'Выкл'}`);
+  }
+  if (Boolean(newIsHidden) !== Boolean(targetUser.is_hidden)) {
+    changesList.push(`Видимость: ${newIsHidden ? 'Скрыт (только модерация)' : 'Открыт для всех'}`);
   }
 
   await logAudit(req, {
@@ -1902,6 +1916,36 @@ router.post('/admin/users/:id/toggle-create-tasks', requireAuth, requireLevel(4)
   });
 });
 
+router.post('/admin/users/:id/toggle-hidden', requireAuth, requireLevel(4), async (req, res) => {
+  const profileId = parseInt(req.params.id, 10);
+  const targetUser = await db.get('SELECT * FROM users WHERE id = ?', [profileId]);
+
+  if (!targetUser) {
+    return res.status(404).json({ error: 'Пользователь не найден.' });
+  }
+
+  const newStatus = targetUser.is_hidden ? 0 : 1;
+  await db.run('UPDATE users SET is_hidden = ? WHERE id = ?', [newStatus, profileId]);
+  invalidateUserCache(profileId);
+
+  await logAudit(req, {
+    action: newStatus ? 'Скрытие профиля' : 'Отображение профиля',
+    category: 'users',
+    target: `${targetUser.name} (@${targetUser.username})`,
+    details: newStatus
+      ? 'Профиль скрыт из общих списков (виден только в панели модерации)'
+      : 'Профиль снова виден в общих списках'
+  });
+
+  res.json({
+    success: true,
+    is_hidden: Boolean(newStatus),
+    message: newStatus
+      ? `Профиль «${targetUser.name}» скрыт из всех общих списков (виден только в панели модерации).`
+      : `Профиль «${targetUser.name}» снова виден всем пользователям.`
+  });
+});
+
 router.post('/admin/users/:id/delete', requireAuth, requireLevel(4), async (req, res) => {
   const profileId = parseInt(req.params.id, 10);
   const targetUser = await db.get('SELECT * FROM users WHERE id = ?', [profileId]);
@@ -2447,9 +2491,9 @@ router.get('/team-chat', requireAuth, requireLevel(2, 'Общий чат ком�
     rows = descRows.reverse();
   }
 
-  // Also fetch active chat members (level >= 2)
+  // Also fetch active chat members (level >= 2, excluding hidden profiles)
   const chatMembers = await db.all(
-    'SELECT id, name, username, role, access_level, avatar_url, last_seen_at FROM users WHERE is_approved = 1 AND access_level >= 2 ORDER BY access_level DESC, name ASC'
+    'SELECT id, name, username, role, access_level, avatar_url, last_seen_at FROM users WHERE is_approved = 1 AND (is_hidden IS NULL OR is_hidden = 0) AND access_level >= 2 ORDER BY access_level DESC, name ASC'
   );
   const membersList = chatMembers.map(u => ({
     id: u.id,

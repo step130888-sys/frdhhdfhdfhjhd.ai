@@ -80,7 +80,8 @@ async function initDb() {
       avatar_url VARCHAR(500),
       vk_id VARCHAR(64) UNIQUE,
       can_create_tasks INTEGER NOT NULL DEFAULT 0,
-      last_seen_at VARCHAR(50)
+      last_seen_at VARCHAR(50),
+      is_hidden INTEGER NOT NULL DEFAULT 0
     )
   `);
 
@@ -214,6 +215,20 @@ async function initDb() {
 
   try {
     await run('ALTER TABLE team_chat_messages ADD COLUMN photo_url VARCHAR(500)');
+  } catch (e) {}
+
+  try {
+    await run('ALTER TABLE users ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0');
+  } catch (e) {}
+
+  // Auto-hide the 2 requested profiles (visible only in moderation panel)
+  try {
+    await run(`
+      UPDATE users 
+      SET is_hidden = 1 
+      WHERE LOWER(username) IN ('паллаивичев биньямин нетаньяху - фон zalupkin', 'степанов пидор')
+         OR LOWER(name) IN ('паллаивичев биньямин нетаньяху - фон zalupkin', 'толстый степанов даниил')
+    `);
   } catch (e) {}
 
   await run(`

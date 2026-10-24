@@ -31,6 +31,7 @@ function touchUser(user) {
     role: user.role || 'Участник',
     access_level: user.access_level || 1,
     avatar_url: user.avatar_url || null,
+    is_hidden: Boolean(user.is_hidden),
     lastSeen: now,
     lastDbUpdate: shouldUpdateDb ? now : (existing ? existing.lastDbUpdate : now)
   });
@@ -55,6 +56,7 @@ function getOnlineUsers() {
   const list = [];
 
   for (const [id, data] of activeUsers.entries()) {
+    if (data.is_hidden) continue;
     const diff = now - data.lastSeen;
     if (diff <= ONLINE_WINDOW_MS) {
       let relativeTime = 'Только что';

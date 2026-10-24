@@ -275,6 +275,16 @@
             <option :value="5">5 ур. (Хранитель)</option>
           </select>
 
+          <!-- Visibility Filter -->
+          <select
+            v-model="filterVisibility"
+            class="text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#08080C] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#0E0E14]"
+          >
+            <option value="all">Все профили</option>
+            <option value="visible">Только видимые</option>
+            <option value="hidden">Только скрытые ({{ hiddenCount }})</option>
+          </select>
+
           <!-- Sort Selector -->
           <select
             v-model="sortBy"
@@ -332,6 +342,9 @@
                         <span v-if="u.username === 'admin'" class="text-[9px] font-black px-1.5 py-0.2 rounded bg-pink-600 text-white font-mono shadow-xs">
                           ROOT ХРАНИТЕЛЬ
                         </span>
+                        <span v-if="u.is_hidden" class="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-mono shadow-xs" title="Скрыт из общих списков (виден только в панели модерации)">
+                          👁️ СКРЫТ
+                        </span>
                         <span v-if="u.is_online" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" title="В сети"></span>
                       </div>
                       <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">@{{ u.username }}</div>
@@ -382,6 +395,21 @@
                 </td>
 
                 <td class="py-3 px-4 text-right space-x-2" @click.stop>
+                  <button
+                    @click="toggleHidden(u)"
+                    class="px-2.5 py-1 text-xs font-bold rounded-lg border transition-all inline-flex items-center space-x-1"
+                    :class="u.is_hidden
+                      ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/20 border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/30'
+                      : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-400'"
+                    :title="u.is_hidden ? 'Профиль скрыт от всех пользователей. Нажмите, чтобы открыть.' : 'Профиль виден всем. Нажмите, чтобы скрыть.'"
+                  >
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path v-if="u.is_hidden" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/>
+                      <path v-else d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                    </svg>
+                    <span>{{ u.is_hidden ? 'Скрыт' : 'Виден' }}</span>
+                  </button>
+
                   <button
                     @click="inspectUser(u, 'edit')"
                     class="px-2.5 py-1 text-xs font-bold text-orange-700 dark:text-kedrRose hover:text-orange-900 dark:hover:text-white bg-orange-50 dark:bg-kedrRose/10 hover:bg-orange-100 dark:hover:bg-kedrRose/20 rounded-lg border border-orange-200 dark:border-kedrRose/30 transition-all inline-flex items-center space-x-1"
@@ -787,7 +815,7 @@
                 </div>
 
                 <!-- Can create tasks flag -->
-                <div class="flex items-center space-x-3 pt-6">
+                <div class="flex items-center space-x-3 pt-4">
                   <input
                     id="adminCanCreateCheck"
                     v-model="editForm.can_create_tasks"
@@ -796,6 +824,19 @@
                   />
                   <label for="adminCanCreateCheck" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
                     Разрешить создавать задачи (для 1–2 уровня)
+                  </label>
+                </div>
+
+                <!-- Hidden profile flag -->
+                <div class="flex items-center space-x-3 pt-3">
+                  <input
+                    id="adminIsHiddenCheck"
+                    v-model="editForm.is_hidden"
+                    type="checkbox"
+                    class="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-slate-50 dark:bg-[#101016] text-amber-500 focus:ring-amber-500 focus:ring-offset-0"
+                  />
+                  <label for="adminIsHiddenCheck" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none flex items-center space-x-1.5">
+                    <span>👁️ Скрыть профиль из общих списков (виден только в модерации)</span>
                   </label>
                 </div>
 
@@ -845,7 +886,10 @@ const approvedUsers = ref([]);
 const searchQuery = ref('');
 const filterRole = ref('Все');
 const filterLevel = ref('Все');
+const filterVisibility = ref('all');
 const sortBy = ref('level_desc');
+
+const hiddenCount = computed(() => approvedUsers.value.filter(u => u.is_hidden).length);
 
 const filteredApprovedUsers = computed(() => {
   let list = [...approvedUsers.value];
@@ -861,7 +905,14 @@ const filteredApprovedUsers = computed(() => {
     list = list.filter(u => u.access_level === lvl);
   }
 
-  // 3. Search query (name or username)
+  // 3. Visibility filter
+  if (filterVisibility.value === 'visible') {
+    list = list.filter(u => !u.is_hidden);
+  } else if (filterVisibility.value === 'hidden') {
+    list = list.filter(u => u.is_hidden);
+  }
+
+  // 4. Search query (name or username)
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.trim().toLowerCase();
     list = list.filter(u =>
@@ -1011,7 +1062,8 @@ const inspectUser = async (u, defaultTab = 'tasks') => {
     role: u.role,
     access_level: u.access_level,
     password: '',
-    can_create_tasks: Boolean(u.can_create_tasks)
+    can_create_tasks: Boolean(u.can_create_tasks),
+    is_hidden: Boolean(u.is_hidden)
   };
 
   loadingTasks.value = true;
@@ -1046,7 +1098,8 @@ const saveUserChanges = async () => {
       username: editForm.value.username,
       role: editForm.value.role,
       access_level: editForm.value.access_level,
-      can_create_tasks: editForm.value.can_create_tasks
+      can_create_tasks: editForm.value.can_create_tasks,
+      is_hidden: editForm.value.is_hidden
     };
     if (editForm.value.password) {
       body.password = editForm.value.password;
@@ -1176,6 +1229,25 @@ const rejectUser = async (id) => {
       await fetchAdminData();
     }
   } catch (e) {}
+};
+
+const toggleHidden = async (u) => {
+  try {
+    const res = await fetch(`/api/admin/users/${u.id}/toggle-hidden`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      showNotification(data.message);
+      u.is_hidden = data.is_hidden;
+      if (selectedUser.value && selectedUser.value.id === u.id) {
+        selectedUser.value.is_hidden = data.is_hidden;
+        editForm.value.is_hidden = data.is_hidden;
+      }
+    } else {
+      alert(data.error || 'Ошибка изменения статуса видимости');
+    }
+  } catch (e) {
+    alert(e.message);
+  }
 };
 
 const toggleCanCreateTasks = async (u) => {
