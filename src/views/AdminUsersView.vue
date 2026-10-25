@@ -230,9 +230,9 @@
       </div>
 
       <!-- Search, Filter & Sorting Controls (Requirement 7) -->
-      <div class="mb-4 p-3.5 rounded-2xl cyber-glass border border-slate-200/80 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+      <div class="mb-4 p-3.5 rounded-2xl cyber-glass border border-slate-200/80 dark:border-white/10 flex flex-col xl:flex-row xl:items-center justify-between gap-3 shadow-xs">
         <!-- Search Input -->
-        <div class="relative flex-1">
+        <div class="relative flex-1 min-w-[220px]">
           <svg class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
           </svg>
@@ -254,11 +254,11 @@
         </div>
 
         <!-- Role, Level & Sort Selectors -->
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2 shrink-0">
           <!-- Workshop / Role Filter -->
           <select
             v-model="filterRole"
-            class="text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#08080C] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#0E0E14]"
+            class="text-xs px-2.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#08080C] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#0E0E14]"
           >
             <option value="Все">Все цехи</option>
             <option value="Фото">Фото</option>
@@ -273,20 +273,20 @@
           <!-- Level Filter -->
           <select
             v-model="filterLevel"
-            class="text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#08080C] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#0E0E14]"
+            class="text-xs px-2.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#08080C] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#0E0E14]"
           >
             <option value="Все">Все уровни</option>
             <option :value="1">1 ур. (Стажёр)</option>
-            <option :value="2">2 ур. (Участник команды)</option>
+            <option :value="2">2 ур. (Участник)</option>
             <option :value="3">3 ур. (Руководство)</option>
-            <option :value="4">4 ур. (Администратор)</option>
+            <option :value="4">4 ур. (Админ)</option>
             <option :value="5">5 ур. (Хранитель)</option>
           </select>
 
           <!-- Visibility Filter -->
           <select
             v-model="filterVisibility"
-            class="text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#08080C] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#0E0E14]"
+            class="text-xs px-2.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#08080C] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#0E0E14]"
           >
             <option value="all">Все профили</option>
             <option value="visible">Только видимые</option>
@@ -296,13 +296,13 @@
           <!-- Sort Selector -->
           <select
             v-model="sortBy"
-            class="text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#08080C] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#0E0E14] font-medium"
+            class="text-xs px-2.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#08080C] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] focus:bg-white dark:focus:bg-[#0E0E14] font-medium"
           >
-            <option value="level_desc">Уровень доступа (сначала высший)</option>
-            <option value="id_desc">По ID (сначала новые)</option>
+            <option value="level_desc">Уровень (высший)</option>
+            <option value="id_desc">По ID (новые)</option>
             <option value="name_asc">Имя: А → Я</option>
-            <option value="completed_desc">Выполнено задач (по убыванию)</option>
-            <option value="can_create">Право создания задач (активные)</option>
+            <option value="completed_desc">Задач (убыв.)</option>
+            <option value="can_create">Создание задач</option>
           </select>
 
           <!-- Count Badge -->
@@ -314,15 +314,15 @@
 
       <div class="cyber-glass rounded-3xl overflow-hidden border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-2xl">
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
+          <table class="w-full text-left text-xs min-w-[940px]">
             <thead class="bg-white/40 dark:bg-white/[0.04] backdrop-blur-md border-b border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
               <tr>
-                <th class="py-3.5 px-4">Пользователь</th>
-                <th class="py-3.5 px-4">Цех</th>
-                <th class="py-3.5 px-4 text-center">Уровень доступа</th>
-                <th class="py-3.5 px-4 text-center">Создание задач (1 ур.)</th>
-                <th class="py-3.5 px-4 text-center">Выполнено</th>
-                <th class="py-3.5 px-4 text-right">Управление</th>
+                <th class="py-3.5 px-4 whitespace-nowrap">Пользователь</th>
+                <th class="py-3.5 px-4 whitespace-nowrap">Цехи</th>
+                <th class="py-3.5 px-4 text-center whitespace-nowrap">Уровень доступа</th>
+                <th class="py-3.5 px-4 text-center whitespace-nowrap">Создание задач (1 ур.)</th>
+                <th class="py-3.5 px-4 text-center whitespace-nowrap">Выполнено</th>
+                <th class="py-3.5 px-4 text-right whitespace-nowrap">Управление</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 dark:divide-white/5">
@@ -338,34 +338,34 @@
                 class="hover:bg-orange-50/60 dark:hover:bg-[#fcb4d5]/10 cursor-pointer transition-colors group"
                 :class="selectedUser?.id === u.id ? 'bg-orange-50 dark:bg-[#fcb4d5]/15 ring-1 ring-inset ring-orange-400 dark:ring-[#fcb4d5]' : ''"
               >
-                <td class="py-3 px-4">
-                  <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-full overflow-hidden bg-orange-100 dark:bg-[#fcb4d5]/20 border border-orange-200 dark:border-[#fcb4d5]/30 flex items-center justify-center font-bold text-xs flex-shrink-0 text-orange-700 dark:text-[#fcb4d5] group-hover:border-orange-500 dark:group-hover:border-[#fcb4d5] transition-colors">
+                <td class="py-3 px-4 min-w-[220px] max-w-[280px]">
+                  <div class="flex items-center space-x-3 min-w-0">
+                    <div class="w-8 h-8 rounded-full overflow-hidden bg-orange-100 dark:bg-[#fcb4d5]/20 border border-orange-200 dark:border-[#fcb4d5]/30 flex items-center justify-center font-bold text-xs shrink-0 text-orange-700 dark:text-[#fcb4d5] group-hover:border-orange-500 dark:group-hover:border-[#fcb4d5] transition-colors">
                       <img v-if="u.avatar_url" :src="u.avatar_url" class="w-full h-full object-cover">
                       <span v-else>{{ u.name.charAt(0) }}</span>
                     </div>
-                    <div>
-                      <div class="font-bold text-slate-900 dark:text-white flex items-center space-x-1.5 group-hover:text-orange-600 dark:group-hover:text-[#fcb4d5] transition-colors">
-                        <span>{{ u.name }}</span>
-                        <span v-if="u.username === 'admin'" class="text-[9px] font-black px-1.5 py-0.2 rounded bg-pink-600 text-white font-mono shadow-xs">
+                    <div class="min-w-0 flex-1">
+                      <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-nowrap group-hover:text-orange-600 dark:group-hover:text-[#fcb4d5] transition-colors">
+                        <span class="truncate" :title="u.name">{{ u.name }}</span>
+                        <span v-if="u.username === 'admin'" class="text-[9px] font-black px-1.5 py-0.2 rounded bg-pink-600 text-white font-mono shadow-xs shrink-0 whitespace-nowrap">
                           ROOT ХРАНИТЕЛЬ
                         </span>
-                        <span v-if="u.is_hidden" class="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-mono shadow-xs" title="Скрыт из общих списков (виден только в панели модерации)">
+                        <span v-if="u.is_hidden" class="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-mono shadow-xs shrink-0 whitespace-nowrap" title="Скрыт из общих списков (виден только в панели модерации)">
                           👁️ СКРЫТ
                         </span>
-                        <span v-if="u.is_online" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" title="В сети"></span>
+                        <span v-if="u.is_online" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] shrink-0" title="В сети"></span>
                       </div>
-                      <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">@{{ u.username }}</div>
+                      <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate" :title="'@' + u.username">@{{ u.username }}</div>
                     </div>
                   </div>
                 </td>
 
-                <td class="py-3 px-4">
+                <td class="py-3 px-4 min-w-[150px] max-w-[220px]">
                   <div class="flex flex-wrap gap-1 items-center">
                     <span
                       v-for="r in getUserDirections(u.role)"
                       :key="r"
-                      class="text-[10px] font-bold px-2 py-0.5 rounded-lg border whitespace-nowrap"
+                      class="text-[10px] font-bold px-1.5 py-0.5 rounded-md border whitespace-nowrap leading-tight inline-flex items-center"
                       :class="getDirBadgeClass(r)"
                     >
                       {{ r }}
@@ -373,9 +373,9 @@
                   </div>
                 </td>
 
-                <td class="py-3 px-4 text-center">
+                <td class="py-3 px-4 text-center whitespace-nowrap">
                   <span
-                    class="text-[10px] font-black px-2 py-0.5 rounded-full border uppercase font-mono"
+                    class="text-[10px] font-black px-2.5 py-0.5 rounded-full border uppercase font-mono whitespace-nowrap inline-flex items-center justify-center"
                     :class="u.access_level >= 5
                       ? 'bg-pink-100 dark:bg-pink-500/25 text-pink-700 dark:text-[#fcb4d5] border-pink-300 dark:border-[#fcb4d5]/40 shadow-xs'
                       : (u.access_level === 4
@@ -388,65 +388,67 @@
                   </span>
                 </td>
 
-                <td class="py-3 px-4 text-center" @click.stop>
+                <td class="py-3 px-4 text-center whitespace-nowrap" @click.stop>
                   <button
                     @click="toggleCanCreateTasks(u)"
-                    class="text-[10px] font-black px-3 py-1 rounded-xl border transition-all inline-flex items-center gap-1.5 active:scale-95"
+                    class="text-[10px] font-black px-2.5 py-1 rounded-xl border transition-all inline-flex items-center gap-1.5 active:scale-95 whitespace-nowrap"
                     :class="u.can_create_tasks
                       ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/40'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'"
                     :title="u.can_create_tasks ? 'Разрешено создавать задачи' : 'Запрещено'"
                   >
-                    <svg v-if="u.can_create_tasks" class="w-3 h-3 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg v-if="u.can_create_tasks" class="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
-                    <svg v-else class="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg v-else class="w-3 h-3 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M18 6 6 18M6 6l12 12"/>
                     </svg>
                     <span>{{ u.can_create_tasks ? 'Включено' : 'Отключено' }}</span>
                   </button>
                 </td>
 
-                <td class="py-3 px-4 text-center font-bold text-slate-900 dark:text-white">
+                <td class="py-3 px-4 text-center font-bold text-slate-900 dark:text-white whitespace-nowrap">
                   {{ u.completed_tasks }}
                 </td>
 
-                <td class="py-3 px-4 text-right space-x-2" @click.stop>
-                  <button
-                    @click="toggleHidden(u)"
-                    class="px-2.5 py-1 text-xs font-bold rounded-lg border transition-all inline-flex items-center space-x-1"
-                    :class="u.is_hidden
-                      ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/20 border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/30'
-                      : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-400'"
-                    :title="u.is_hidden ? 'Профиль скрыт от всех пользователей. Нажмите, чтобы открыть.' : 'Профиль виден всем. Нажмите, чтобы скрыть.'"
-                  >
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path v-if="u.is_hidden" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/>
-                      <path v-else d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
-                    </svg>
-                    <span>{{ u.is_hidden ? 'Скрыт' : 'Виден' }}</span>
-                  </button>
+                <td class="py-3 px-4 text-right whitespace-nowrap min-w-[210px]" @click.stop>
+                  <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap">
+                    <button
+                      @click="toggleHidden(u)"
+                      class="px-2 py-1 text-xs font-bold rounded-lg border transition-all inline-flex items-center gap-1 shrink-0 whitespace-nowrap"
+                      :class="u.is_hidden
+                        ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/20 border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/30'
+                        : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-400'"
+                      :title="u.is_hidden ? 'Профиль скрыт от всех пользователей. Нажмите, чтобы открыть.' : 'Профиль виден всем. Нажмите, чтобы скрыть.'"
+                    >
+                      <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path v-if="u.is_hidden" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/>
+                        <path v-else d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                      </svg>
+                      <span>{{ u.is_hidden ? 'Скрыт' : 'Виден' }}</span>
+                    </button>
 
-                  <button
-                    @click="inspectUser(u, 'edit')"
-                    class="px-2.5 py-1 text-xs font-bold text-orange-700 dark:text-kedrRose hover:text-orange-900 dark:hover:text-white bg-orange-50 dark:bg-kedrRose/10 hover:bg-orange-100 dark:hover:bg-kedrRose/20 rounded-lg border border-orange-200 dark:border-kedrRose/30 transition-all inline-flex items-center space-x-1"
-                  >
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
-                    </svg>
-                    <span>Редактировать</span>
-                  </button>
+                    <button
+                      @click="inspectUser(u, 'edit')"
+                      class="px-2.5 py-1 text-xs font-bold text-orange-700 dark:text-kedrRose hover:text-orange-900 dark:hover:text-white bg-orange-50 dark:bg-kedrRose/10 hover:bg-orange-100 dark:hover:bg-kedrRose/20 rounded-lg border border-orange-200 dark:border-kedrRose/30 transition-all inline-flex items-center gap-1 shrink-0 whitespace-nowrap"
+                    >
+                      <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
+                      </svg>
+                      <span>Редактировать</span>
+                    </button>
 
-                  <button
-                    v-if="u.username !== 'admin'"
-                    @click="deleteUser(u)"
-                    class="px-2 py-1 text-xs font-bold text-rose-700 dark:text-rose-300 hover:text-rose-900 dark:hover:text-white bg-rose-50 dark:bg-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/40 rounded-lg border border-rose-200 dark:border-rose-500/30 transition-all inline-flex items-center justify-center"
-                    title="Удалить профиль с освобождением задач"
-                  >
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    </svg>
-                  </button>
+                    <button
+                      v-if="u.username !== 'admin'"
+                      @click="deleteUser(u)"
+                      class="p-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 hover:text-rose-900 dark:hover:text-white bg-rose-50 dark:bg-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/40 rounded-lg border border-rose-200 dark:border-rose-500/30 transition-all inline-flex items-center justify-center shrink-0"
+                      title="Удалить профиль с освобождением задач"
+                    >
+                      <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                      </svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
