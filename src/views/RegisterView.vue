@@ -63,31 +63,65 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <div>
-            <label class="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Направление (цех):</label>
-            <select
-              v-model="form.role"
-              required
-              class="w-full text-xs px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-black text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-rose-400"
-            >
-              <option value="" disabled>-- Выберите цех --</option>
-              <option value="Фото">Фото (репортажи, фотосессии)</option>
-              <option value="Дизайн">Дизайн (афиши, графика)</option>
-              <option value="Видео">Видео (операторы, рилс)</option>
-              <option value="Моушен">Моушен (2D/3D анимация)</option>
-              <option value="СММ">СММ (тексты, посты)</option>
-            </select>
+        <!-- Telegram Field -->
+        <div>
+          <label class="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Telegram (@username):</label>
+          <input
+            v-model="form.telegram_id"
+            type="text"
+            placeholder="@ivanov"
+            class="w-full text-xs px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-black text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-rose-400 font-mono"
+          />
+        </div>
+
+        <!-- Multiple Directions Selector -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              Направления (цехи):
+            </label>
+            <span class="text-[10px] text-orange-600 dark:text-[#fcb4d5] font-semibold">
+              Выберите одно или несколько
+            </span>
           </div>
 
-          <div>
-            <label class="block text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Telegram (@username):</label>
-            <input
-              v-model="form.telegram_id"
-              type="text"
-              placeholder="@ivanov"
-              class="w-full text-xs px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-black text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-rose-400 font-mono"
-            />
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <button
+              v-for="dir in availableDirections"
+              :key="dir.name"
+              type="button"
+              @click="toggleRole(dir.name)"
+              class="relative p-3 rounded-xl border text-left transition-all flex flex-col justify-between group active:scale-95 cursor-pointer"
+              :class="form.roles.includes(dir.name)
+                ? 'bg-orange-500/10 dark:bg-[#fcb4d5]/15 border-orange-500 dark:border-[#fcb4d5] ring-1 ring-orange-500/30 dark:ring-[#fcb4d5]/40 text-slate-900 dark:text-white shadow-xs'
+                : 'bg-black/[0.02] dark:bg-white/[0.03] border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/30'"
+            >
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-lg">{{ dir.icon }}</span>
+                <span
+                  class="w-4 h-4 rounded-md border flex items-center justify-center transition-all"
+                  :class="form.roles.includes(dir.name)
+                    ? 'bg-orange-500 dark:bg-[#fcb4d5] border-orange-500 dark:border-[#fcb4d5] text-white dark:text-black'
+                    : 'border-slate-300 dark:border-white/20 bg-white/50 dark:bg-black/50'"
+                >
+                  <svg v-if="form.roles.includes(dir.name)" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </span>
+              </div>
+              <div>
+                <div class="font-bold text-xs">{{ dir.name }}</div>
+                <div class="text-[10px] text-slate-400 dark:text-slate-500 line-clamp-1">{{ dir.desc }}</div>
+              </div>
+            </button>
+          </div>
+
+          <div v-if="form.roles.length > 0" class="mt-2 text-[11px] text-slate-600 dark:text-slate-400 flex items-center space-x-1">
+            <span>Выбрано:</span>
+            <span class="font-bold text-orange-600 dark:text-[#fcb4d5]">{{ form.roles.join(', ') }}</span>
+          </div>
+          <div v-else class="mt-2 text-[11px] text-amber-500 font-medium">
+            ⚠️ Обязательно выберите хотя бы одно направление
           </div>
         </div>
 
@@ -126,13 +160,32 @@ import { useAuthStore } from '../stores/auth';
 
 const { register } = useAuthStore();
 
+const availableDirections = [
+  { name: 'Фото', icon: '📸', desc: 'Репортажи, студийная съемка' },
+  { name: 'Дизайн', icon: '🎨', desc: 'Афиши, графика, айдентика' },
+  { name: 'Видео', icon: '🎬', desc: 'Операторы, клипы, монтаж' },
+  { name: 'Моушен', icon: '✨', desc: '2D/3D анимация, заставки' },
+  { name: 'СММ', icon: '✍️', desc: 'Тексты, сценарии, посты' }
+];
+
 const form = ref({
   name: '',
   username: '',
   password: '',
-  role: '',
+  roles: ['Фото'],
+  role: 'Фото',
   telegram_id: ''
 });
+
+const toggleRole = (dirName) => {
+  const idx = form.value.roles.indexOf(dirName);
+  if (idx > -1) {
+    form.value.roles.splice(idx, 1);
+  } else {
+    form.value.roles.push(dirName);
+  }
+  form.value.role = form.value.roles.join(', ');
+};
 
 const loading = ref(false);
 const errorMsg = ref('');
@@ -141,6 +194,13 @@ const successMsg = ref('');
 const handleRegister = async () => {
   errorMsg.value = '';
   successMsg.value = '';
+
+  if (form.value.roles.length === 0) {
+    errorMsg.value = 'Пожалуйста, выберите как минимум одно направление (цех).';
+    return;
+  }
+  form.value.role = form.value.roles.join(', ');
+
   loading.value = true;
   try {
     const res = await register(form.value);

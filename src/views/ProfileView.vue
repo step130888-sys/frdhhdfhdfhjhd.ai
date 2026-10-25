@@ -43,9 +43,16 @@
             <div>
               <div class="flex flex-wrap items-center gap-2 mb-1">
                 <h1 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white">{{ profileUser.name }}</h1>
-                <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-orange-50 dark:bg-[#fcb4d5]/15 text-orange-600 dark:text-[#fcb4d5] border border-orange-200 dark:border-[#fcb4d5]/30">
-                  {{ profileUser.role }}
-                </span>
+                <div class="inline-flex flex-wrap items-center gap-1">
+                  <span
+                    v-for="r in getUserDirections(profileUser.role)"
+                    :key="r"
+                    class="text-xs font-black px-2.5 py-0.5 rounded-full border shadow-xs"
+                    :class="getDirBadgeClass(r)"
+                  >
+                    {{ r }}
+                  </span>
+                </div>
                 <span
                   class="text-[10px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider inline-flex items-center gap-1 shadow-xs"
                   :class="profileUser.access_level >= 5
@@ -609,20 +616,34 @@
           </div>
 
           <div v-if="isSuperAdmin">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Цех / Роль:</label>
-            <select
-              v-model="editForm.role"
-              :disabled="profileUser.access_level >= 5 && user?.id !== profileUser.id && user?.username !== 'admin'"
-              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#12131c] text-slate-900 dark:text-white"
-            >
-              <option value="Фото">Фото</option>
-              <option value="Дизайн">Дизайн</option>
-              <option value="Видео">Видео</option>
-              <option value="Моушен">Моушен</option>
-              <option value="СММ">СММ</option>
-              <option value="Руководство">Руководство</option>
-              <option value="Хранитель">Хранитель</option>
-            </select>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Направления (цехи):
+              </label>
+              <span class="text-[10px] text-orange-600 dark:text-[#fcb4d5] font-semibold">
+                можно выбрать несколько
+              </span>
+            </div>
+            <div class="flex flex-wrap gap-1.5 mb-2">
+              <button
+                v-for="dir in allAvailableDirections"
+                :key="dir"
+                type="button"
+                :disabled="profileUser.access_level >= 5 && user?.id !== profileUser.id && user?.username !== 'admin'"
+                @click="toggleEditRole(dir)"
+                class="px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center space-x-1.5 active:scale-95 disabled:opacity-40 cursor-pointer"
+                :class="(editForm.roles || []).includes(dir)
+                  ? 'bg-orange-500/15 dark:bg-[#fcb4d5]/20 border-orange-500 dark:border-[#fcb4d5] text-orange-600 dark:text-[#fcb4d5] ring-1 ring-orange-500/30 font-black'
+                  : 'bg-slate-100 dark:bg-white/[0.04] border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/30'"
+              >
+                <span>{{ getDirIcon(dir) }}</span>
+                <span>{{ dir }}</span>
+                <span v-if="(editForm.roles || []).includes(dir)" class="text-[10px]">✓</span>
+              </button>
+            </div>
+            <div class="text-[11px] text-slate-500 dark:text-slate-400">
+              Выбрано: <b class="text-slate-900 dark:text-white">{{ (editForm.roles && editForm.roles.length) ? editForm.roles.join(', ') : 'Не выбрано' }}</b>
+            </div>
           </div>
 
           <div v-if="isSuperAdmin">
@@ -631,7 +652,7 @@
               <button
                 v-if="user?.username === 'admin' && profileUser.access_level >= 5 && profileUser.username !== 'admin'"
                 type="button"
-                @click="editForm.access_level = 2; if (editForm.role === 'Хранитель') editForm.role = 'Дизайн'"
+                @click="editForm.access_level = 2; editForm.roles = (editForm.roles || []).filter(r => r !== 'Хранитель'); if (!editForm.roles.length) editForm.roles = ['Дизайн']; editForm.role = editForm.roles.join(', ');"
                 class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500/30 transition"
               >
                 ⬇ Снять статус Хранителя
@@ -691,6 +712,66 @@ const openTasks = ref([]);
 const inProgressCount = ref(0);
 const reviewCount = ref(0);
 const loading = ref(true);
+const allAvailableDirections = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ', 'Руководство', 'Хранитель'];
+
+const getUserDirections = (roleStr) => {
+  if (!roleStr) return [];
+  return String(roleStr).split(',').map(s => s.trim()).filter(Boolean);
+};
+
+const getDirIcon = (dir) => {
+  switch (dir) {
+    case 'Фото': return '📸';
+    case 'Дизайн': return '🎨';
+    case 'Видео': return '🎬';
+    case 'Моушен': return '✨';
+    case 'СММ': return '✍️';
+    case 'Руководство': return '⚡';
+    case 'Хранитель': return '👑';
+    default: return '📁';
+  }
+};
+
+const getDirBadgeClass = (dir) => {
+  switch (dir) {
+    case 'Фото':
+      return 'bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-500/30';
+    case 'Дизайн':
+      return 'bg-pink-50 dark:bg-pink-500/15 text-pink-700 dark:text-[#fcb4d5] border-pink-200 dark:border-pink-500/30';
+    case 'Видео':
+      return 'bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30';
+    case 'Моушен':
+      return 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30';
+    case 'СММ':
+      return 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30';
+    case 'Руководство':
+      return 'bg-violet-50 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/40 font-bold';
+    case 'Хранитель':
+      return 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/40 font-black';
+    default:
+      return 'bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10';
+  }
+};
+
+const toggleEditRole = (dir) => {
+  if (!editForm.value.roles) editForm.value.roles = [];
+  const idx = editForm.value.roles.indexOf(dir);
+  if (idx > -1) {
+    if (editForm.value.roles.length > 1) {
+      editForm.value.roles.splice(idx, 1);
+    }
+  } else {
+    editForm.value.roles.push(dir);
+  }
+  editForm.value.role = editForm.value.roles.join(', ');
+};
+
+const hasMatchingDirection = (u1, u2) => {
+  const dirs1 = getUserDirections(u1?.role);
+  const dirs2 = getUserDirections(u2?.role);
+  return dirs1.some(d => dirs2.includes(d));
+};
+
 const taskFilter = ref('');
 
 const telegramId = ref('');
@@ -703,6 +784,7 @@ const editForm = ref({
   username: '',
   password: '',
   role: '',
+  roles: ['Фото'],
   access_level: 1
 });
 
@@ -738,17 +820,19 @@ const canManageProfile = computed(() => {
 const canForceAssign = computed(() => {
   if (!user.value || !profileUser.value) return false;
   if (isLeader.value) return true;
-  if (user.value.can_create_tasks && user.value.role === profileUser.value.role) return true;
+  if (user.value.can_create_tasks && hasMatchingDirection(user.value, profileUser.value)) return true;
   return false;
 });
 
 const openEditProfileModal = () => {
   if (!profileUser.value) return;
+  const userDirs = getUserDirections(profileUser.value.role);
   editForm.value = {
     name: profileUser.value.name || '',
     username: profileUser.value.username || '',
     password: '',
-    role: profileUser.value.role || 'Дизайн',
+    role: profileUser.value.role || 'Фото',
+    roles: userDirs.length ? [...userDirs] : ['Фото'],
     access_level: profileUser.value.access_level || 1
   };
   showEditModal.value = true;
@@ -758,10 +842,16 @@ const saveProfileChanges = async () => {
   if (!profileUser.value) return;
   savingProfile.value = true;
   try {
+    const rolesArr = (editForm.value.roles && editForm.value.roles.length) ? editForm.value.roles : [editForm.value.role || 'Фото'];
+    const body = {
+      ...editForm.value,
+      role: rolesArr.join(', '),
+      roles: rolesArr
+    };
     const res = await fetch(`/api/users/${profileUser.value.id}/update`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editForm.value)
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Ошибка сохранения профиля');

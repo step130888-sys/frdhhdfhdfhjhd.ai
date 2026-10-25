@@ -674,10 +674,16 @@ const canManageTasks = computed(() => {
   return isLeader.value || Boolean(user.value.can_create_tasks);
 });
 
+const userHasDirection = (u, dir) => {
+  if (!u || !dir) return false;
+  const dirs = (u.role || '').split(',').map(s => s.trim().toLowerCase());
+  return dirs.includes(dir.trim().toLowerCase());
+};
+
 const canDeleteSingleTask = (task) => {
   if (!user.value || !task) return false;
   if (isLeader.value) return true; // Level 3-5
-  if (user.value.can_create_tasks && user.value.role === task.direction) return true;
+  if (user.value.can_create_tasks && userHasDirection(user.value, task.direction)) return true;
   return false;
 };
 

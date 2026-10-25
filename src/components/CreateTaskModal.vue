@@ -39,15 +39,11 @@
             </label>
             <select
               v-model="form.direction"
-              :disabled="userLevel <= 2"
+              :disabled="userLevel <= 2 && selectableDirections.length <= 1"
               required
               class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-kedrRose focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-kedrRose/20 focus:bg-white dark:focus:bg-[#181822] disabled:opacity-75 transition-all"
             >
-              <option value="Фото">Фото</option>
-              <option value="Дизайн">Дизайн</option>
-              <option value="Видео">Видео</option>
-              <option value="Моушен">Моушен</option>
-              <option value="СММ">СММ</option>
+              <option v-for="d in selectableDirections" :key="d" :value="d">{{ d }}</option>
             </select>
           </div>
 
@@ -135,10 +131,18 @@ const userLevel = ref(props.currentUser?.access_level || 1);
 const loading = ref(false);
 const usersList = ref([]);
 
+const selectableDirections = computed(() => {
+  if (userLevel.value >= 3) {
+    return ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ'];
+  }
+  const myDirs = (props.currentUser?.role || '').split(',').map(s => s.trim()).filter(Boolean);
+  return myDirs.length ? myDirs : ['Фото'];
+});
+
 const form = ref({
   title: '',
   description: '',
-  direction: props.currentUser?.role || 'Фото',
+  direction: (props.currentUser?.role || '').split(',')[0]?.trim() || 'Фото',
   deadline: '',
   assigned_to_id: null
 });
@@ -146,8 +150,9 @@ const form = ref({
 watch(() => props.currentUser, (newVal) => {
   if (newVal) {
     userLevel.value = newVal.access_level;
-    if (newVal.access_level <= 2 && newVal.role) {
-      form.value.direction = newVal.role;
+    const myDirs = (newVal.role || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!form.value.direction || (newVal.access_level <= 2 && !myDirs.includes(form.value.direction))) {
+      form.value.direction = myDirs[0] || 'Фото';
     }
   }
 }, { immediate: true });

@@ -419,10 +419,13 @@ async function notifyNewOpenTask(task) {
   const token = getGroupToken();
   if (!token) return false;
 
-  const users = await db.all(
-    'SELECT * FROM users WHERE role = ? AND is_approved = 1 AND vk_id IS NOT NULL',
-    [task.direction]
+  const allUsers = await db.all(
+    'SELECT * FROM users WHERE is_approved = 1 AND vk_id IS NOT NULL'
   );
+  const users = allUsers.filter(u => {
+    const dirs = (u.role || '').split(',').map(s => s.trim().toLowerCase());
+    return dirs.includes((task.direction || '').trim().toLowerCase());
+  });
   if (!users || users.length === 0) return false;
 
   const deadlineStr = task.deadline ? task.deadline.replace('T', ' ') : 'Не установлен';

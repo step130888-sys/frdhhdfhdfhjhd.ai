@@ -35,6 +35,26 @@ const upload = multer({
   limits: { fileSize: 100 * 1024 * 1024 } // 100 MB limit
 });
 
+// Helpers for multi-direction support (e.g. "Фото, Дизайн")
+function getUserDirections(u) {
+  if (!u) return [];
+  const roleStr = typeof u === 'string' ? u : (u.role || '');
+  return roleStr.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function userHasDirection(u, dir) {
+  if (!u || !dir) return false;
+  const dirs = getUserDirections(u).map(d => d.toLowerCase());
+  return dirs.includes(dir.trim().toLowerCase());
+}
+
+function hasMatchingDirection(userA, userB) {
+  if (!userA || !userB) return false;
+  const dirsA = getUserDirections(userA).map(d => d.toLowerCase());
+  const dirsB = getUserDirections(userB).map(d => d.toLowerCase());
+  return dirsA.some(d => dirsB.includes(d));
+}
+
 // Helper for wrapping dict for compatibility
 function wrapUser(u) {
   if (!u) return null;
@@ -43,6 +63,7 @@ function wrapUser(u) {
     name: u.name,
     username: u.username,
     role: u.role,
+    roles: getUserDirections(u),
     access_level: u.access_level,
     is_approved: Boolean(u.is_approved),
     is_hidden: Boolean(u.is_hidden),
@@ -169,11 +190,19 @@ router.post('/auth/register', async (req, res) => {
   const name = (req.body.name || '').trim();
   const username = (req.body.username || '').trim().toLowerCase();
   const password = (req.body.password || '').trim();
-  const role = (req.body.role || '').trim();
   const telegramId = (req.body.telegram_id || '').trim();
 
+  let role = '';
+  if (Array.isArray(req.body.roles) && req.body.roles.length > 0) {
+    role = req.body.roles.map(r => String(r).trim()).filter(Boolean).join(', ');
+  } else if (Array.isArray(req.body.role)) {
+    role = req.body.role.map(r => String(r).trim()).filter(Boolean).join(', ');
+  } else if (typeof req.body.role === 'string') {
+    role = req.body.role.trim();
+  }
+
   if (!name || !username || !password || !role) {
-    return res.status(400).json({ error: 'Все обязательные поля (ФИО, логин, пароль, направление) должны быть заполнены.' });
+    return res.status(400).json({ error: 'Все обязательные поля (ФИО, логин, пароль, как минимум одно направление) должны быть заполнены.' });
   }
 
   const existing = await db.get('SELECT id FROM users WHERE LOWER(username) = ?', [username]);
@@ -459,8 +488,12 @@ router.get('/users/:id', requireAuth, async (req, res) => {
   let openTasksQuery = 'SELECT * FROM tasks WHERE status = "open"';
   const openTasksParams = [];
   if (req.user.access_level <= 2) {
-    openTasksQuery += ' AND direction = ?';
-    openTasksParams.push(profileUser.role);
+    const profileDirs = getUserDirections(profileUser);
+    if (profileDirs.length > 0) {
+      const placeholders = profileDirs.map(() => '?').join(', ');
+      openTasksQuery += ` AND direction IN (${placeholders})`;
+      openTasksParams.push(...profileDirs);
+    }
   }
   openTasksQuery += ` ORDER BY 
     CASE WHEN deadline IS NOT NULL AND TRIM(deadline) != '' THEN 0 ELSE 1 END ASC,
@@ -537,7 +570,17 @@ router.post('/users/:id/update', requireAuth, async (req, res) => {
   let newCanCreate = targetUser.can_create_tasks;
 
   if (name) newName = name;
-  if (role) newRole = role;
+
+  let rolesInput = null;
+  if (Array.isArray(req.body.roles) && req.body.roles.length > 0) {
+    rolesInput = req.body.roles.map(r => String(r).trim()).filter(Boolean).join(', ');
+  } else if (Array.isArray(req.body.role)) {
+    rolesInput = req.body.role.map(r => String(r).trim()).filter(Boolean).join(', ');
+  } else if (typeof req.body.role === 'string' && req.body.role.trim()) {
+    rolesInput = req.body.role.trim();
+  }
+  if (rolesInput) newRole = rolesInput;
+
   if (password) newHash = db.hashPassword(password);
 
   if (username && username !== targetUser.username) {
@@ -741,7 +784,7 @@ router.post('/users/:id/assign-task', requireAuth, async (req, res) => {
     return res.status(403).json({ error: 'Недостаточно прав. Принудительно выдавать задачи могут руководители (3–5 ур.) или уполномоченные участники.' });
   }
 
-  if (req.user.access_level < 3 && targetUser.role !== req.user.role) {
+  if (req.user.access_level < 3 && !hasMatchingDirection(req.user, targetUser)) {
     return res.status(403).json({ error: `Вы можете выдавать задачи только участникам своего направления (${req.user.role}).` });
   }
 
@@ -1099,7 +1142,7 @@ router.delete('/tasks/:id', requireAuth, async (req, res) => {
   // Level 3-5: can delete any task
   // Authorized member (can_create_tasks): can delete tasks in their own department
   const isLeaderOrAdmin = req.user.access_level >= 3;
-  const isAuthorizedMember = Boolean(req.user.can_create_tasks) && req.user.role === task.direction;
+  const isAuthorizedMember = Boolean(req.user.can_create_tasks) && userHasDirection(req.user, task.direction);
 
   if (!isLeaderOrAdmin && !isAuthorizedMember) {
     return res.status(403).json({
@@ -1166,7 +1209,7 @@ router.post('/tasks/bulk-delete', requireAuth, async (req, res) => {
     const task = await db.get('SELECT * FROM tasks WHERE id = ?', [tid]);
     if (!task) continue;
 
-    const canDelete = isLeaderOrAdmin || (Boolean(req.user.can_create_tasks) && req.user.role === task.direction);
+    const canDelete = isLeaderOrAdmin || (Boolean(req.user.can_create_tasks) && userHasDirection(req.user, task.direction));
     if (!canDelete) continue;
 
     // Delete comments
@@ -1314,9 +1357,11 @@ router.post('/tasks', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Заголовок и описание задачи обязательны.' });
   }
 
-  // Level 1 or 2 can only create tasks in their own direction
+  // Level 1 or 2 can only create tasks in their own directions
   if (req.user.access_level <= 2) {
-    direction = req.user.role;
+    if (!direction || !userHasDirection(req.user, direction)) {
+      direction = getUserDirections(req.user)[0] || 'Фото';
+    }
   }
 
   if (!direction) {
@@ -1426,7 +1471,7 @@ router.post('/tasks/:id/take', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Задача уже находится в работе или завершена.' });
   }
 
-  if (req.user.access_level <= 2 && req.user.role !== task.direction) {
+  if (req.user.access_level <= 2 && !userHasDirection(req.user, task.direction)) {
     return res.status(403).json({ error: `Вы можете брать задачи только своего направления (${req.user.role}).` });
   }
 
@@ -1845,21 +1890,29 @@ router.post('/admin/users/:id/approve', requireAuth, requireLevel(4), async (req
 
   const maxLevel = req.user.access_level >= 5 ? 5 : 4;
   const finalLevel = Math.max(1, Math.min(maxLevel, accessLevel));
+
+  let finalRole = targetUser.role;
+  if (Array.isArray(req.body.roles) && req.body.roles.length > 0) {
+    finalRole = req.body.roles.map(r => String(r).trim()).filter(Boolean).join(', ');
+  } else if (typeof req.body.role === 'string' && req.body.role.trim()) {
+    finalRole = req.body.role.trim();
+  }
+
   await db.run(
-    'UPDATE users SET is_approved = 1, access_level = ? WHERE id = ?',
-    [finalLevel, profileId]
+    'UPDATE users SET is_approved = 1, access_level = ?, role = ? WHERE id = ?',
+    [finalLevel, finalRole, profileId]
   );
   invalidateUserCache(profileId);
 
   try {
-    await telegramService.notifyUserApproved(targetUser, finalLevel);
+    await telegramService.notifyUserApproved({ ...targetUser, role: finalRole }, finalLevel);
   } catch (e) {}
 
   await logAudit(req, {
     action: 'Одобрение заявки',
     category: 'users',
     target: `${targetUser.name} (@${targetUser.username})`,
-    details: `Профиль одобрен с уровнем доступа ${finalLevel} (${targetUser.role})`
+    details: `Профиль одобрен с уровнем доступа ${finalLevel} (Цехи: ${finalRole})`
   });
 
   res.json({ success: true, message: `Заявка пользователя «${targetUser.name}» успешно одобрена!` });

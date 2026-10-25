@@ -291,10 +291,16 @@ const canRework = computed(() => {
   return isLeader.value;
 });
 
+const userHasDirection = (u, dir) => {
+  if (!u || !dir) return false;
+  const dirs = (u.role || '').split(',').map(s => s.trim().toLowerCase());
+  return dirs.includes(dir.trim().toLowerCase());
+};
+
 const canDeleteTask = computed(() => {
   if (!task.value || !user.value) return false;
   if (user.value.access_level >= 3) return true;
-  if (user.value.can_create_tasks && user.value.role === task.value.direction) return true;
+  if (user.value.can_create_tasks && userHasDirection(user.value, task.value.direction)) return true;
   return false;
 });
 

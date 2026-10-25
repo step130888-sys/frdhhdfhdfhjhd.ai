@@ -653,13 +653,15 @@ async function notifyTaskSubmittedForReview(task, user) {
   // Send to workshop head of this direction (level = 2)
   if (task.direction) {
     const workshopHeads = await db.all(
-      'SELECT telegram_id FROM users WHERE access_level = 2 AND role = ? AND telegram_id IS NOT NULL AND is_approved = 1',
-      [task.direction]
+      'SELECT telegram_id, role FROM users WHERE access_level = 2 AND telegram_id IS NOT NULL AND is_approved = 1'
     );
     for (const h of workshopHeads) {
-      if (h.telegram_id && h.telegram_id !== leadGroup) {
-        const ok = await sendTelegramMessage(h.telegram_id, card, kbd);
-        if (ok) sentCount++;
+      const dirs = (h.role || '').split(',').map(s => s.trim().toLowerCase());
+      if (dirs.includes(task.direction.toLowerCase())) {
+        if (h.telegram_id && h.telegram_id !== leadGroup) {
+          const ok = await sendTelegramMessage(h.telegram_id, card, kbd);
+          if (ok) sentCount++;
+        }
       }
     }
   }
