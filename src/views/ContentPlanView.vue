@@ -19,7 +19,7 @@
           </h1>
         </div>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
-          Координация задач и мульти-проектов 5 цехов («Фото», «Дизайн», «Видео», «Моушен», «СММ») в реальном времени
+          Координация задач и мульти-проектов 6 цехов («Фото», «Дизайн», «Видео», «Моушен», «СММ», «Звук») в реальном времени
         </p>
       </div>
 
@@ -296,6 +296,9 @@
                       <svg v-else-if="st.direction === 'СММ'" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
                       </svg>
+                      <svg v-else-if="st.direction === 'Звук'" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>
+                      </svg>
                       <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/>
                       </svg>
@@ -554,7 +557,8 @@ const directionTabs = [
   { label: 'Дизайн', value: 'Дизайн' },
   { label: 'Видео', value: 'Видео' },
   { label: 'Моушен', value: 'Моушен' },
-  { label: 'СММ', value: 'СММ' }
+  { label: 'СММ', value: 'СММ' },
+  { label: 'Звук', value: 'Звук' }
 ];
 
 const statusTabs = [
@@ -806,6 +810,7 @@ const getDirColor = (dir) => {
     case 'Видео': return 'text-red-600 dark:text-red-400';
     case 'Моушен': return 'text-sky-600 dark:text-cyan-300';
     case 'СММ': return 'text-emerald-600 dark:text-emerald-300';
+    case 'Звук': return 'text-teal-600 dark:text-teal-300';
     default: return 'text-orange-600 dark:text-kedrRose';
   }
 };

@@ -266,6 +266,7 @@
             <option value="Видео">Видео</option>
             <option value="Моушен">Моушен</option>
             <option value="СММ">СММ</option>
+            <option value="Звук">Звук</option>
             <option value="Руководство">Руководство</option>
             <option value="Хранитель">Хранитель</option>
           </select>
@@ -923,7 +924,7 @@ import { useAuthStore } from '../stores/auth';
 
 const { showNotification, user } = useAuthStore();
 
-const allAvailableDirections = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ', 'Руководство', 'Хранитель'];
+const allAvailableDirections = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ', 'Звук', 'Руководство', 'Хранитель'];
 
 const getUserDirections = (roleStr) => {
   if (!roleStr) return [];
@@ -937,6 +938,7 @@ const getDirIcon = (dir) => {
     case 'Видео': return '🎬';
     case 'Моушен': return '✨';
     case 'СММ': return '✍️';
+    case 'Звук': return '🎙️';
     case 'Руководство': return '⚡';
     case 'Хранитель': return '👑';
     default: return '📁';
@@ -955,6 +957,8 @@ const getDirBadgeClass = (dir) => {
       return 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30';
     case 'СММ':
       return 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30';
+    case 'Звук':
+      return 'bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-500/30';
     case 'Руководство':
       return 'bg-violet-50 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/40 font-bold';
     case 'Хранитель':

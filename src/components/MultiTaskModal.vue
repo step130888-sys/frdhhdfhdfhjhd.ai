@@ -184,7 +184,8 @@ const allWorkshops = [
   { name: 'Дизайн', placeholder: 'Афиша, обложки постов, инфографика' },
   { name: 'Видео', placeholder: 'Динамичный ролик Reels / Shorts на 30-45 секунд' },
   { name: 'Моушен', placeholder: 'Анимированная заставка и плашки' },
-  { name: 'СММ', placeholder: 'Анонс и итоговый пост с ключевыми цитатами' }
+  { name: 'СММ', placeholder: 'Анонс и итоговый пост с ключевыми цитатами' },
+  { name: 'Звук', placeholder: 'Запись звука на площадке, подкаст, сведение и мастеринг' }
 ];
 
 const getWorkshopPlaceholder = (name) => {
@@ -199,13 +200,14 @@ const form = reactive({
   description: '',
   event_date: today,
   deadline: `${today} 21:00`,
-  departments: ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ'],
+  departments: ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ', 'Звук'],
   subtasks: {
     'Фото': '',
     'Дизайн': '',
     'Видео': '',
     'Моушен': '',
-    'СММ': ''
+    'СММ': '',
+    'Звук': ''
   }
 });
 
@@ -236,7 +238,7 @@ watch(() => props.isOpen, (open) => {
       form.description = '';
       form.event_date = today;
       form.deadline = `${today} 21:00`;
-      form.departments = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ'];
+      form.departments = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ', 'Звук'];
       for (const w of allWorkshops) {
         form.subtasks[w.name] = '';
       }

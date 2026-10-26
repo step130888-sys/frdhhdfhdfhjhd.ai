@@ -95,7 +95,7 @@
           </div>
 
           <div v-if="!toggleSubtasksCustom" class="p-3 rounded-xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-slate-400 flex items-center justify-between">
-            <span>Будут автоматически сгенерированы 5 подзадач для «Фото», «Дизайн», «Видео», «Моушен», «СММ».</span>
+            <span>Будут автоматически сгенерированы 6 подзадач для «Фото», «Дизайн», «Видео», «Моушен», «СММ», «Звук».</span>
             <span class="text-orange-600 dark:text-[#fcb4d5] font-bold ml-2 inline-flex items-center gap-1">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
               <span>Авто-ТЗ</span>
@@ -129,7 +129,7 @@
             :disabled="loading"
             class="btn-neon px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black shadow-xl flex items-center space-x-2 disabled:opacity-50 cursor-pointer active:scale-95"
           >
-            <span>{{ loading ? 'Создание...' : 'Создать событие и 5 задач' }}</span>
+            <span>{{ loading ? 'Создание...' : 'Создать событие и 6 задач' }}</span>
           </button>
         </div>
       </form>
@@ -156,7 +156,8 @@ const workshops = [
   { name: 'Дизайн', placeholder: 'Обложка для статьи, афиша мероприятия, инфографика' },
   { name: 'Видео', placeholder: 'Динамичный вертикальный ролик Reels / Shorts на 30-45 секунд' },
   { name: 'Моушен', placeholder: 'Анимированная плашка с таймлайном и логотипом мероприятия' },
-  { name: 'СММ', placeholder: 'Анонсирующий и итоговый посты с цитатами и хэштегами' }
+  { name: 'СММ', placeholder: 'Анонсирующий и итоговый посты с цитатами и хэштегами' },
+  { name: 'Звук', placeholder: 'Запись звука спикеров, сведение аудиодорожки, подкаст' }
 ];
 
 const today = new Date().toISOString().substring(0, 10);
@@ -171,7 +172,8 @@ const form = reactive({
     'Дизайн': 'Оформление афиши, плашки и обложки публикации',
     'Видео': 'Динамичная съемка и вертикальный монтаж (Reels/Shorts)',
     'Моушен': 'Анимация графических элементов и интро/аутро',
-    'СММ': 'Написание текста поста, подбор хэштегов и публикация'
+    'СММ': 'Написание текста поста, подбор хэштегов и публикация',
+    'Звук': 'Чистая запись звука спикеров, мастеринг и саунд-дизайн'
   }
 });
 

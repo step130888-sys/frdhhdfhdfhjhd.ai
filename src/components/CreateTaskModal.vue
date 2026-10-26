@@ -133,7 +133,7 @@ const usersList = ref([]);
 
 const selectableDirections = computed(() => {
   if (userLevel.value >= 3) {
-    return ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ'];
+    return ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ', 'Звук'];
   }
   const myDirs = (props.currentUser?.role || '').split(',').map(s => s.trim()).filter(Boolean);
   return myDirs.length ? myDirs : ['Фото'];

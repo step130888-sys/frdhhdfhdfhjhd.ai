@@ -69,7 +69,7 @@
         <div class="flex items-center space-x-2">
           <span class="font-bold text-slate-700 dark:text-slate-300">Медиацентр «СМС СГТУ»</span>
           <span>•</span>
-          <span class="text-slate-500 dark:text-slate-400">Фото • Дизайн • Видео • Моушен • СММ</span>
+          <span class="text-slate-500 dark:text-slate-400">Фото • Дизайн • Видео • Моушен • СММ • Звук</span>
         </div>
         <div class="text-[11px] text-slate-400 dark:text-slate-600 font-mono">
           VUE 3 + Express + SQLite WAL + Bots • 2026

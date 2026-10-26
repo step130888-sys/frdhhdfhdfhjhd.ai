@@ -236,6 +236,7 @@
                 <option value="Видео">Видео</option>
                 <option value="Моушен">Моушен</option>
                 <option value="СММ">СММ</option>
+                <option value="Звук">Звук</option>
               </select>
             </div>
 
@@ -321,7 +322,8 @@ const directionTabs = computed(() => [
   { label: 'Дизайн', value: 'Дизайн', count: counts.value['Дизайн'] || 0 },
   { label: 'Видео', value: 'Видео', count: counts.value['Видео'] || 0 },
   { label: 'Моушен', value: 'Моушен', count: counts.value['Моушен'] || 0 },
-  { label: 'СММ', value: 'СММ', count: counts.value['СММ'] || 0 }
+  { label: 'СММ', value: 'СММ', count: counts.value['СММ'] || 0 },
+  { label: 'Звук', value: 'Звук', count: counts.value['Звук'] || 0 }
 ]);
 
 // VK Connection State

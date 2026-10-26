@@ -944,7 +944,7 @@ router.post('/tasks/multi', requireAuth, requireLevel(3, 'Создавать м�
   const eventDate = (req.body.event_date || '').trim();
   const deadline = (req.body.deadline || `${eventDate} 21:00`).trim();
   const rawDepartments = req.body.departments || [];
-  const validWorkshops = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ'];
+  const validWorkshops = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ', 'Звук'];
   const departments = rawDepartments.filter(d => validWorkshops.includes(d));
 
   if (!title || !eventDate) {
@@ -952,7 +952,7 @@ router.post('/tasks/multi', requireAuth, requireLevel(3, 'Создавать м�
   }
 
   if (departments.length === 0) {
-    return res.status(400).json({ error: 'Выберите хотя бы одно подразделение (от 1 до 5 цехов).' });
+    return res.status(400).json({ error: 'Выберите хотя бы одно подразделение (от 1 до 6 цехов).' });
   }
 
   // 1. Create parent multi-task
@@ -1016,7 +1016,7 @@ router.post('/tasks/multi/:id/update', requireAuth, requireLevel(3, 'Редак�
   const eventDate = (req.body.event_date || parentTask.event_date || '').trim();
   const deadline = (req.body.deadline || parentTask.deadline || `${eventDate} 21:00`).trim();
   const rawDepartments = req.body.departments;
-  const validWorkshops = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ'];
+  const validWorkshops = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ', 'Звук'];
   const departments = Array.isArray(rawDepartments) ? rawDepartments.filter(d => validWorkshops.includes(d)) : null;
 
   // 1. Update parent multi-task
@@ -1781,7 +1781,8 @@ router.get('/materials', requireAuth, async (req, res) => {
     'Дизайн': 0,
     'Видео': 0,
     'Моушен': 0,
-    'СММ': 0
+    'СММ': 0,
+    'Звук': 0
   };
   let totalCount = 0;
   for (const row of directionCounts) {

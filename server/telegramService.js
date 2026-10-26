@@ -1865,7 +1865,7 @@ class TelegramBotWorker {
         const rawRole = parts[2].trim();
         const newName = parts.slice(3).join(' ').trim();
 
-        const validRoles = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ', 'Руководство'];
+        const validRoles = ['Фото', 'Дизайн', 'Видео', 'Моушен', 'СММ', 'Звук', 'Руководство'];
         const matchedRole = validRoles.find(r => r.toLowerCase() === rawRole.toLowerCase()) || rawRole;
 
         const existing = await db.get('SELECT id FROM users WHERE LOWER(username) = ?', [newLogin]);
@@ -1904,7 +1904,7 @@ class TelegramBotWorker {
         '<code>/add_user &lt;логин&gt; &lt;цех&gt; &lt;Имя и Фамилия&gt;</code>\n\n' +
         '📌 <b>Пример:</b>\n' +
         '<code>/add_user ivanov Фото Иван Иванов</code>\n\n' +
-        '🏷️ <b>Доступные цехи:</b> <code>Фото</code>, <code>Дизайн</code>, <code>Видео</code>, <code>Моушен</code>, <code>СММ</code>, <code>Руководство</code>.\n\n' +
+        '🏷️ <b>Доступные цехи:</b> <code>Фото</code>, <code>Дизайн</code>, <code>Видео</code>, <code>Моушен</code>, <code>СММ</code>, <code>Звук</code>, <code>Руководство</code>.\n\n' +
         '💡 <i>Пароль по умолчанию создается:</i> <code>kedr2026</code>\n' +
         '<i>Бот автоматически создаст пользователя и пришлет персональную ссылку для входа!</i>'
       );
@@ -1947,7 +1947,8 @@ class TelegramBotWorker {
             { text: '✨ Моушен', callback_data: 'reg_dept:Моушен' }
           ],
           [
-            { text: '📱 СММ', callback_data: 'reg_dept:СММ' }
+            { text: '📱 СММ', callback_data: 'reg_dept:СММ' },
+            { text: '🎙️ Звук', callback_data: 'reg_dept:Звук' }
           ]
         ]
       };
@@ -1960,7 +1961,8 @@ class TelegramBotWorker {
         '• <b>Дизайн</b> — графика, баннеры, айдентика\n' +
         '• <b>Видео</b> — съемка и монтаж сюжетов\n' +
         '• <b>Моушен</b> — анимация, титры, заставки\n' +
-        '• <b>СММ</b> — копирайтинг, посты, контент-план\n\n' +
+        '• <b>СММ</b> — копирайтинг, посты, контент-план\n' +
+        '• <b>Звук</b> — звукозапись, сведение, подкасты, саунд-дизайн\n\n' +
         '<i>Нажмите на кнопку с нужным направлением ниже:</i>'
       );
       await sendTelegramMessage(chatId, msgText, regKbd);

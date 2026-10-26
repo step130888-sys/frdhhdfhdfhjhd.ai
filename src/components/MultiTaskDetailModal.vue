@@ -172,6 +172,9 @@
                     <svg v-else-if="st.direction === 'СММ'" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/>
                     </svg>
+                    <svg v-else-if="st.direction === 'Звук'" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>
+                    </svg>
                     <span v-else class="w-1.5 h-1.5 rounded-full bg-current"></span>
                     <span>{{ st.direction }}</span>
                   </span>
@@ -265,6 +268,7 @@ const getDirBadgeClasses = (dir) => {
     case 'Видео': return 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30';
     case 'Моушен': return 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/30';
     case 'СММ': return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30';
+    case 'Звук': return 'bg-teal-500/15 text-teal-600 dark:text-teal-300 border-teal-500/30';
     default: return 'bg-orange-500/15 text-orange-600 dark:text-[#fcb4d5] border-orange-500/30 dark:border-[#fcb4d5]/30';
   }
 };

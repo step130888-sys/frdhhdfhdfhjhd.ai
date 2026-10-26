@@ -168,6 +168,7 @@
       <span class="hover:text-orange-600 dark:hover:text-[#fcb4d5] transition-colors cursor-default">● ВИДЕО</span>
       <span class="hover:text-orange-600 dark:hover:text-[#fcb4d5] transition-colors cursor-default">● МОУШЕН</span>
       <span class="hover:text-orange-600 dark:hover:text-[#fcb4d5] transition-colors cursor-default">● СММ</span>
+      <span class="hover:text-orange-600 dark:hover:text-[#fcb4d5] transition-colors cursor-default">● ЗВУК</span>
     </div>
 
   </div>
