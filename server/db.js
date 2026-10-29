@@ -176,6 +176,14 @@ async function initDb() {
     await run('ALTER TABLE tasks ADD COLUMN parent_id INTEGER');
   } catch (e) {}
 
+  // Backfill event_date for single tasks created without it so they appear in the calendar
+  try {
+    await run(`UPDATE tasks SET event_date = SUBSTR(deadline, 1, 10) WHERE (event_date IS NULL OR TRIM(event_date) = '') AND deadline IS NOT NULL AND TRIM(deadline) != ''`);
+  } catch (e) {}
+  try {
+    await run(`UPDATE tasks SET event_date = strftime('%Y-%m-%d', 'now') WHERE (event_date IS NULL OR TRIM(event_date) = '')`);
+  } catch (e) {}
+
   // High-performance database query indexes
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to_id ON tasks(assigned_to_id)');
   await run('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)');

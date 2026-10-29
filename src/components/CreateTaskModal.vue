@@ -30,21 +30,34 @@
           />
         </div>
 
-        <!-- Direction & Deadline Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <!-- Direction, Date & Deadline Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <!-- Direction -->
           <div>
             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">
-              Направление (цех):
+              Цех / Отдел:
             </label>
             <select
               v-model="form.direction"
               :disabled="userLevel <= 2 && selectableDirections.length <= 1"
               required
-              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-kedrRose focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-kedrRose/20 focus:bg-white dark:focus:bg-[#181822] disabled:opacity-75 transition-all"
+              class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-kedrRose focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-kedrRose/20 focus:bg-white dark:focus:bg-[#181822] disabled:opacity-75 transition-all"
             >
               <option v-for="d in selectableDirections" :key="d" :value="d">{{ d }}</option>
             </select>
+          </div>
+
+          <!-- Event Date (Calendar) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">
+              Дата в календаре:
+            </label>
+            <input
+              v-model="form.event_date"
+              type="date"
+              required
+              class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-kedrRose focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-kedrRose/20 focus:bg-white dark:focus:bg-[#181822] transition-all"
+            />
           </div>
 
           <!-- Deadline -->
@@ -55,7 +68,7 @@
             <input
               v-model="form.deadline"
               type="datetime-local"
-              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-kedrRose focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-kedrRose/20 focus:bg-white dark:focus:bg-[#181822] transition-all"
+              class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-kedrRose focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-kedrRose/20 focus:bg-white dark:focus:bg-[#181822] transition-all"
             />
           </div>
         </div>
@@ -115,7 +128,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 
 const props = defineProps({
   isOpen: Boolean,
@@ -139,11 +152,14 @@ const selectableDirections = computed(() => {
   return myDirs.length ? myDirs : ['Фото'];
 });
 
+const todayStr = new Date().toISOString().substring(0, 10);
+
 const form = ref({
   title: '',
   description: '',
   direction: (props.currentUser?.role || '').split(',')[0]?.trim() || 'Фото',
-  deadline: '',
+  event_date: todayStr,
+  deadline: `${todayStr}T21:00`,
   assigned_to_id: null
 });
 
@@ -156,6 +172,12 @@ watch(() => props.currentUser, (newVal) => {
     }
   }
 }, { immediate: true });
+
+watch(() => form.value.event_date, (newDate) => {
+  if (newDate && !form.value.deadline) {
+    form.value.deadline = `${newDate}T21:00`;
+  }
+});
 
 onMounted(async () => {
   try {
@@ -179,7 +201,9 @@ const submitTask = async () => {
       emit('created', data.task);
       form.value.title = '';
       form.value.description = '';
-      form.value.deadline = '';
+      const nowStr = new Date().toISOString().substring(0, 10);
+      form.value.event_date = nowStr;
+      form.value.deadline = `${nowStr}T21:00`;
       form.value.assigned_to_id = null;
       emit('close');
     } else {

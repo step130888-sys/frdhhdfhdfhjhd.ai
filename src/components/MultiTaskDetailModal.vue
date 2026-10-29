@@ -18,7 +18,7 @@
           <div>
             <div class="flex flex-wrap items-center gap-2 mb-1">
               <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-orange-500/10 dark:bg-[#fcb4d5]/15 text-orange-600 dark:text-[#fcb4d5] border border-orange-500/20 dark:border-[#fcb4d5]/30 font-mono">
-                Мульти-задача #{{ event.id }}
+                {{ event.direction && event.direction !== 'Общее' ? `Задача (${event.direction}) #${event.id}` : `Мульти-задача #${event.id}` }}
               </span>
               <span
                 class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border font-mono inline-flex items-center gap-1.5"
@@ -36,8 +36,9 @@
 
         <!-- Header Actions: Edit, Delete & Close -->
         <div class="flex items-center space-x-2.5 self-start sm:self-auto flex-wrap gap-y-2">
+          <!-- Edit Multi-Task button (Level 3-4 only) -->
           <button
-            v-if="isLeader && event.id < 900000"
+            v-if="isLeader && event.id < 900000 && (!event.direction || event.direction === 'Общее')"
             @click="$emit('edit', event)"
             class="px-4 py-2.5 min-h-[44px] rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 hover:bg-orange-500/20 dark:hover:bg-[#fcb4d5]/25 text-orange-600 dark:text-[#fcb4d5] border border-orange-500/20 dark:border-[#fcb4d5]/30 text-xs font-bold transition-all flex items-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer"
           >
@@ -47,16 +48,30 @@
             <span>Редактировать проект</span>
           </button>
 
+          <!-- Open Single Task button -->
+          <button
+            v-else-if="event.direction && event.direction !== 'Общее'"
+            @click="$router.push(`/task/${event.id}`)"
+            class="px-4 py-2.5 min-h-[44px] rounded-xl bg-orange-500/10 dark:bg-[#fcb4d5]/15 hover:bg-orange-500/20 dark:hover:bg-[#fcb4d5]/25 text-orange-600 dark:text-[#fcb4d5] border border-orange-500/20 dark:border-[#fcb4d5]/30 text-xs font-bold transition-all flex items-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            <span>Открыть задачу</span>
+          </button>
+
           <button
             v-if="isLeader && event.id < 900000"
             @click="$emit('delete', event)"
             class="px-3.5 py-2.5 min-h-[44px] rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-xs font-bold transition-all flex items-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer"
-            title="Удалить мульти-задачу"
+            :title="event.direction && event.direction !== 'Общее' ? 'Удалить задачу' : 'Удалить мульти-задачу'"
           >
             <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
             </svg>
-            <span>Удалить проект</span>
+            <span>Удалить {{ event.direction && event.direction !== 'Общее' ? 'задачу' : 'проект' }}</span>
           </button>
           
           <button

@@ -168,6 +168,9 @@
           <span class="text-[10px] font-mono font-black px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10">
             {{ formatShortDay(ev.event_date) }}
           </span>
+          <span v-if="ev.direction && ev.direction !== 'Общее'" class="text-[10px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-bold opacity-90">
+            {{ ev.direction }}
+          </span>
           <span class="truncate max-w-[170px] sm:max-w-[220px]">{{ ev.title }}</span>
           <svg class="w-3 h-3 text-slate-400 group-hover/pill:translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </button>

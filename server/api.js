@@ -872,7 +872,8 @@ router.get('/tasks/calendar', requireAuth, async (req, res) => {
     if (t.parent_id) {
       subtasks.push(taskObj);
     } else {
-      const dateKey = t.event_date || (t.deadline ? t.deadline.substring(0, 10) : 'Без даты');
+      const rawDate = t.event_date || (t.deadline ? t.deadline.substring(0, 10) : null);
+      const dateKey = rawDate ? (rawDate.includes('T') ? rawDate.split('T')[0] : (rawDate.includes(' ') ? rawDate.split(' ')[0] : rawDate)) : new Date().toISOString().substring(0, 10);
       if (!eventsMap.has(t.id)) {
         const ev = {
           id: t.id,
@@ -881,6 +882,9 @@ router.get('/tasks/calendar', requireAuth, async (req, res) => {
           event_date: dateKey,
           deadline: t.deadline,
           status: t.status,
+          direction: t.direction,
+          assigned_to: taskObj.assigned_to,
+          comment_count: taskObj.comment_count,
           subtasks: []
         };
         eventsMap.set(t.id, ev);
@@ -896,7 +900,8 @@ router.get('/tasks/calendar', requireAuth, async (req, res) => {
     if (eventsMap.has(st.parent_id)) {
       eventsMap.get(st.parent_id).subtasks.push(st);
     } else {
-      const dateKey = st.event_date || (st.deadline ? st.deadline.substring(0, 10) : 'Без даты');
+      const rawDate = st.event_date || (st.deadline ? st.deadline.substring(0, 10) : null);
+      const dateKey = rawDate ? (rawDate.includes('T') ? rawDate.split('T')[0] : (rawDate.includes(' ') ? rawDate.split(' ')[0] : rawDate)) : new Date().toISOString().substring(0, 10);
       let foundEvent = (dateKey !== 'Без даты') ? dateToEventMap.get(dateKey) : null;
       if (!foundEvent) {
         foundEvent = {
@@ -906,6 +911,7 @@ router.get('/tasks/calendar', requireAuth, async (req, res) => {
           event_date: dateKey,
           deadline: st.deadline,
           status: 'in_progress',
+          direction: 'Общее',
           subtasks: []
         };
         eventsMap.set(foundEvent.id, foundEvent);
@@ -914,6 +920,32 @@ router.get('/tasks/calendar', requireAuth, async (req, res) => {
         }
       }
       foundEvent.subtasks.push(st);
+    }
+  }
+
+  // For standalone single tasks (created with no child subtasks and a specific direction):
+  // Expose the task itself as a subtask so it displays with its workshop badge, assignee, status and details
+  for (const ev of eventsMap.values()) {
+    if (ev.subtasks.length === 0 && ev.direction && ev.direction !== 'Общее') {
+      const origTask = allTasks.find(t => t.id === ev.id);
+      ev.subtasks.push({
+        id: ev.id,
+        title: ev.title,
+        description: ev.description,
+        direction: ev.direction,
+        status: ev.status,
+        deadline: ev.deadline,
+        event_date: ev.event_date,
+        parent_id: ev.id,
+        assigned_to: ev.assigned_to || (origTask && origTask.assigned_to_id ? {
+          id: origTask.u_id,
+          name: origTask.u_name,
+          username: origTask.u_username,
+          role: origTask.u_role,
+          avatar_url: origTask.u_avatar_url
+        } : null),
+        comment_count: origTask ? (origTask.comment_count || 0) : (ev.comment_count || 0)
+      });
     }
   }
 
@@ -1351,6 +1383,8 @@ router.post('/tasks', requireAuth, async (req, res) => {
   const description = (req.body.description || '').trim();
   let direction = (req.body.direction || '').trim();
   const deadline = (req.body.deadline || '').trim();
+  const rawEventDate = (req.body.event_date || '').trim();
+  const eventDate = rawEventDate || (deadline ? deadline.substring(0, 10) : new Date().toISOString().substring(0, 10));
   let assignedToId = req.body.assigned_to_id ? parseInt(req.body.assigned_to_id, 10) : null;
 
   if (!title || !description) {
@@ -1371,9 +1405,9 @@ router.post('/tasks', requireAuth, async (req, res) => {
   const status = assignedToId ? 'in_progress' : 'open';
 
   const result = await db.run(
-    `INSERT INTO tasks (title, description, direction, deadline, assigned_to_id, status)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [title, description, direction, deadline || null, assignedToId, status]
+    `INSERT INTO tasks (title, description, direction, event_date, deadline, assigned_to_id, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [title, description, direction, eventDate, deadline || null, assignedToId, status]
   );
 
   const newTask = await db.get('SELECT * FROM tasks WHERE id = ?', [result.lastID]);
@@ -1480,14 +1514,15 @@ router.post('/tasks/:id/update', requireAuth, async (req, res) => {
   const description = req.body.description !== undefined ? req.body.description.trim() : task.description;
   const deadline = req.body.deadline !== undefined ? req.body.deadline.trim() : task.deadline;
   const direction = (isLeader && req.body.direction) ? req.body.direction.trim() : task.direction;
+  const eventDate = req.body.event_date !== undefined ? req.body.event_date.trim() : (task.event_date || (deadline ? deadline.substring(0, 10) : null));
 
   if (!title) {
     return res.status(400).json({ error: 'Заголовок задачи не может быть пустым.' });
   }
 
   await db.run(
-    'UPDATE tasks SET title = ?, description = ?, deadline = ?, direction = ? WHERE id = ?',
-    [title, description, deadline || null, direction, taskId]
+    'UPDATE tasks SET title = ?, description = ?, deadline = ?, direction = ?, event_date = ? WHERE id = ?',
+    [title, description, deadline || null, direction, eventDate, taskId]
   );
 
   await logAudit(req, {

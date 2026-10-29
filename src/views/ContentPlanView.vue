@@ -81,6 +81,18 @@
             <span>Синхронизировать задачи</span>
           </button>
 
+          <!-- Button in Calendar mode: Create Single Task -->
+          <button
+            v-if="canCreateTasks"
+            @click="showCreateModal = true"
+            class="px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 border border-black/10 dark:border-white/10 flex items-center space-x-2 active:scale-95 cursor-pointer transition-all"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>+ Создать задачу (+1)</span>
+          </button>
+
           <!-- Button in Calendar mode: Create Multi-task (Level 3-4 only) -->
           <button
             v-if="isLeader"
@@ -233,9 +245,9 @@
 
             <!-- Leadership Controls (Removed workshop dot circles per user instruction) -->
             <div class="flex items-center space-x-2 text-xs self-start md:self-auto flex-wrap gap-y-1.5">
-              <!-- Edit Multi-Task button (Level 3-4 only) -->
+              <!-- Multi-task controls: Edit Multi-Task button (Level 3-4 only) -->
               <button
-                v-if="isLeader && ev.id < 900000"
+                v-if="isLeader && ev.id < 900000 && (!ev.direction || ev.direction === 'Общее')"
                 @click.stop="openEditMultiTask(ev)"
                 class="px-3.5 py-2 min-h-[44px] rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/15 hover:bg-orange-100 dark:hover:bg-[#fcb4d5]/25 text-orange-700 dark:text-[#fcb4d5] border border-orange-200 dark:border-[#fcb4d5]/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
                 title="Редактировать мульти-задачу и подразделения"
@@ -247,17 +259,32 @@
                 <span>Редактировать проект</span>
               </button>
 
-              <!-- Delete Multi-Task button (Level 3-4 only) -->
+              <!-- Single Task button -->
+              <button
+                v-else-if="ev.direction && ev.direction !== 'Общее'"
+                @click.stop="$router.push(`/task/${ev.id}`)"
+                class="px-3.5 py-2 min-h-[44px] rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/15 hover:bg-orange-100 dark:hover:bg-[#fcb4d5]/25 text-orange-700 dark:text-[#fcb4d5] border border-orange-200 dark:border-[#fcb4d5]/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
+                title="Открыть карточку задачи"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                <span>Открыть задачу</span>
+              </button>
+
+              <!-- Delete Multi-Task or Single Task button (Level 3-4 only) -->
               <button
                 v-if="isLeader && ev.id < 900000"
                 @click.stop="deleteMultiTask(ev)"
                 class="px-3.5 py-2 min-h-[44px] rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
-                title="Удалить мульти-задачу и все её цеховые подзадачи"
+                :title="ev.direction && ev.direction !== 'Общее' ? 'Удалить задачу' : 'Удалить мульти-задачу и все её цеховые подзадачи'"
               >
                 <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
                 </svg>
-                <span>Удалить проект</span>
+                <span>Удалить {{ ev.direction && ev.direction !== 'Общее' ? 'задачу' : 'проект' }}</span>
               </button>
             </div>
           </div>
@@ -781,8 +808,12 @@ const bulkDeleteTasks = async () => {
 
 const deleteMultiTask = async (ev) => {
   if (!ev || !ev.id) return;
+  const isSingle = Boolean(ev.direction && ev.direction !== 'Общее');
   const count = ev.subtasks ? ev.subtasks.length : 0;
-  if (!confirm(`Вы действительно хотите удалить мульти-задачу «${ev.title}» и все привязанные цеховые подзадачи (${count} шт.)? Это действие необратимо.`)) {
+  const confirmMsg = isSingle
+    ? `Вы действительно хотите удалить задачу «${ev.title}»? Это действие необратимо.`
+    : `Вы действительно хотите удалить мульти-задачу «${ev.title}» и все привязанные цеховые подзадачи (${count} шт.)? Это действие необратимо.`;
+  if (!confirm(confirmMsg)) {
     return;
   }
   try {
@@ -791,9 +822,9 @@ const deleteMultiTask = async (ev) => {
     });
     const data = await res.json();
     if (!res.ok) {
-      throw new Error(data.error || 'Ошибка при удалении мульти-задачи');
+      throw new Error(data.error || 'Ошибка при удалении задачи');
     }
-    showNotification(data.message || `Мульти-задача «${ev.title}» успешно удалена`, 'success');
+    showNotification(data.message || `${isSingle ? 'Задача' : 'Мульти-задача'} «${ev.title}» успешно удалена`, 'success');
     showDetailModal.value = false;
     selectedDetailEvent.value = null;
     await Promise.all([fetchCalendarEvents(), fetchTasks()]);
