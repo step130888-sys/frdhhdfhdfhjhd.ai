@@ -191,65 +191,94 @@
         </button>
       </div>
 
-      <!-- Multi-task Cards Timeline -->
-      <div v-else class="space-y-8">
+      <!-- Multi-task Cards Timeline (3-column cooperative grid for single-task events) -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 items-stretch">
         <div
           v-for="ev in displayedCalendarEvents"
           :key="ev.id"
           :id="'multitask-' + ev.id"
           @click="openDetailMultiTask(ev)"
-          class="cyber-glass rounded-3xl overflow-hidden transition-all duration-300 cursor-pointer group/card scroll-mt-24"
-          :class="{
-            'ring-4 ring-orange-500/80 dark:ring-[#fcb4d5] shadow-2xl scale-[1.01] -translate-y-0.5': highlightedEventId === ev.id
-          }"
+          class="cyber-glass rounded-3xl overflow-hidden transition-all duration-300 cursor-pointer group/card scroll-mt-24 flex flex-col justify-between"
+          :class="[
+            highlightedEventId === ev.id ? 'ring-4 ring-orange-500/80 dark:ring-[#fcb4d5] shadow-2xl scale-[1.01] -translate-y-0.5' : '',
+            ev.subtasks && ev.subtasks.length > 1 ? 'col-span-1 md:col-span-2 lg:col-span-3' : 'col-span-1 h-full'
+          ]"
           title="Нажмите на карточку для просмотра деталей мульти-задачи"
         >
           <!-- Multi-task Header (Liquid Glass) -->
-          <div class="p-5 md:p-6 bg-white/40 dark:bg-white/[0.04] border-b border-black/[0.05] dark:border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="flex items-start md:items-center space-x-4">
+          <div
+            class="bg-white/40 dark:bg-white/[0.04] border-b border-black/[0.05] dark:border-white/[0.08]"
+            :class="ev.subtasks && ev.subtasks.length > 1
+              ? 'p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4'
+              : 'p-4 sm:p-5 flex flex-col justify-between gap-3.5'"
+          >
+            <div
+              class="flex items-start"
+              :class="ev.subtasks && ev.subtasks.length > 1 ? 'md:items-center space-x-4' : 'space-x-3'"
+            >
               <!-- Date Badge -->
-              <div class="flex-shrink-0 text-center px-4 py-2.5 rounded-2xl bg-orange-50 dark:bg-rose-500/15 border border-orange-200 dark:border-rose-400/30 shadow-xs group-hover/card:border-orange-400 dark:group-hover/card:border-rose-400/50 transition-colors">
-                <div class="text-[10px] text-orange-600 dark:text-rose-400 font-mono uppercase font-black">ДАТА</div>
-                <div class="text-lg md:text-xl font-black text-slate-800 dark:text-white font-mono leading-tight">
+              <div
+                class="flex-shrink-0 text-center rounded-2xl bg-orange-50 dark:bg-rose-500/15 border border-orange-200 dark:border-rose-400/30 shadow-xs group-hover/card:border-orange-400 dark:group-hover/card:border-rose-400/50 transition-colors"
+                :class="ev.subtasks && ev.subtasks.length > 1 ? 'px-4 py-2.5' : 'px-3 py-2 min-w-[54px]'"
+              >
+                <div class="text-[9px] text-orange-600 dark:text-rose-400 font-mono uppercase font-black">ДАТА</div>
+                <div
+                  class="font-black text-slate-800 dark:text-white font-mono leading-tight"
+                  :class="ev.subtasks && ev.subtasks.length > 1 ? 'text-lg md:text-xl' : 'text-base sm:text-lg'"
+                >
                   {{ formatDateDay(ev.event_date) }}
                 </div>
-                <div class="text-[10px] text-orange-600 dark:text-rose-300 font-mono font-bold">
+                <div class="text-[9px] text-orange-600 dark:text-rose-300 font-mono font-bold">
                   {{ formatDateMonth(ev.event_date) }}
                 </div>
               </div>
 
-              <div>
-                <div class="flex items-center space-x-2.5 mb-1">
-                  <h3 class="text-base md:text-lg font-black text-slate-800 dark:text-white group-hover/card:text-orange-600 dark:group-hover/card:text-rose-300 transition-colors">{{ ev.title }}</h3>
+              <!-- Title & Meta -->
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center space-x-2 mb-1 flex-wrap gap-y-1">
+                  <h3
+                    class="font-black text-slate-800 dark:text-white group-hover/card:text-orange-600 dark:group-hover/card:text-rose-300 transition-colors line-clamp-1"
+                    :class="ev.subtasks && ev.subtasks.length > 1 ? 'text-base md:text-lg' : 'text-sm sm:text-base'"
+                    :title="ev.title"
+                  >
+                    {{ ev.title }}
+                  </h3>
                   <span
-                    class="text-[10px] font-bold px-2 py-0.5 rounded-full border font-mono"
+                    class="text-[9px] font-bold px-2 py-0.5 rounded-full border font-mono shrink-0"
                     :class="ev.status === 'done' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30' : 'bg-orange-50 dark:bg-rose-500/15 text-orange-700 dark:text-rose-300 border-orange-200 dark:border-rose-500/30'"
                   >
                     {{ ev.status === 'done' ? 'Завершено' : 'В работе' }}
                   </span>
                 </div>
+
                 <p v-if="ev.description" class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 max-w-2xl whitespace-pre-wrap break-words font-sans">
                   {{ ev.description }}
                 </p>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center space-x-4">
-                  <span v-if="ev.deadline" class="flex items-center space-x-1">
+
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center space-x-3 flex-wrap gap-y-1">
+                  <span v-if="ev.deadline" class="flex items-center space-x-1 shrink-0">
                     <svg class="w-3.5 h-3.5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    <span>Дедлайн: <b class="text-amber-600 dark:text-amber-400">{{ ev.deadline }}</b></span>
+                    <span>Дедлайн: <b class="text-amber-600 dark:text-amber-400 font-mono">{{ ev.deadline }}</b></span>
                   </span>
-                  <span>Цехов задействовано: <b class="text-orange-600 dark:text-rose-300">{{ ev.subtasks ? ev.subtasks.length : 0 }}</b></span>
+                  <span class="shrink-0">Цехов: <b class="text-orange-600 dark:text-rose-300 font-mono">{{ ev.subtasks ? ev.subtasks.length : 0 }}</b></span>
                 </div>
               </div>
             </div>
 
-            <!-- Leadership Controls (Removed workshop dot circles per user instruction) -->
-            <div class="flex items-center space-x-2 text-xs self-start md:self-auto flex-wrap gap-y-1.5">
+            <!-- Leadership Controls -->
+            <div
+              class="flex items-center text-xs flex-wrap gap-1.5"
+              :class="ev.subtasks && ev.subtasks.length > 1
+                ? 'space-x-2 self-start md:self-auto'
+                : 'justify-end w-full pt-2 border-t border-black/[0.04] dark:border-white/[0.04]'"
+            >
               <!-- Multi-task controls: Edit Multi-Task button (Level 3-4 only) -->
               <button
                 v-if="isLeader && ev.id < 900000 && (!ev.direction || ev.direction === 'Общее')"
                 @click.stop="openEditMultiTask(ev)"
-                class="px-3.5 py-2 min-h-[44px] rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/15 hover:bg-orange-100 dark:hover:bg-[#fcb4d5]/25 text-orange-700 dark:text-[#fcb4d5] border border-orange-200 dark:border-[#fcb4d5]/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
+                class="px-3 py-1.5 min-h-[38px] rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/15 hover:bg-orange-100 dark:hover:bg-[#fcb4d5]/25 text-orange-700 dark:text-[#fcb4d5] border border-orange-200 dark:border-[#fcb4d5]/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
                 title="Редактировать мульти-задачу и подразделения"
               >
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -263,7 +292,7 @@
               <button
                 v-else-if="ev.direction && ev.direction !== 'Общее'"
                 @click.stop="$router.push(`/task/${ev.id}`)"
-                class="px-3.5 py-2 min-h-[44px] rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/15 hover:bg-orange-100 dark:hover:bg-[#fcb4d5]/25 text-orange-700 dark:text-[#fcb4d5] border border-orange-200 dark:border-[#fcb4d5]/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
+                class="px-3 py-1.5 min-h-[38px] rounded-xl bg-orange-50 dark:bg-[#fcb4d5]/15 hover:bg-orange-100 dark:hover:bg-[#fcb4d5]/25 text-orange-700 dark:text-[#fcb4d5] border border-orange-200 dark:border-[#fcb4d5]/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
                 title="Открыть карточку задачи"
               >
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -278,7 +307,7 @@
               <button
                 v-if="isLeader && ev.id < 900000"
                 @click.stop="deleteMultiTask(ev)"
-                class="px-3.5 py-2 min-h-[44px] rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
+                class="px-3 py-1.5 min-h-[38px] rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 transition-all font-bold flex items-center space-x-1.5 shadow-2xs cursor-pointer active:scale-95"
                 :title="ev.direction && ev.direction !== 'Общее' ? 'Удалить задачу' : 'Удалить мульти-задачу и все её цеховые подзадачи'"
               >
                 <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -290,17 +319,24 @@
           </div>
 
           <!-- Subtasks Grid: Liquid Glass Translucent Surface -->
-          <div class="p-5 md:p-6 bg-white/20 dark:bg-black/25 transition-colors">
+          <div
+            class="bg-white/20 dark:bg-black/25 transition-colors flex-1 flex flex-col justify-between"
+            :class="ev.subtasks && ev.subtasks.length > 1 ? 'p-5 md:p-6' : 'p-4 sm:p-5'"
+          >
             <div v-if="!ev.subtasks || ev.subtasks.length === 0" class="text-xs text-slate-400 italic py-2">
               В этой мульти-задаче пока нет подзадач.
             </div>
 
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
+            <div
+              v-else
+              class="gap-3.5 flex-1"
+              :class="ev.subtasks.length > 1 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5' : 'flex flex-col'"
+            >
               <div
                 v-for="st in ev.subtasks"
                 :key="st.id"
                 @click.stop="$router.push(`/task/${st.id}`)"
-                class="rounded-2xl p-3.5 border transition-all duration-200 flex flex-col justify-between cursor-pointer group"
+                class="rounded-2xl p-3.5 border transition-all duration-200 flex flex-col justify-between cursor-pointer group flex-1"
                 :class="getSubtaskCardClasses(st)"
               >
                 <!-- Workshop Header -->
