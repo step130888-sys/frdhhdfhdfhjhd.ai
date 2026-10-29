@@ -107,10 +107,41 @@
         </div>
       </div>
 
+      <!-- Workshop / Department Filter Dock for Calendar -->
+      <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-white/40 dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.06] backdrop-blur-md">
+        <div class="flex flex-wrap gap-2.5 items-center">
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 text-[11px] uppercase tracking-wider flex items-center space-x-1.5">
+            <svg class="w-3.5 h-3.5 text-orange-500 dark:text-[#fcb4d5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+            <span>Отдел:</span>
+          </span>
+          <AnimatedPills
+            v-model="calendarSelectedDirection"
+            :items="directionTabs"
+            variant="glass"
+            size="sm"
+          />
+        </div>
+
+        <div v-if="calendarSelectedDirection" class="flex items-center space-x-2 text-xs">
+          <span class="text-slate-500 dark:text-slate-400">
+            Фильтр: <b class="text-orange-600 dark:text-[#fcb4d5]">{{ calendarSelectedDirection }}</b>
+          </span>
+          <button
+            type="button"
+            @click="calendarSelectedDirection = ''"
+            class="font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white underline cursor-pointer ml-1"
+          >
+            Сбросить (все отделы)
+          </button>
+        </div>
+      </div>
+
       <!-- TOP CALENDAR WIDGET: Month Grid + Quick Multi-Task Navigation -->
       <MultiTaskCalendar
         v-model="calendarSelectedDate"
-        :events="calendarEvents"
+        :events="filteredCalendarEvents"
         :can-create="isLeader"
         @jump-to-event="onJumpToMultiTask"
         @create-on-date="onCreateOnDate"
@@ -118,15 +149,18 @@
 
       <!-- Multi-tasks Section Header & Filter Toolbar (Pillar 01: Unboxed) -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
-        <div class="flex items-center space-x-2.5">
+        <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
           <div class="w-2.5 h-2.5 rounded-full bg-orange-500 dark:bg-[#fcb4d5] animate-pulse"></div>
-          <h2 class="text-sm sm:text-base font-black uppercase tracking-wider text-slate-800 dark:text-white">
+          <h2 class="text-sm sm:text-base font-black uppercase tracking-wider text-slate-800 dark:text-white flex items-center space-x-2 flex-wrap gap-y-1">
             <template v-if="calendarSelectedDate && filterByDateOnly">
-              Мульти-задачи на {{ formatFilterDateTitle(calendarSelectedDate) }}
+              <span>Мульти-задачи на {{ formatFilterDateTitle(calendarSelectedDate) }}</span>
             </template>
             <template v-else>
-              Все мульти-задачи медиацентра
+              <span>Все мульти-задачи медиацентра</span>
             </template>
+            <span v-if="calendarSelectedDirection" class="px-2 py-0.5 rounded-lg text-xs font-bold bg-orange-500/10 dark:bg-[#fcb4d5]/15 text-orange-600 dark:text-[#fcb4d5] border border-orange-500/20 dark:border-[#fcb4d5]/30">
+              Цех: {{ calendarSelectedDirection }}
+            </span>
           </h2>
           <span class="text-xs font-mono font-bold text-slate-400">
             ({{ displayedCalendarEvents.length }})
@@ -175,20 +209,32 @@
             <line x1="3" x2="21" y1="10" y2="10"/>
           </svg>
         </div>
-        <div class="text-sm font-extrabold text-slate-800 dark:text-white mb-1">Событий календаря пока нет</div>
+        <div class="text-sm font-extrabold text-slate-800 dark:text-white mb-1">
+          {{ calendarSelectedDirection ? `Задач отдела «${calendarSelectedDirection}» не найдено` : 'Событий календаря пока нет' }}
+        </div>
         <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">
-          Создайте мульти-задачу для автоматической координации цехов.
+          {{ calendarSelectedDirection ? 'Попробуйте сбросить фильтр или создать новую задачу для этого цеха.' : 'Создайте мульти-задачу для автоматической координации цехов.' }}
         </p>
-        <button
-          v-if="isLeader"
-          @click="openCreateMultiTask"
-          class="btn-neon px-5 py-2.5 rounded-xl text-xs font-black text-white shadow-md inline-flex items-center space-x-2"
-        >
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-          </svg>
-          <span>Создать мульти-задачу</span>
-        </button>
+        <div class="flex items-center justify-center space-x-2">
+          <button
+            v-if="calendarSelectedDirection"
+            type="button"
+            @click="calendarSelectedDirection = ''"
+            class="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+          >
+            Сбросить фильтр отдела
+          </button>
+          <button
+            v-if="isLeader"
+            @click="openCreateMultiTask"
+            class="btn-neon px-5 py-2.5 rounded-xl text-xs font-black text-white shadow-md inline-flex items-center space-x-2 cursor-pointer"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+            </svg>
+            <span>Создать мульти-задачу</span>
+          </button>
+        </div>
       </div>
 
       <!-- Multi-task Cards Timeline (3-column cooperative grid for single-task events) -->
@@ -652,6 +698,7 @@ const selectedDetailEvent = ref(null);
 
 // Top Calendar State & Quick Jump
 const calendarSelectedDate = ref(null);
+const calendarSelectedDirection = ref('');
 const filterByDateOnly = ref(false);
 const highlightedEventId = ref(null);
 
@@ -687,14 +734,49 @@ const clearDateFilter = () => {
   filterByDateOnly.value = false;
 };
 
-const displayedCalendarEvents = computed(() => {
-  if (!filterByDateOnly.value || !calendarSelectedDate.value) {
+const filteredCalendarEvents = computed(() => {
+  if (!calendarSelectedDirection.value) {
     return calendarEvents.value;
   }
+  const dir = calendarSelectedDirection.value.trim().toLowerCase();
   return calendarEvents.value.filter(ev => {
-    const rawDate = ev.event_date || (ev.deadline ? ev.deadline.substring(0, 10) : null);
-    return rawDate && rawDate.startsWith(calendarSelectedDate.value);
+    // 1. Standalone task with this direction
+    if (ev.direction && ev.direction.trim().toLowerCase() === dir) {
+      return true;
+    }
+    // 2. Multi-task with a subtask for this direction
+    if (ev.subtasks && ev.subtasks.some(st => (st.direction || '').trim().toLowerCase() === dir)) {
+      return true;
+    }
+    return false;
   });
+});
+
+const displayedCalendarEvents = computed(() => {
+  let list = filteredCalendarEvents.value;
+
+  if (filterByDateOnly.value && calendarSelectedDate.value) {
+    list = list.filter(ev => {
+      const rawDate = ev.event_date || (ev.deadline ? ev.deadline.substring(0, 10) : null);
+      return rawDate && rawDate.startsWith(calendarSelectedDate.value);
+    });
+  }
+
+  // When a specific department is chosen, show only that department's subtasks in the cards
+  if (calendarSelectedDirection.value) {
+    const dir = calendarSelectedDirection.value.trim().toLowerCase();
+    list = list.map(ev => {
+      const matchingSubtasks = (ev.subtasks || []).filter(
+        st => (st.direction || '').trim().toLowerCase() === dir
+      );
+      return {
+        ...ev,
+        subtasks: matchingSubtasks.length > 0 ? matchingSubtasks : ev.subtasks
+      };
+    });
+  }
+
+  return list;
 });
 
 const formatFilterDateTitle = (dateStr) => {
@@ -721,7 +803,8 @@ const openEditMultiTask = (ev) => {
 };
 
 const openDetailMultiTask = (ev) => {
-  selectedDetailEvent.value = ev;
+  const fullEvent = calendarEvents.value.find(e => e.id === ev.id) || ev;
+  selectedDetailEvent.value = fullEvent;
   showDetailModal.value = true;
 };
 
