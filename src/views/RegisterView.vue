@@ -3,9 +3,9 @@
     <div class="cyber-glass max-w-lg w-full p-8 md:p-10 rounded-3xl border border-white/60 dark:border-white/10 shadow-sm relative overflow-hidden">
       <!-- Header -->
       <div class="text-center mb-7 relative z-10">
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Заявка в команду</h1>
+        <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase font-sans">Регистрация</h1>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-          Регистрация в студенческий медиацентр «СМС СГТУ»
+          Студенческий медиацентр «СМС СГТУ» им. Гагарина Ю.А.
         </p>
       </div>
 
@@ -132,10 +132,105 @@
           <span>После подачи заявки аккаунт отправляется на модерацию Главному администратору (4 уровень). Вы получите доступ сразу после подтверждения.</span>
         </div>
 
+        <!-- 152-ФЗ Согласие на обработку персональных данных и Пользовательское соглашение -->
+        <div class="space-y-3 pt-2 text-xs">
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
+            Нажимая на кнопку «Отправить заявку на модерацию»,
+          </p>
+
+          <!-- Чекбокс 1: Пользовательское соглашение -->
+          <label class="flex items-start space-x-3 cursor-pointer group select-none">
+            <div class="relative flex items-center justify-center shrink-0 mt-0.5">
+              <input
+                type="checkbox"
+                v-model="form.agree_terms"
+                class="sr-only"
+              />
+              <div
+                class="w-4 h-4 rounded transition-all flex items-center justify-center border"
+                :class="form.agree_terms
+                  ? 'bg-red-500 border-red-500 text-white shadow-xs'
+                  : 'border-slate-300 dark:border-white/20 bg-white dark:bg-black/40 group-hover:border-slate-400 dark:group-hover:border-white/40'"
+              >
+                <svg v-if="form.agree_terms" class="w-3 h-3 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+            </div>
+            <span class="text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 leading-snug">
+              Я принимаю условия 
+              <a
+                href="/docs/user_agreement.pdf"
+                download="Пользовательское_соглашение.pdf"
+                target="_blank"
+                @click.stop="downloadDoc('/docs/user_agreement.pdf', 'Пользовательское_соглашение.pdf')"
+                class="text-blue-600 dark:text-blue-400 underline hover:text-blue-700 dark:hover:text-blue-300 font-medium inline-flex items-center gap-1 cursor-pointer"
+                title="Нажмите, чтобы скачать Пользовательское соглашение"
+              >
+                <span>Пользовательского соглашения</span>
+                <svg class="w-3 h-3 shrink-0 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </a>
+            </span>
+          </label>
+
+          <!-- Чекбокс 2: Согласие на обработку ПДн + Политика конфиденциальности -->
+          <label class="flex items-start space-x-3 cursor-pointer group select-none">
+            <div class="relative flex items-center justify-center shrink-0 mt-0.5">
+              <input
+                type="checkbox"
+                v-model="form.agree_privacy"
+                class="sr-only"
+              />
+              <div
+                class="w-4 h-4 rounded transition-all flex items-center justify-center border"
+                :class="form.agree_privacy
+                  ? 'bg-red-500 border-red-500 text-white shadow-xs'
+                  : 'border-slate-300 dark:border-white/20 bg-white dark:bg-black/40 group-hover:border-slate-400 dark:group-hover:border-white/40'"
+              >
+                <svg v-if="form.agree_privacy" class="w-3 h-3 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+            </div>
+            <span class="text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 leading-snug">
+              Я даю 
+              <a
+                href="/docs/personal_data_consent.pdf"
+                download="Согласие_на_обработку_персональных_данных.pdf"
+                target="_blank"
+                @click.stop="downloadDoc('/docs/personal_data_consent.pdf', 'Согласие_на_обработку_персональных_данных.pdf')"
+                class="text-blue-600 dark:text-blue-400 underline hover:text-blue-700 dark:hover:text-blue-300 font-medium inline-flex items-center gap-1 cursor-pointer"
+                title="Нажмите, чтобы скачать Согласие на обработку персональных данных"
+              >
+                <span>согласие на обработку моих персональных данных</span>
+                <svg class="w-3 h-3 shrink-0 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </a>
+              в порядке и на условиях, указанных в 
+              <a
+                href="/docs/privacy_policy.pdf"
+                download="Политика_конфиденциальности.pdf"
+                target="_blank"
+                @click.stop="downloadDoc('/docs/privacy_policy.pdf', 'Политика_конфиденциальности.pdf')"
+                class="text-blue-600 dark:text-blue-400 underline hover:text-blue-700 dark:hover:text-blue-300 font-medium inline-flex items-center gap-1 cursor-pointer"
+                title="Нажмите, чтобы скачать Политику конфиденциальности"
+              >
+                <span>Политике конфиденциальности</span>
+                <svg class="w-3 h-3 shrink-0 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </a>
+            </span>
+          </label>
+        </div>
+
         <button
           type="submit"
-          :disabled="loading"
-          class="w-full btn-neon py-3.5 min-h-[44px] rounded-xl text-xs font-black text-white shadow-xl flex items-center justify-center space-x-2 disabled:opacity-40 active:scale-95 transition-all cursor-pointer"
+          :disabled="loading || !form.agree_terms || !form.agree_privacy"
+          class="w-full btn-neon py-3.5 min-h-[44px] rounded-xl text-xs font-black text-white shadow-xl flex items-center justify-center space-x-2 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
         >
           <span>{{ loading ? 'Отправка...' : 'Отправить заявку на модерацию' }}</span>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -175,7 +270,9 @@ const form = ref({
   password: '',
   roles: ['Фото'],
   role: 'Фото',
-  telegram_id: ''
+  telegram_id: '',
+  agree_terms: false,
+  agree_privacy: false
 });
 
 const toggleRole = (dirName) => {
@@ -186,6 +283,16 @@ const toggleRole = (dirName) => {
     form.value.roles.push(dirName);
   }
   form.value.role = form.value.roles.join(', ');
+};
+
+const downloadDoc = (url, filename) => {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.target = '_blank';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
 const loading = ref(false);
@@ -200,6 +307,12 @@ const handleRegister = async () => {
     errorMsg.value = 'Пожалуйста, выберите как минимум одно направление (цех).';
     return;
   }
+
+  if (!form.value.agree_terms || !form.value.agree_privacy) {
+    errorMsg.value = 'В соответствии с 152-ФЗ, для регистрации необходимо принять Пользовательское соглашение и дать согласие на обработку персональных данных.';
+    return;
+  }
+
   form.value.role = form.value.roles.join(', ');
 
   loading.value = true;

@@ -38,6 +38,18 @@ app.use('/uploads', express.static(uploadsDir, {
   }
 }));
 
+// Static legal docs (152-FZ compliance: User Agreement, Personal Data Consent, Privacy Policy)
+const docsDir = path.join(__dirname, 'public', 'docs');
+if (fs.existsSync(docsDir)) {
+  app.use('/docs', express.static(docsDir, {
+    maxAge: 7 * 24 * 3600 * 1000,
+    etag: true,
+    setHeaders: (res) => {
+      res.setHeader('Content-Type', 'application/pdf');
+    }
+  }));
+}
+
 const { sqlInjectionProtectionMiddleware, connectionLoggerMiddleware } = require('./server/security');
 
 // Security: Protection against SQL Injection

@@ -205,6 +205,12 @@ router.post('/auth/register', async (req, res) => {
     return res.status(400).json({ error: 'Все обязательные поля (ФИО, логин, пароль, как минимум одно направление) должны быть заполнены.' });
   }
 
+  if (!req.body.agree_terms || !req.body.agree_privacy) {
+    return res.status(400).json({
+      error: 'В соответствии с требованиями Федерального закона № 152-ФЗ «О персональных данных», для регистрации необходимо принять Пользовательское соглашение и дать согласие на обработку персональных данных.'
+    });
+  }
+
   const existing = await db.get('SELECT id FROM users WHERE LOWER(username) = ?', [username]);
   if (existing) {
     return res.status(400).json({ error: `Логин '${username}' уже занят. Пожалуйста, выберите другой.` });
