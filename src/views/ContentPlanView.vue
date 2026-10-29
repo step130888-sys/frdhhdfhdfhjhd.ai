@@ -216,7 +216,7 @@
                     {{ ev.status === 'done' ? 'Завершено' : 'В работе' }}
                   </span>
                 </div>
-                <p v-if="ev.description" class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 max-w-2xl">
+                <p v-if="ev.description" class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 max-w-2xl whitespace-pre-wrap break-words font-sans">
                   {{ ev.description }}
                 </p>
                 <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center space-x-4">
@@ -315,7 +315,7 @@
                   <div class="font-bold text-slate-800 dark:text-white text-xs mb-1 line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-rose-300 transition-colors">
                     #{{ st.id }} {{ st.title }}
                   </div>
-                  <p class="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">
+                  <p class="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-3 mb-3 whitespace-pre-wrap break-words font-sans">
                     {{ st.description || 'ТЗ для отдела' }}
                   </p>
                 </div>

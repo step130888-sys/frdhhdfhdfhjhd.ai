@@ -66,7 +66,7 @@
       </div>
 
       <!-- Description preview -->
-      <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed font-normal">
+      <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed font-normal whitespace-pre-wrap break-words font-sans">
         {{ task.description }}
       </p>
 

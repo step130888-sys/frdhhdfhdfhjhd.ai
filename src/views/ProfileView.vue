@@ -418,7 +418,7 @@
                 #{{ task.id }} {{ task.title }}
               </h3>
 
-              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 mb-3 whitespace-pre-wrap break-words font-sans">
                 {{ task.description }}
               </p>
 
@@ -517,7 +517,7 @@
               <h4 class="text-xs font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors line-clamp-1 mb-1">
                 {{ item.title }}
               </h4>
-              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed whitespace-pre-wrap break-words font-sans">
                 {{ item.description }}
               </p>
             </div>

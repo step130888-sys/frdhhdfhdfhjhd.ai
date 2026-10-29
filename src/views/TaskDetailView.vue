@@ -90,8 +90,20 @@
 
           <!-- Description -->
           <div class="mb-6">
-            <h4 class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Техническое задание:</h4>
-            <div class="text-xs md:text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line bg-slate-50/80 dark:bg-[#14141c] p-4 rounded-2xl border border-slate-200 dark:border-white/10">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Техническое задание:</h4>
+              <button
+                v-if="canEditTask"
+                @click="openEditTaskModal"
+                class="px-2.5 py-1 text-xs font-bold text-orange-600 dark:text-[#fcb4d5] hover:text-orange-700 dark:hover:text-white bg-orange-50 dark:bg-[#fcb4d5]/10 hover:bg-orange-100 dark:hover:bg-[#fcb4d5]/20 rounded-lg border border-orange-200 dark:border-[#fcb4d5]/30 transition-all inline-flex items-center space-x-1 cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
+                </svg>
+                <span>Редактировать ТЗ</span>
+              </button>
+            </div>
+            <div class="text-xs md:text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap break-words font-sans bg-slate-50/80 dark:bg-[#14141c] p-4 rounded-2xl border border-slate-200 dark:border-white/10">
               {{ task.description }}
             </div>
           </div>
@@ -249,6 +261,91 @@
       @reworked="onTaskReworked"
     />
 
+    <!-- Edit Task / ТЗ Modal -->
+    <div
+      v-if="showEditModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+      @click.self="showEditModal = false"
+    >
+      <div class="cyber-glass rounded-3xl p-6 border border-slate-200 dark:border-white/10 max-w-2xl w-full shadow-2xl bg-white dark:bg-[#0c0c10] space-y-4 animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-xl bg-orange-500/15 dark:bg-[#fcb4d5]/20 text-orange-600 dark:text-[#fcb4d5] flex items-center justify-center font-bold">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+            </div>
+            <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              Редактирование задачи / ТЗ
+            </h3>
+          </div>
+          <button
+            @click="showEditModal = false"
+            class="w-7 h-7 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center text-xs transition-colors cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form @submit.prevent="saveTaskEdit" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              Название задачи:
+            </label>
+            <input
+              v-model="editForm.title"
+              type="text"
+              required
+              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5]"
+            />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Техническое задание (ТЗ) / Описание:
+              </label>
+              <span class="text-[10px] text-slate-400">Переносы строк и списки сохраняются</span>
+            </div>
+            <textarea
+              v-model="editForm.description"
+              rows="10"
+              required
+              placeholder="Подробное техническое задание, пункты, ссылки..."
+              class="w-full text-xs px-3.5 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] resize-y font-sans leading-relaxed whitespace-pre-wrap"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              Дедлайн:
+            </label>
+            <input
+              v-model="editForm.deadline"
+              type="text"
+              placeholder="ГГГГ-ММ-ДД ЧЧ:ММ"
+              class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5]"
+            />
+          </div>
+
+          <div class="pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-end space-x-3">
+            <button
+              type="button"
+              @click="showEditModal = false"
+              class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              Отмена
+            </button>
+            <button
+              type="submit"
+              :disabled="savingEdit || !editForm.title.trim()"
+              class="btn-neon px-5 py-2.5 rounded-xl text-xs font-black shadow-lg flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer active:scale-95"
+            >
+              <span>{{ savingEdit ? 'Сохранение...' : 'Сохранить изменения' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -303,6 +400,57 @@ const canDeleteTask = computed(() => {
   if (user.value.can_create_tasks && userHasDirection(user.value, task.value.direction)) return true;
   return false;
 });
+
+const showEditModal = ref(false);
+const savingEdit = ref(false);
+const editForm = ref({
+  title: '',
+  description: '',
+  deadline: ''
+});
+
+const canEditTask = computed(() => {
+  if (!task.value || !user.value) return false;
+  if (user.value.access_level >= 3) return true;
+  if (user.value.access_level === 2 && userHasDirection(user.value, task.value.direction)) return true;
+  if (user.value.can_create_tasks && userHasDirection(user.value, task.value.direction)) return true;
+  return false;
+});
+
+const openEditTaskModal = () => {
+  if (!task.value) return;
+  editForm.value = {
+    title: task.value.title || '',
+    description: task.value.description || '',
+    deadline: task.value.deadline || ''
+  };
+  showEditModal.value = true;
+};
+
+const saveTaskEdit = async () => {
+  if (!task.value || savingEdit.value) return;
+  savingEdit.value = true;
+  try {
+    const res = await fetch(`/api/tasks/${taskId.value}/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(editForm.value)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Ошибка при сохранении задачи');
+
+    task.value.title = data.task.title;
+    task.value.description = data.task.description;
+    task.value.deadline = data.task.deadline;
+    showNotification('ТЗ задачи успешно сохранено!', 'success');
+    showEditModal.value = false;
+  } catch (err) {
+    showNotification(err.message, 'error');
+  } finally {
+    savingEdit.value = false;
+  }
+};
 
 const deleteTask = async () => {
   if (!task.value) return;

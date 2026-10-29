@@ -105,12 +105,12 @@
           <div v-else class="space-y-2.5">
             <div v-for="w in workshops" :key="w.name" class="p-2.5 rounded-xl bg-slate-50 dark:bg-[#14141c] border border-slate-200 dark:border-white/10">
               <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">ТЗ для цеха «{{ w.name }}»:</label>
-              <input
+              <textarea
                 v-model="form.subtasks[w.name]"
-                type="text"
+                rows="3"
                 :placeholder="w.placeholder"
-                class="w-full text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5]"
-              />
+                class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0c10] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-[#fcb4d5] resize-y font-sans leading-relaxed whitespace-pre-wrap"
+              ></textarea>
             </div>
           </div>
         </div>

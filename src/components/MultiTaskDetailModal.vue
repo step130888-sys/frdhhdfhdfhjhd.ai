@@ -118,7 +118,7 @@
           <span class="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider block mb-1.5">
             Общее техническое задание и сценарий:
           </span>
-          <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line">
+          <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap break-words font-sans">
             {{ event.description }}
           </p>
         </div>
@@ -193,7 +193,7 @@
                   {{ st.title }}
                 </div>
 
-                <p v-if="st.description" class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                <p v-if="st.description" class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-3 whitespace-pre-wrap break-words font-sans">
                   {{ st.description }}
                 </p>
               </div>

@@ -83,10 +83,10 @@
           </label>
           <textarea
             v-model="form.description"
-            rows="4"
+            rows="5"
             required
             placeholder="Что именно нужно сделать, формат файлов, тайминги, референсы..."
-            class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-kedrRose focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-kedrRose/20 focus:bg-white dark:focus:bg-[#181822] resize-none transition-all"
+            class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#14141c] text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 dark:focus:border-kedrRose focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-kedrRose/20 focus:bg-white dark:focus:bg-[#181822] resize-y transition-all font-sans leading-relaxed whitespace-pre-wrap"
           ></textarea>
         </div>
 

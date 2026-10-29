@@ -1459,6 +1459,48 @@ router.get('/tasks/:id', requireAuth, async (req, res) => {
   });
 });
 
+// POST /tasks/:id/update - Update a single task (description/ТЗ, title, deadline)
+router.post('/tasks/:id/update', requireAuth, async (req, res) => {
+  const taskId = parseInt(req.params.id, 10);
+  const task = await db.get('SELECT * FROM tasks WHERE id = ?', [taskId]);
+
+  if (!task) {
+    return res.status(404).json({ error: 'Задача не найдена.' });
+  }
+
+  const isLeader = (req.user.access_level >= 3);
+  const isHeadOfDept = (req.user.access_level === 2 && userHasDirection(req.user, task.direction));
+  const canManage = Boolean(req.user.can_create_tasks) && userHasDirection(req.user, task.direction);
+
+  if (!isLeader && !isHeadOfDept && !canManage) {
+    return res.status(403).json({ error: 'Недостаточно прав для редактирования ТЗ задачи.' });
+  }
+
+  const title = req.body.title !== undefined ? req.body.title.trim() : task.title;
+  const description = req.body.description !== undefined ? req.body.description.trim() : task.description;
+  const deadline = req.body.deadline !== undefined ? req.body.deadline.trim() : task.deadline;
+  const direction = (isLeader && req.body.direction) ? req.body.direction.trim() : task.direction;
+
+  if (!title) {
+    return res.status(400).json({ error: 'Заголовок задачи не может быть пустым.' });
+  }
+
+  await db.run(
+    'UPDATE tasks SET title = ?, description = ?, deadline = ?, direction = ? WHERE id = ?',
+    [title, description, deadline || null, direction, taskId]
+  );
+
+  await logAudit(req, {
+    action: 'Редактирование ТЗ задачи',
+    category: 'tasks',
+    target: `Задача #${taskId} «${title}»`,
+    details: `Обновлено ТЗ / параметры задачи`
+  });
+
+  const updatedTask = await db.get('SELECT * FROM tasks WHERE id = ?', [taskId]);
+  res.json({ success: true, task: updatedTask });
+});
+
 router.post('/tasks/:id/take', requireAuth, async (req, res) => {
   const taskId = parseInt(req.params.id, 10);
   const task = await db.get('SELECT * FROM tasks WHERE id = ?', [taskId]);
