@@ -323,26 +323,52 @@ function getEmptyKeyboard() {
 }
 
 /**
- * Send VK direct message to user
- * @param {string|number} userId VK user id / screen name
- * @param {string} message text content
- * @param {object|null|undefined} keyboard optional VK keyboard object. If omitted or null, no keyboard is sent.
+ * Smart splitting of long VK messages (max 4096 chars in VK API, safe limit 3800)
+ * Preserves paragraphs / task blocks intact wherever possible.
  */
-async function sendVkMessage(userId, message, keyboard = undefined) {
-  if (!userId) return false;
-  const token = getGroupToken();
-  if (!token) return false;
+function splitVkMessageText(text, maxLen = 3800) {
+  if (!text || text.length <= maxLen) return [text || ''];
+  const blocks = text.split('\n\n');
+  const chunks = [];
+  let current = '';
 
-  const numericId = await resolveNumericUserId(userId);
-  if (!numericId) {
-    console.error(`[VkBot] Не удалось определить числовой ID для пользователя: '${userId}'. Укажите цифровой ID (например, 12345678).`);
-    return false;
+  for (const block of blocks) {
+    const candidate = current ? (current + '\n\n' + block) : block;
+    if (candidate.length <= maxLen) {
+      current = candidate;
+    } else {
+      if (current.trim().length > 0) {
+        chunks.push(current.trim());
+        current = '';
+      }
+      if (block.length > maxLen) {
+        const lines = block.split('\n');
+        for (const line of lines) {
+          if (current.length + line.length + 1 > maxLen) {
+            if (current.trim().length > 0) chunks.push(current.trim());
+            current = line;
+          } else {
+            current = current ? (current + '\n' + line) : line;
+          }
+        }
+      } else {
+        current = block;
+      }
+    }
   }
 
+  if (current.trim().length > 0) {
+    chunks.push(current.trim());
+  }
+
+  return chunks.length > 0 ? chunks : [text];
+}
+
+async function sendSingleVkMessage(numericId, text, keyboard = undefined) {
   const params = {
     user_id: numericId,
     random_id: Math.floor(Math.random() * 2147483647),
-    message: message
+    message: text
   };
 
   if (keyboard !== undefined && keyboard !== null) {
@@ -362,6 +388,42 @@ async function sendVkMessage(userId, message, keyboard = undefined) {
   }
 
   return Boolean(res);
+}
+
+/**
+ * Send VK direct message to user (with automatic chunking for long messages)
+ * @param {string|number} userId VK user id / screen name
+ * @param {string} message text content
+ * @param {object|null|undefined} keyboard optional VK keyboard object. If omitted or null, no keyboard is sent.
+ */
+async function sendVkMessage(userId, message, keyboard = undefined) {
+  if (!userId) return false;
+  const token = getGroupToken();
+  if (!token) return false;
+
+  const numericId = await resolveNumericUserId(userId);
+  if (!numericId) {
+    console.error(`[VkBot] Не удалось определить числовой ID для пользователя: '${userId}'. Укажите цифровой ID (например, 12345678).`);
+    return false;
+  }
+
+  const strMessage = String(message || '');
+  if (strMessage.length > 3800) {
+    const chunks = splitVkMessageText(strMessage, 3800);
+    let allOk = true;
+    for (let i = 0; i < chunks.length; i++) {
+      const isLast = (i === chunks.length - 1);
+      const chunkKeyboard = isLast ? keyboard : undefined;
+      const ok = await sendSingleVkMessage(numericId, chunks[i], chunkKeyboard);
+      if (!ok) allOk = false;
+      if (!isLast) {
+        await new Promise(r => setTimeout(r, 200));
+      }
+    }
+    return allOk;
+  }
+
+  return await sendSingleVkMessage(numericId, strMessage, keyboard);
 }
 
 /**
@@ -519,6 +581,12 @@ async function notifyTaskNewComment(task, authorUser, commentText) {
   }
 }
 
+function userHasDirection(user, dir) {
+  if (!user || !user.role || !dir) return false;
+  const dirs = user.role.split(',').map(d => d.trim().toLowerCase()).filter(Boolean);
+  return dirs.includes(dir.trim().toLowerCase());
+}
+
 // -------------------------------------------------------------
 // VK Message Handler (Read-Only)
 // -------------------------------------------------------------
@@ -538,9 +606,13 @@ async function handleIncomingMessage(message) {
 
   let payload = null;
   if (message.payload) {
-    try {
-      payload = JSON.parse(message.payload);
-    } catch (e) {}
+    if (typeof message.payload === 'object') {
+      payload = message.payload;
+    } else if (typeof message.payload === 'string') {
+      try {
+        payload = JSON.parse(message.payload);
+      } catch (e) {}
+    }
   }
 
   const btnAction = payload && payload.button ? payload.button : null;
@@ -757,10 +829,73 @@ async function handleIncomingMessage(message) {
     return;
   }
 
+  // Action: Take Task (/take <id> or взять <id>)
+  const isTakeTask = cleanText.startsWith('/take') || 
+                     cleanText.startsWith('взять ') || 
+                     cleanText.startsWith('/взять ');
+
+  if (isTakeTask) {
+    const parts = cleanText.split(/\s+/);
+    const idStr = parts[1] ? parts[1].replace('#', '').trim() : '';
+    const taskId = parseInt(idStr, 10);
+
+    if (isNaN(taskId) || taskId <= 0) {
+      await sendVkMessage(
+        fromId,
+        '⚠️ Укажите номер задачи:\n👉 взять <номер>\n\nПример:\nвзять 2\nили: /take 2'
+      );
+      return;
+    }
+
+    const task = await db.get('SELECT * FROM tasks WHERE id = ?', [taskId]);
+    if (!task) {
+      await sendVkMessage(fromId, `❌ Задача #${taskId} не найдена в системе.`);
+      return;
+    }
+
+    if (task.status !== 'open') {
+      await sendVkMessage(
+        fromId,
+        `⚠️ Задача #${taskId} «${task.title}» уже занята или завершена (статус: ${task.status}).`
+      );
+      return;
+    }
+
+    // Role check for participants (level <= 2)
+    if (user.access_level <= 2 && !userHasDirection(user, task.direction)) {
+      await sendVkMessage(
+        fromId,
+        `⛔ Вы состоите в цехе «${user.role}», а задача #${taskId} относится к направлению «${task.direction}». Вы можете брать задачи только своего профиля.`
+      );
+      return;
+    }
+
+    await db.run('UPDATE tasks SET assigned_to_id = ?, status = "in_progress" WHERE id = ?', [user.id, taskId]);
+    if (typeof db.recalculateUserStats === 'function') {
+      await db.recalculateUserStats(user.id);
+    }
+
+    const nowIso = new Date().toISOString();
+    await db.run(
+      'INSERT INTO task_comments (task_id, user_id, message, created_at) VALUES (?, ?, ?, ?)',
+      [taskId, user.id, `🚀 Участник ${user.name} (${user.role}) взял задачу в работу через VK-бота.`, nowIso]
+    );
+
+    const deadlineInfo = task.deadline ? `\n⏰ Дедлайн: ${task.deadline.replace('T', ' ')}` : '';
+    await sendVkMessage(
+      fromId,
+      `✅ Задача #${taskId} «${task.title}» успешно закреплена за вами!${deadlineInfo}\n\nОна добавлена в раздел «📋 Мои задачи». Желаем продуктивной работы!`,
+      getMainKeyboard()
+    );
+    return;
+  }
+
   // Action: Open / Available Tasks (🟢 Свободные задачи)
   const isOpenTasks = btnAction === 'open_tasks' ||
                       cleanText.includes('свободные') ||
                       cleanText.includes('открытые') ||
+                      cleanText.includes('доступные') ||
+                      cleanText.includes('контент-план') ||
                       cleanText === '/open' ||
                       cleanText === 'open' ||
                       cleanText === 'взять задачу' ||
@@ -785,6 +920,20 @@ async function handleIncomingMessage(message) {
     }
 
     const now = new Date();
+    const userDirs = (user && user.role)
+      ? user.role.split(',').map(r => r.trim().toLowerCase()).filter(Boolean)
+      : [];
+
+    // Prioritize tasks for the user's direction(s)
+    openTasks.sort((a, b) => {
+      const aMy = (a.direction && userDirs.includes(a.direction.toLowerCase())) ? 0 : 1;
+      const bMy = (b.direction && userDirs.includes(b.direction.toLowerCase())) ? 0 : 1;
+      if (aMy !== bMy) return aMy - bMy;
+      const dA = a.deadline || '9999';
+      const dB = b.deadline || '9999';
+      return dA.localeCompare(dB);
+    });
+
     const lines = [
       `🟢 СВОБОДНЫЕ ЗАДАЧИ В КОНТЕНТ-ПЛАНЕ (${openTasks.length}):`,
       '━━━━━━━━━━━━━━━━━━'
@@ -805,19 +954,23 @@ async function handleIncomingMessage(message) {
         }
       }
 
-      const isMyDir = (user && user.role === t.direction) ? ' ⭐ (Ваш цех!)' : '';
+      const isMyDir = (t.direction && userDirs.includes(t.direction.toLowerCase())) ? ' ⭐ (Ваш цех!)' : '';
       lines.push(`${i + 1}. #${t.id} «${t.title}»${isMyDir}`);
       lines.push(`   🎯 Цех: ${t.direction}`);
       lines.push(`   ${deadlineInfo}`);
       if (t.description) {
-        const descPreview = t.description.length > 80 ? t.description.substring(0, 77) + '...' : t.description;
+        const cleanDesc = t.description.replace(/\s+/g, ' ').trim();
+        const descPreview = cleanDesc.length > 75 ? cleanDesc.substring(0, 72) + '...' : cleanDesc;
         lines.push(`   📝 ТЗ: ${descPreview}`);
       }
       lines.push('');
     });
 
-    lines.push('🚀 Чтобы взять задачу в работу, откройте Контент-план на сайте:');
-    lines.push('http://localhost:8000/content-plan');
+    const siteUrl = process.env.APP_URL || 'http://192.168.1.152:8000';
+    lines.push('💡 Чтобы взять задачу в работу:');
+    lines.push('👉 Отправьте боту: взять <номер> (например: взять 2)');
+    lines.push(`👉 Или откройте сайт: ${siteUrl}/content-plan`);
+
     await sendVkMessage(fromId, lines.join('\n'));
     return;
   }
