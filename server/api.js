@@ -1342,7 +1342,7 @@ router.get('/tasks', requireAuth, async (req, res) => {
     let isExpired = false;
     let isUrgent = false;
 
-    if (t.deadline) {
+    if (t.deadline && t.status !== 'done') {
       const dDate = new Date(t.deadline);
       const diffHours = (dDate - now) / (1000 * 60 * 60);
       isExpired = diffHours < 0;
@@ -1461,7 +1461,7 @@ router.get('/tasks/:id', requireAuth, async (req, res) => {
   let isExpired = false;
   let isUrgent = false;
 
-  if (task.deadline) {
+  if (task.deadline && task.status !== 'done') {
     const dDate = new Date(task.deadline);
     const diffHours = (dDate - now) / (1000 * 60 * 60);
     isExpired = diffHours < 0;

@@ -207,6 +207,9 @@ const getStatusClasses = (status) => {
 };
 
 const getDeadlineClasses = (task) => {
+  if (task.status === 'done') {
+    return 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30';
+  }
   if (task.is_expired) {
     return 'bg-red-50 dark:bg-red-500/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/40 animate-pulse';
   }

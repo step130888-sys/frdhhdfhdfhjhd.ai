@@ -144,12 +144,23 @@
 
             <div>
               <span class="text-slate-500 dark:text-slate-400 block mb-1">Дедлайн:</span>
-              <div v-if="task.deadline" class="font-bold flex items-center space-x-1.5" :class="task.is_expired ? 'text-rose-500 dark:text-rose-400 animate-pulse' : (task.is_urgent ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-slate-200')">
+              <div
+                v-if="task.deadline"
+                class="font-bold flex items-center space-x-1.5"
+                :class="task.status === 'done'
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : (task.is_expired
+                      ? 'text-rose-500 dark:text-rose-400 animate-pulse'
+                      : (task.is_urgent
+                          ? 'text-amber-600 dark:text-amber-400'
+                          : 'text-slate-700 dark:text-slate-200'))"
+              >
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                 </svg>
                 <span>{{ formatDeadline(task.deadline) }}</span>
-                <span v-if="task.is_expired" class="text-[10px] ml-1 bg-red-500/20 px-1.5 py-0.5 rounded border border-red-500/30">Просрочен</span>
+                <span v-if="task.status !== 'done' && task.is_expired" class="text-[10px] ml-1 bg-red-500/20 px-1.5 py-0.5 rounded border border-red-500/30">Просрочен</span>
+                <span v-else-if="task.status === 'done'" class="text-[10px] ml-1 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">Сдана</span>
               </div>
               <span v-else class="text-slate-400 dark:text-slate-500 italic">Не установлен</span>
             </div>
