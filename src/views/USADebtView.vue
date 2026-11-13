@@ -220,6 +220,134 @@
       </div>
     </div>
 
+    <!-- Server External IP & Port 25565 Monitor (5-min auto-ping, Level 5 Guardian) -->
+    <div class="usa-dark-card relative overflow-hidden rounded-3xl p-6 md:p-7 bg-gradient-to-br from-slate-950 via-[#07151b] to-[#07090f] border border-emerald-500/30 shadow-2xl">
+      <div class="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <!-- Left: Status, MC Specs & History -->
+        <div class="space-y-3 flex-1 min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <div
+              class="inline-flex items-center space-x-2 px-3 py-1 rounded-full border text-[11px] font-black uppercase tracking-widest"
+              :class="serverStatus?.online
+                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                : 'bg-rose-500/15 border-rose-500/40 text-rose-300'"
+            >
+              <span
+                class="w-2 h-2 rounded-full"
+                :class="serverStatus?.online ? 'bg-emerald-400 animate-ping' : 'bg-rose-500'"
+              ></span>
+              <span>{{ serverStatus?.online ? 'SERVER ONLINE :25565' : 'PORT :25565 OFFLINE' }}</span>
+            </div>
+
+            <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono text-slate-300">
+              Автопинг каждые 5 мин
+            </span>
+
+            <span
+              v-if="serverStatus?.latency_ms !== null && serverStatus?.latency_ms !== undefined"
+              class="px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-[10px] font-mono font-bold text-cyan-300"
+            >
+              Пинг: {{ serverStatus.latency_ms }} мс
+            </span>
+          </div>
+
+          <h2 class="text-xl md:text-2xl font-black tracking-tight text-white flex items-center space-x-2">
+            <span>📡 Мониторинг IP сервера (порт 25565)</span>
+          </h2>
+
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-mono text-slate-300">
+            <span v-if="serverStatus?.mc">
+              Версия: <strong class="text-white">{{ serverStatus.mc.version || 'Minecraft' }}</strong>
+            </span>
+            <span v-if="serverStatus?.mc">
+              Игроки: <strong class="text-emerald-400">{{ serverStatus.mc.players_online }} / {{ serverStatus.mc.players_max }}</strong>
+            </span>
+            <span v-if="serverStatus?.checked_at">
+              Проверено: <strong class="text-slate-100">{{ formatPingTime(serverStatus.checked_at) }}</strong>
+            </span>
+            <span v-if="nextPingCountdown">
+              Следующий пинг через: <strong class="text-cyan-300">{{ nextPingCountdown }}</strong>
+            </span>
+          </div>
+
+          <div v-if="serverStatus?.error && !serverStatus?.online" class="text-[11px] font-mono text-rose-300 bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-xl inline-block">
+            ⚠ {{ serverStatus.error }}
+          </div>
+
+          <!-- Recent ping history strip -->
+          <div v-if="serverStatus?.history?.length" class="pt-2 border-t border-white/10">
+            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+              Последние проверки (раз в 5 мин):
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <span
+                v-for="(h, idx) in serverStatus.history.slice(0, 6)"
+                :key="idx"
+                class="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg bg-black/40 border border-white/10 text-[10px] font-mono text-slate-300"
+                :title="h.address || 'IP не определён'"
+              >
+                <span class="w-1.5 h-1.5 rounded-full" :class="h.online ? 'bg-emerald-400' : 'bg-rose-500'"></span>
+                <span>{{ formatPingTime(h.checked_at) }}</span>
+                <span class="text-slate-400">{{ h.address || '—' }}</span>
+                <span v-if="h.latency_ms !== null" class="text-cyan-400">{{ h.latency_ms }}ms</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: XXX.XX.XXX.XX:25565 Readout + Actions -->
+        <div class="bg-black/60 backdrop-blur-xl border border-emerald-500/40 rounded-2xl p-5 min-w-[270px] sm:min-w-[330px] shadow-inner shrink-0 flex flex-col justify-between space-y-3">
+          <div>
+            <div class="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest flex items-center justify-between mb-1.5">
+              <span>ТЕКУЩИЙ АДРЕС СЕРВЕРА</span>
+              <span class="text-slate-400">:25565</span>
+            </div>
+            <div class="font-mono text-xl sm:text-2xl font-black text-white tracking-tight select-all break-all">
+              {{ serverStatus?.address || (serverLoading ? 'Проверка IP...' : 'Не определён:25565') }}
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 pt-2 border-t border-white/10">
+            <button
+              type="button"
+              @click="copyServerIp"
+              :disabled="!serverStatus?.address"
+              class="flex-1 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-40"
+              :class="copiedServerIp
+                ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-400/50'
+                : 'bg-white/10 hover:bg-white/15 text-white border border-white/15'"
+            >
+              <svg v-if="copiedServerIp" class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span>{{ copiedServerIp ? 'Скопировано!' : 'Копировать IP' }}</span>
+            </button>
+
+            <button
+              type="button"
+              @click="pingServerNow"
+              :disabled="pingingNow"
+              class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600/80 hover:bg-emerald-500 text-white border border-emerald-400/40 transition-all flex items-center space-x-1.5 cursor-pointer disabled:opacity-50 active:scale-95"
+              title="Принудительно проверить внешний IP и порт 25565 сейчас"
+            >
+              <svg class="w-3.5 h-3.5" :class="{ 'animate-spin': pingingNow }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>
+              </svg>
+              <span>{{ pingingNow ? 'Пинг...' : 'Пинг' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Notes Management Section -->
     <div class="space-y-6">
       
@@ -527,6 +655,14 @@ const newNoteContent = ref('');
 const newNotePinned = ref(false);
 const savingNote = ref(false);
 
+const serverStatus = ref(null);
+const serverLoading = ref(true);
+const pingingNow = ref(false);
+const copiedServerIp = ref(false);
+const nowMs = ref(Date.now());
+let serverPollTimer = null;
+let countdownTimer = null;
+
 // Real-time dynamic US National Debt simulation
 const baseDebt = 36254129482109; // Baseline US National Debt in USD
 const startTime = Date.now();
@@ -702,14 +838,103 @@ const copyContent = (note) => {
   });
 };
 
+const nextPingCountdown = computed(() => {
+  const nextAt = serverStatus.value?.next_check_at;
+  if (!nextAt) return '~5 мин';
+  const target = new Date(nextAt).getTime();
+  if (Number.isNaN(target)) return '~5 мин';
+  const diffSec = Math.floor((target - nowMs.value) / 1000);
+  if (diffSec <= 0) return 'скоро';
+  const mins = Math.floor(diffSec / 60);
+  const secs = diffSec % 60;
+  return mins > 0 ? `${mins}м ${String(secs).padStart(2, '0')}с` : `${secs}с`;
+});
+
+const formatPingTime = (ts) => {
+  if (!ts) return '—';
+  try {
+    return new Date(ts).toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  } catch (e) {
+    return ts;
+  }
+};
+
+const fetchServerStatus = async (silent = false) => {
+  if (!silent && !serverStatus.value) {
+    serverLoading.value = true;
+  }
+  try {
+    const res = await fetch('/api/guardian/server-status');
+    if (res.ok) {
+      const data = await res.json();
+      serverStatus.value = data.status || null;
+    }
+  } catch (e) {
+    console.error('Failed to load server status:', e);
+  } finally {
+    serverLoading.value = false;
+  }
+};
+
+const pingServerNow = async () => {
+  if (pingingNow.value) return;
+  pingingNow.value = true;
+  try {
+    const res = await fetch('/api/guardian/server-status/ping', {
+      method: 'POST'
+    });
+    const data = await res.json();
+    if (res.ok && data.status) {
+      serverStatus.value = data.status;
+      if (data.status.online) {
+        showNotification(`Сервер доступен: ${data.status.address} (${data.status.latency_ms} мс)`);
+      } else {
+        showNotification(`Порт 25565 недоступен (${data.status.address || 'IP не определён'})`, 'error');
+      }
+    } else {
+      showNotification(data.error || 'Ошибка проверки сервера', 'error');
+    }
+  } catch (e) {
+    console.error('Manual server ping failed:', e);
+    showNotification('Не удалось выполнить пинг сервера', 'error');
+  } finally {
+    pingingNow.value = false;
+  }
+};
+
+const copyServerIp = () => {
+  const addr = serverStatus.value?.address;
+  if (!addr) return;
+  navigator.clipboard.writeText(addr).then(() => {
+    copiedServerIp.value = true;
+    showNotification(`Адрес ${addr} скопирован в буфер обмена!`);
+    setTimeout(() => {
+      copiedServerIp.value = false;
+    }, 2000);
+  }).catch(() => {
+    showNotification('Не удалось скопировать адрес', 'error');
+  });
+};
+
 onMounted(() => {
   fetchNotes();
+  fetchServerStatus();
   updateDebtTicker();
   debtTimer = setInterval(updateDebtTicker, 500);
+  serverPollTimer = setInterval(() => fetchServerStatus(true), 60000);
+  countdownTimer = setInterval(() => {
+    nowMs.value = Date.now();
+  }, 1000);
 });
 
 onUnmounted(() => {
   if (debtTimer) clearInterval(debtTimer);
+  if (serverPollTimer) clearInterval(serverPollTimer);
+  if (countdownTimer) clearInterval(countdownTimer);
 });
 </script>
 

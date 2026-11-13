@@ -13,6 +13,7 @@ const gdriveService = require('./gdriveService');
 const telegramAuth = require('./telegramAuth');
 const { loginRateLimiter, getClientIp, trafficMonitor, logConnectionEvent } = require('./security');
 const secretVault = require('./secretVault');
+const serverMonitor = require('./serverMonitor');
 
 // Multer storage configuration
 const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
@@ -1741,6 +1742,146 @@ router.post('/tasks/:id/rework', requireAuth, requireLevel(3, 'Возвраща�
   res.json({ success: true, message: 'Задача возвращена на доработку исполнителю.' });
 });
 
+// POST /tasks/:id/reopen - Reopen / restart an existing task (reset progress/score to open or in_progress)
+router.post('/tasks/:id/reopen', requireAuth, async (req, res) => {
+  const taskId = parseInt(req.params.id, 10);
+  const task = await db.get('SELECT * FROM tasks WHERE id = ?', [taskId]);
+
+  if (!task) {
+    return res.status(404).json({ error: 'Задача не найдена.' });
+  }
+
+  const isLeader = req.user.access_level >= 3;
+  const isHeadOfDept = req.user.access_level === 2 && userHasDirection(req.user, task.direction);
+  const canManage = Boolean(req.user.can_create_tasks) && userHasDirection(req.user, task.direction);
+
+  if (!isLeader && !isHeadOfDept && !canManage) {
+    return res.status(403).json({ error: 'Перезадавать задачи могут руководители (3–5 ур.) или главы своего цеха.' });
+  }
+
+  const targetStatus = req.body.target_status === 'in_progress' ? 'in_progress' : 'open';
+  const clearSubmission = req.body.clear_submission !== false;
+  const comment = (req.body.comment || '').trim();
+
+  const oldAssigneeId = task.assigned_to_id || null;
+  let newAssigneeId = null;
+  let assigneeUser = null;
+
+  if (targetStatus === 'in_progress') {
+    const requestedAssigneeId = req.body.assigned_to_id !== undefined && req.body.assigned_to_id !== null && req.body.assigned_to_id !== ''
+      ? parseInt(req.body.assigned_to_id, 10)
+      : oldAssigneeId;
+
+    if (!requestedAssigneeId || isNaN(requestedAssigneeId)) {
+      return res.status(400).json({ error: 'Для статуса «В работе» выберите исполнителя или верните задачу в «Свободна».' });
+    }
+
+    assigneeUser = await db.get('SELECT * FROM users WHERE id = ?', [requestedAssigneeId]);
+    if (!assigneeUser || !assigneeUser.is_approved) {
+      return res.status(404).json({ error: 'Выбранный исполнитель не найден или не одобрен.' });
+    }
+
+    if (!isLeader && task.direction !== 'Общее' && !userHasDirection(assigneeUser, task.direction) && requestedAssigneeId !== oldAssigneeId) {
+      return res.status(403).json({ error: `Вы можете назначать задачи только участникам цеха «${task.direction}».` });
+    }
+    newAssigneeId = assigneeUser.id;
+  }
+
+  let newDeadline = task.deadline;
+  if (req.body.deadline !== undefined) {
+    const trimmedDl = String(req.body.deadline || '').trim();
+    newDeadline = trimmedDl || null;
+  }
+
+  let newEventDate = task.event_date;
+  if (req.body.event_date !== undefined) {
+    const trimmedEd = String(req.body.event_date || '').trim();
+    newEventDate = trimmedEd || null;
+  } else if (!newEventDate && newDeadline) {
+    newEventDate = newDeadline.substring(0, 10);
+  }
+
+  if (clearSubmission) {
+    await db.run(
+      `UPDATE tasks
+       SET status = ?, assigned_to_id = ?, score = NULL, graded_by_id = NULL,
+           rework_notes = NULL, file_link = NULL, file_name = NULL,
+           deadline = ?, event_date = ?
+       WHERE id = ?`,
+      [targetStatus, newAssigneeId, newDeadline, newEventDate, taskId]
+    );
+  } else {
+    await db.run(
+      `UPDATE tasks
+       SET status = ?, assigned_to_id = ?, score = NULL, graded_by_id = NULL,
+           rework_notes = NULL, deadline = ?, event_date = ?
+       WHERE id = ?`,
+      [targetStatus, newAssigneeId, newDeadline, newEventDate, taskId]
+    );
+  }
+
+  // If this task belongs to a completed parent multi-task, reopen parent status to in_progress
+  if (task.parent_id) {
+    const parentTask = await db.get('SELECT id, status FROM tasks WHERE id = ?', [task.parent_id]);
+    if (parentTask && parentTask.status === 'done') {
+      await db.run(`UPDATE tasks SET status = 'in_progress' WHERE id = ?`, [parentTask.id]);
+    }
+  }
+
+  if (oldAssigneeId) {
+    await db.recalculateUserStats(oldAssigneeId);
+  }
+  if (newAssigneeId && newAssigneeId !== oldAssigneeId) {
+    await db.recalculateUserStats(newAssigneeId);
+  }
+
+  const nowIso = new Date().toISOString();
+  let chatText = targetStatus === 'open'
+    ? `🔁 ${req.user.name} перезадал(а) задачу: статус сброшен в «Свободна» (результат и оценка очищены).`
+    : `🔁 ${req.user.name} перезадал(а) задачу в работу для ${assigneeUser.name}.`;
+
+  if (newDeadline && newDeadline !== task.deadline) {
+    chatText += `\n🕒 Новый дедлайн: ${newDeadline}`;
+  }
+  if (comment) {
+    chatText += `\n💬 Комментарий: ${comment}`;
+  }
+
+  await db.run(
+    'INSERT INTO task_comments (task_id, user_id, message, created_at) VALUES (?, ?, ?, ?)',
+    [taskId, req.user.id, chatText, nowIso]
+  );
+
+  const updatedTask = await db.get('SELECT * FROM tasks WHERE id = ?', [taskId]);
+
+  if (targetStatus === 'in_progress' && assigneeUser) {
+    const notifyNote = comment ? `Перезапуск задачи: ${comment}` : 'Задача перезадана руководителем в работу.';
+    try {
+      await telegramService.notifyTaskForceAssigned(updatedTask, assigneeUser, req.user, notifyNote);
+    } catch (e) {}
+    try {
+      await vkService.notifyTaskForceAssigned(updatedTask, assigneeUser, req.user, notifyNote);
+    } catch (e) {}
+  }
+
+  await logAudit(req, {
+    action: 'Перезапуск задачи',
+    category: 'tasks',
+    target: `Задача #${taskId} «${task.title}»`,
+    details: targetStatus === 'open'
+      ? `Сброшена в «Свободна»${newDeadline ? `, дедлайн: ${newDeadline}` : ''}`
+      : `Перезадана в работу для ${assigneeUser.name}${newDeadline ? `, дедлайн: ${newDeadline}` : ''}`
+  });
+
+  res.json({
+    success: true,
+    message: targetStatus === 'open'
+      ? `Задача #${taskId} перезадана и возвращена в список свободных.`
+      : `Задача #${taskId} перезадана в работу для ${assigneeUser.name}.`,
+    task: updatedTask
+  });
+});
+
 // --------------------------------------------------------------------------
 // 6. TASK DISCUSSION CHAT (/api/tasks/:id/comments)
 // --------------------------------------------------------------------------
@@ -2902,6 +3043,23 @@ router.post('/guardian/logs/clear-connections', requireAuth, requireLevel(5), as
     success: true,
     message: 'Рядовые записи подключений очищены (предупреждения безопасности сохранены).'
   });
+});
+
+// --------------------------------------------------------------------------
+// GUARDIAN SERVER IP & PORT 25565 MONITOR (5-min auto-ping, Level 5 only)
+// --------------------------------------------------------------------------
+
+router.get('/guardian/server-status', requireAuth, requireLevel(5), async (req, res) => {
+  let status = serverMonitor.getServerStatus();
+  if (!status.checked_at) {
+    status = await serverMonitor.refreshServerStatus();
+  }
+  res.json({ success: true, status });
+});
+
+router.post('/guardian/server-status/ping', requireAuth, requireLevel(5), async (req, res) => {
+  const status = await serverMonitor.refreshServerStatus();
+  res.json({ success: true, status });
 });
 
 module.exports = router;

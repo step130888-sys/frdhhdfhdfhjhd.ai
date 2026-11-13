@@ -226,6 +226,19 @@
               <span>Вернуть задачу на доработку</span>
             </button>
 
+            <!-- 4.5 Reopen / Restart Task (Level 3-5 or Head of Dept / Authorized) -->
+            <button
+              v-if="canReopenTask"
+              @click="showReopenModal = true"
+              class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/30 px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-xs active:scale-95 cursor-pointer"
+              title="Сбросить прогресс/оценку и перезадать задачу заново"
+            >
+              <svg class="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+              </svg>
+              <span>Перезадать задачу</span>
+            </button>
+
             <!-- 5. Delete Task (Level 3-5 or Level 2 head of department) -->
             <button
               v-if="canDeleteTask"
@@ -245,7 +258,7 @@
 
       <!-- Right 1 Col: Live Discussion Chat -->
       <div class="lg:col-span-1">
-        <TaskChat :task-id="taskId" />
+        <TaskChat ref="taskChatRef" :task-id="taskId" />
       </div>
 
     </div>
@@ -270,6 +283,13 @@
       :task-id="taskId"
       @close="showReworkModal = false"
       @reworked="onTaskReworked"
+    />
+
+    <ReopenTaskModal
+      :is-open="showReopenModal"
+      :task="task"
+      @close="showReopenModal = false"
+      @reopened="onTaskReopened"
     />
 
     <!-- Edit Task / ТЗ Modal -->
@@ -368,6 +388,7 @@ import TaskChat from '../components/TaskChat.vue';
 import SubmitWorkModal from '../components/SubmitWorkModal.vue';
 import RateTaskModal from '../components/RateTaskModal.vue';
 import ReworkTaskModal from '../components/ReworkTaskModal.vue';
+import ReopenTaskModal from '../components/ReopenTaskModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -376,6 +397,7 @@ const { user, isLeader, isWorkshopHead, showNotification } = useAuthStore();
 const taskId = computed(() => parseInt(route.params.id, 10));
 const task = ref(null);
 const loading = ref(true);
+const taskChatRef = ref(null);
 
 watch(taskId, (newVal) => {
   if (newVal) fetchTask();
@@ -384,6 +406,7 @@ watch(taskId, (newVal) => {
 const showSubmitModal = ref(false);
 const showRateModal = ref(false);
 const showReworkModal = ref(false);
+const showReopenModal = ref(false);
 
 const canSubmitWork = computed(() => {
   if (!task.value || !user.value) return false;
@@ -427,6 +450,8 @@ const canEditTask = computed(() => {
   if (user.value.can_create_tasks && userHasDirection(user.value, task.value.direction)) return true;
   return false;
 });
+
+const canReopenTask = canEditTask;
 
 const openEditTaskModal = () => {
   if (!task.value) return;
@@ -528,6 +553,13 @@ const onTaskRated = (msg) => {
 const onTaskReworked = (msg) => {
   showNotification(msg, 'warning');
   fetchTask();
+  taskChatRef.value?.fetchComments?.();
+};
+
+const onTaskReopened = (data) => {
+  showNotification(data?.message || 'Задача успешно перезадана!', 'success');
+  fetchTask();
+  taskChatRef.value?.fetchComments?.();
 };
 
 const getStatusClasses = (status) => {

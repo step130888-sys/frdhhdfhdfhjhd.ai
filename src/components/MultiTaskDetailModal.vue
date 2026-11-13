@@ -62,6 +62,19 @@
             <span>Открыть задачу</span>
           </button>
 
+          <!-- Reopen Single Task button -->
+          <button
+            v-if="event.direction && event.direction !== 'Общее' && event.id < 900000 && canReopenItem(event)"
+            @click="$emit('reopen', event)"
+            class="px-3.5 py-2.5 min-h-[44px] rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/30 text-xs font-bold transition-all flex items-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer"
+            title="Сбросить прогресс и перезадать задачу"
+          >
+            <svg class="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+            </svg>
+            <span>Перезадать</span>
+          </button>
+
           <button
             v-if="isLeader && event.id < 900000"
             @click="$emit('delete', event)"
@@ -231,6 +244,20 @@
                   </template>
                 </div>
 
+                <!-- Reopen Subtask button -->
+                <button
+                  v-if="canReopenItem(st)"
+                  type="button"
+                  @click.stop="$emit('reopen', st)"
+                  title="Сбросить прогресс и перезадать подзадачу"
+                  class="px-2.5 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/30 text-xs font-bold transition-all flex items-center space-x-1 cursor-pointer"
+                >
+                  <svg class="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+                  </svg>
+                  <span class="hidden sm:inline">Перезадать</span>
+                </button>
+
                 <!-- Chat & Open Link -->
                 <router-link
                   :to="`/task/${st.id}`"
@@ -268,13 +295,27 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '../stores/auth';
+
 const props = defineProps({
   isOpen: Boolean,
   event: Object,
   isLeader: Boolean
 });
 
-const emit = defineEmits(['close', 'edit', 'delete']);
+const emit = defineEmits(['close', 'edit', 'delete', 'reopen']);
+
+const { user } = useAuthStore();
+
+const canReopenItem = (item) => {
+  if (!item || !user.value) return false;
+  if (user.value.access_level >= 3) return true;
+  const dirs = (user.value.role || '').split(',').map((s) => s.trim().toLowerCase());
+  const matchesDir = item.direction && dirs.includes(item.direction.trim().toLowerCase());
+  if (user.value.access_level === 2 && matchesDir) return true;
+  if (user.value.can_create_tasks && matchesDir) return true;
+  return false;
+};
 
 const getDirBadgeClasses = (dir) => {
   switch (dir) {

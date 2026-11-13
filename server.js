@@ -9,6 +9,7 @@ const { getCurrentUserMiddleware } = require('./server/auth');
 const apiRouter = require('./server/api');
 const telegramService = require('./server/telegramService');
 const vkService = require('./server/vkService');
+const serverMonitor = require('./server/serverMonitor');
 
 const compression = require('compression');
 
@@ -152,6 +153,12 @@ async function startServer() {
     }
   } catch (e) {
     console.error('[VK] Ошибка старта бота:', e.message);
+  }
+
+  try {
+    serverMonitor.startServerMonitor();
+  } catch (e) {
+    console.error('[ServerMonitor] Ошибка старта мониторинга:', e.message);
   }
 
   app.listen(PORT, '0.0.0.0', () => {

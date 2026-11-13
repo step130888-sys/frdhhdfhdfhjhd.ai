@@ -289,4 +289,6 @@ onUnmounted(() => {
   if (pollInterval) clearInterval(pollInterval);
   document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
+
+defineExpose({ fetchComments });
 </script>

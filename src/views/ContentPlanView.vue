@@ -631,6 +631,14 @@
       @close="showDetailModal = false"
       @edit="onEditFromDetail"
       @delete="deleteMultiTask"
+      @reopen="openReopenTaskModal"
+    />
+
+    <ReopenTaskModal
+      :is-open="showReopenModal"
+      :task="reopeningTask"
+      @close="showReopenModal = false"
+      @reopened="onTaskReopened"
     />
 
   </div>
@@ -644,6 +652,7 @@ import CreateTaskModal from '../components/CreateTaskModal.vue';
 import MultiTaskModal from '../components/MultiTaskModal.vue';
 import MultiTaskDetailModal from '../components/MultiTaskDetailModal.vue';
 import MultiTaskCalendar from '../components/MultiTaskCalendar.vue';
+import ReopenTaskModal from '../components/ReopenTaskModal.vue';
 import AnimatedPills from '../components/AnimatedPills.vue';
 
 const { user, isLeader, canCreateTasks, showNotification } = useAuthStore();
@@ -811,6 +820,27 @@ const openDetailMultiTask = (ev) => {
 const onEditFromDetail = (ev) => {
   showDetailModal.value = false;
   openEditMultiTask(ev);
+};
+
+const showReopenModal = ref(false);
+const reopeningTask = ref(null);
+
+const openReopenTaskModal = (taskObj) => {
+  reopeningTask.value = taskObj;
+  showReopenModal.value = true;
+};
+
+const onTaskReopened = async (data) => {
+  showNotification(data?.message || 'Задача успешно перезадана!', 'success');
+  await Promise.all([fetchCalendarEvents(), fetchTasks()]);
+  if (showDetailModal.value && selectedDetailEvent.value) {
+    const refreshed = calendarEvents.value.find(e => e.id === selectedDetailEvent.value.id);
+    if (refreshed) {
+      selectedDetailEvent.value = refreshed;
+    } else {
+      showDetailModal.value = false;
+    }
+  }
 };
 
 const closeMultiTaskModal = () => {
